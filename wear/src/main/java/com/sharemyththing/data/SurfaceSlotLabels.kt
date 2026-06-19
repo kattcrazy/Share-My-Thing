@@ -1,0 +1,18 @@
+package com.sharemyththing.data
+
+import androidx.annotation.StringRes
+import com.sharemyththing.R
+
+val SurfaceSlot.labelRes: Int
+    @StringRes get() = when (this) {
+        SurfaceSlot.TILE_1 -> R.string.tile_1
+        SurfaceSlot.TILE_2 -> R.string.tile_2
+        SurfaceSlot.TILE_3 -> R.string.tile_3
+        SurfaceSlot.TILE_4 -> R.string.tile_4
+        SurfaceSlot.TILE_5 -> R.string.tile_5
+        SurfaceSlot.COMPLICATION_1 -> R.string.complication_1
+        SurfaceSlot.COMPLICATION_2 -> R.string.complication_2
+        SurfaceSlot.COMPLICATION_3 -> R.string.complication_3
+        SurfaceSlot.COMPLICATION_4 -> R.string.complication_4
+        SurfaceSlot.COMPLICATION_5 -> R.string.complication_5
+    }

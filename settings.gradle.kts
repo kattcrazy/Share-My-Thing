@@ -25,4 +25,4 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = "Share My Thing"
-include(":app")
+include(":core", ":ui-theme", ":wear", ":mobile")

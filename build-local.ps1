@@ -1,22 +1,27 @@
 #Requires -Version 5.1
 <#
 .SYNOPSIS
-  Copies Share My Thing to a local folder and builds the APK.
+  Copies Share My Thing to a local folder and builds wear + mobile APKs.
 
   Google Drive paths break KSP/Gradle incremental builds, so we mirror the
-  project to a local directory, compile there, then copy the APK back to dist/.
+  project to a local directory, compile there, then copy APKs back to dist/.
 
 .USAGE
-  .\build-local.ps1              # debug APK (default)
-  .\build-local.ps1 -Release     # release APK
+  .\build-local.ps1              # debug APKs (default)
+  .\build-local.ps1 -Release     # release APKs
   .\build-local.ps1 -SkipCopy    # rebuild using existing local copy only
-  .\build-local.ps1 -Install     # build debug APK and adb install to connected watch
+  .\build-local.ps1 -InstallWear  # build wear debug APK and adb install to connected watch
+  .\build-local.ps1 -InstallMobile # build mobile debug APK and adb install to connected phone
+
+  Play Console: one listing, applicationId com.sharemyththing, upload both wear and mobile
+  APKs/AABs signed with the same key.
 #>
 [CmdletBinding()]
 param(
     [switch] $Release,
     [switch] $SkipCopy,
-    [switch] $Install,
+    [switch] $InstallWear,
+    [switch] $InstallMobile,
     [string] $BuildDir = $(Join-Path $env:LOCALAPPDATA "ShareMyThing-build"),
     [string] $JavaHome = ""
 )
@@ -75,15 +80,32 @@ function Write-LocalProperties {
     Write-Host "  SDK: $sdkDir"
 }
 
-$GradleTask = if ($Release) { "assembleRelease" } else { "assembleDebug" }
-$ApkRelativePath = if ($Release) {
-    "app\build\outputs\apk\release\app-release-unsigned.apk"
-} else {
-    "app\build\outputs\apk\debug\app-debug.apk"
+function Find-BuiltApk {
+    param(
+        [string] $BuildDir,
+        [string] $ModuleName,
+        [string] $Variant
+    )
+    $expected = Join-Path $BuildDir "$ModuleName\build\outputs\apk\$Variant\$ModuleName-$Variant.apk"
+    if (Test-Path $expected) {
+        return $expected
+    }
+    $fallback = Get-ChildItem -Path (Join-Path $BuildDir "$ModuleName\build\outputs\apk\$Variant") -Filter "*.apk" -ErrorAction SilentlyContinue |
+        Sort-Object LastWriteTime -Descending |
+        Select-Object -First 1
+    if ($fallback) {
+        return $fallback.FullName
+    }
+    throw "Build succeeded but APK not found for $ModuleName ($Variant)"
 }
+
+$GradleTask = if ($Release) { "assembleRelease" } else { "assembleDebug" }
+$Variant = if ($Release) { "release" } else { "debug" }
 $DistDir = Join-Path $ProjectRoot "dist"
-$DistApkName = if ($Release) { "ShareMyThing-release-unsigned.apk" } else { "ShareMyThing-debug.apk" }
-$DistApkPath = Join-Path $DistDir $DistApkName
+$WearDistName = if ($Release) { "ShareMyThing-wear-release-unsigned.apk" } else { "ShareMyThing-wear-debug.apk" }
+$MobileDistName = if ($Release) { "ShareMyThing-mobile-release-unsigned.apk" } else { "ShareMyThing-mobile-debug.apk" }
+$WearDistPath = Join-Path $DistDir $WearDistName
+$MobileDistPath = Join-Path $DistDir $MobileDistName
 
 if (-not $JavaHome) {
     $JavaHome = Find-AndroidStudioJbr
@@ -104,7 +126,7 @@ if (-not $SkipCopy) {
         $ProjectRoot,
         $BuildDir,
         "/MIR",
-        "/XD", ".gradle", "build", "app\build", ".idea", ".kotlin", "dist", ".git",
+        "/XD", ".gradle", "build", "wear\build", "mobile\build", "core\build", ".idea", ".kotlin", "dist", ".git",
         "/XF", "local.properties",
         "/NFL", "/NDL", "/NJH", "/NJS", "/nc", "/ns", "/np"
     )
@@ -123,13 +145,13 @@ if (-not $SkipCopy) {
 Write-Step "Configuring Android SDK"
 Write-LocalProperties -TargetDir $BuildDir -SourceRoot $ProjectRoot
 
-Write-Step "Building $GradleTask"
+Write-Step "Building $GradleTask for :wear and :mobile"
 Write-Host "  JAVA_HOME: $JavaHome"
 
 $env:JAVA_HOME = $JavaHome
 Push-Location $BuildDir
 try {
-    & .\gradlew.bat $GradleTask --no-daemon
+    & .\gradlew.bat ":wear:$GradleTask" ":mobile:$GradleTask" --no-daemon
     if ($LASTEXITCODE -ne 0) {
         throw "Gradle build failed with exit code $LASTEXITCODE"
     }
@@ -137,38 +159,42 @@ try {
     Pop-Location
 }
 
-$BuiltApk = Join-Path $BuildDir $ApkRelativePath
-if (-not (Test-Path $BuiltApk)) {
-    # Release builds may be signed differently; fall back to any matching APK.
-    $variant = if ($Release) { "release" } else { "debug" }
-    $fallback = Get-ChildItem -Path (Join-Path $BuildDir "app\build\outputs\apk\$variant") -Filter "*.apk" -ErrorAction SilentlyContinue |
-        Sort-Object LastWriteTime -Descending |
-        Select-Object -First 1
-    if ($fallback) {
-        $BuiltApk = $fallback.FullName
-    } else {
-        throw "Build succeeded but APK not found at $BuiltApk"
-    }
-}
+$BuiltWearApk = Find-BuiltApk -BuildDir $BuildDir -ModuleName "wear" -Variant $Variant
+$BuiltMobileApk = Find-BuiltApk -BuildDir $BuildDir -ModuleName "mobile" -Variant $Variant
 
-Write-Step "Copying APK to dist/"
+Write-Step "Copying APKs to dist/"
 New-Item -ItemType Directory -Force -Path $DistDir | Out-Null
-Copy-Item -Path $BuiltApk -Destination $DistApkPath -Force
+Copy-Item -Path $BuiltWearApk -Destination $WearDistPath -Force
+Copy-Item -Path $BuiltMobileApk -Destination $MobileDistPath -Force
 
 Write-Host ""
 Write-Host "Build complete." -ForegroundColor Green
-Write-Host "APK (send this file):" -ForegroundColor Green
-Write-Host "  $DistApkPath"
+Write-Host "Wear APK:" -ForegroundColor Green
+Write-Host "  $WearDistPath"
+Write-Host "Mobile APK:" -ForegroundColor Green
+Write-Host "  $MobileDistPath"
 
-if ($Install) {
-    Write-Step "Installing via adb"
-    $adb = Join-Path $env:LOCALAPPDATA "Android\Sdk\platform-tools\adb.exe"
+$adb = Join-Path $env:LOCALAPPDATA "Android\Sdk\platform-tools\adb.exe"
+if ($InstallWear -or $InstallMobile) {
     if (-not (Test-Path $adb)) {
         throw "adb not found at $adb"
     }
-    & $adb install -r $DistApkPath
+}
+
+if ($InstallWear) {
+    Write-Step "Installing wear APK via adb"
+    & $adb install -r $WearDistPath
     if ($LASTEXITCODE -ne 0) {
         throw "adb install failed with exit code $LASTEXITCODE"
     }
-    Write-Host "Installed on connected device." -ForegroundColor Green
+    Write-Host "Wear APK installed on connected device." -ForegroundColor Green
+}
+
+if ($InstallMobile) {
+    Write-Step "Installing mobile APK via adb"
+    & $adb install -r $MobileDistPath
+    if ($LASTEXITCODE -ne 0) {
+        throw "adb install failed with exit code $LASTEXITCODE"
+    }
+    Write-Host "Mobile APK installed on connected device." -ForegroundColor Green
 }
