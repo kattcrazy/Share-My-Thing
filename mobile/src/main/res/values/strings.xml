@@ -48,10 +48,15 @@
     <string name="list_watch_section">Watch</string>
     <string name="about_title">About</string>
     <string name="about_version">Version %1$s</string>
-    <string name="about_developer">Developer</string>
-    <string name="about_developer_name">kattcrazy</string>
-    <string name="about_report_issue">Report an issue</string>
-    <string name="about_report_issue_body">Found a bug or have feedback? Open an issue on GitHub.</string>
-    <string name="about_github_link">Share My Thing on GitHub</string>
-    <string name="about_github_url">https://github.com/kattcrazy/Share-My-Thing/issues</string>
+    <string name="about_developer_heading">About the developer</string>
+    <string name="about_developer_body">Hi, I\'m Kattcrazy and I\'m an artist and developer. I enjoy working on my Home Assistant setup, coding, and am eager to contribute to the open-source community!</string>
+    <string name="about_support_heading">Support the development</string>
+    <string name="about_support_prefix">You can support me via </string>
+    <string name="about_support_link">my website</string>
+    <string name="about_support_suffix">.</string>
+    <string name="about_bug_heading">Found a bug or issue?</string>
+    <string name="about_bug_prefix">Report any bugs, issues, or request features via the </string>
+    <string name="about_bug_link">Share My Thing GitHub repo</string>
+    <string name="about_bug_suffix">.</string>
+    <string name="about_github_url">https://github.com/kattcrazy/Share-My-Thing</string>
 </resources>

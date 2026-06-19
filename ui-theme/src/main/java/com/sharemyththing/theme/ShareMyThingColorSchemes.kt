@@ -40,7 +40,7 @@ object ShareMyThingColorSchemes {
         inversePrimary = Color(0xFFACC7FF),
     )
 
-    /** Fixed watch palette — always dark, no system theme. */
+    /** Fixed watch palette: always dark, no system theme. */
     val dark: ColorScheme = darkColorScheme(
         primary = Color(0xFFACC7FF),
         onPrimary = Color(0xFF002F67),
