@@ -53,18 +53,4 @@ class SurfacePreferences(private val context: Context) {
             }
         }
     }
-
-    // Legacy migration from old single-pin keys
-    suspend fun migrateFromLegacyPinsIfNeeded() {
-        context.surfaceDataStore.edit { prefs ->
-            val legacyTile = prefs[longPreferencesKey("pinned_tile_item_id")]
-            val legacyComplication = prefs[longPreferencesKey("pinned_complication_item_id")]
-            if (legacyTile != null && prefs[keyFor(SurfaceSlot.TILE_1)] == null) {
-                prefs[keyFor(SurfaceSlot.TILE_1)] = legacyTile
-            }
-            if (legacyComplication != null && prefs[keyFor(SurfaceSlot.COMPLICATION_1)] == null) {
-                prefs[keyFor(SurfaceSlot.COMPLICATION_1)] = legacyComplication
-            }
-        }
-    }
 }

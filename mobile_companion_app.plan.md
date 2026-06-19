@@ -61,7 +61,7 @@ isProject: false
 **Data layer:**
 
 - **Room** — `DisplayItem` entity (`id`, `title`, `content`, `type`, `sortOrder`). Auto-increment `Long` id only — **no uuid / updatedAt yet** (required before bidirectional sync).
-- **DataStore** — `SurfacePreferences`: slot → item id assignments, which slots are “placed on watch”, legacy pin migration on first launch.
+- **DataStore** — `SurfacePreferences`: slot → item id assignments, which slots are “placed on watch”.
 - **Repository** — `ItemsRepository` owns CRUD, slot assignment, and **targeted** tile/complication refresh (not all 10 surfaces on every change).
 - **Application singleton** — `ShareMyThingApplication` exposes one shared `ItemsRepository`; tile/complication services reuse it.
 
@@ -99,7 +99,7 @@ isProject: false
 **Performance work already done (do not redo):**
 
 - Targeted `requestSurfaceUpdate(slot)` instead of refreshing all tiles/complications
-- No launch-time refresh of all 10 surfaces — only `initializeOnLaunch()` migration
+- No launch-time refresh of all 10 surfaces
 - Singleton repository from Application in tile/complication services
 - QR generated once in `buildTileResources()`, not duplicated in layout
 - Release APK shrinking; Compose/Wear tooling deps are `debugImplementation` only
@@ -153,7 +153,7 @@ Ship a **phone companion app** alongside the existing Wear app under the **same 
 - Multiline text fields when editing items
 - Tooltips on non-obvious controls
 - **Sync** button (bidirectional merge with paired watch)
-- Subtle support banner linking to [Support Me](https://kattcrazy.nz/product/support-me/)
+- Subtle banner linking to [Support Me](https://kattcrazy.nz/product/support-me/)
 
 Watch behavior stays **standalone** (no phone required); sync is optional enhancement.
 

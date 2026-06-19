@@ -55,10 +55,6 @@ class ItemsRepository(context: Context) {
         affectedSlots.forEach { requestSurfaceUpdate(it) }
     }
 
-    suspend fun initializeOnLaunch() {
-        surfacePreferences.migrateFromLegacyPinsIfNeeded()
-    }
-
     suspend fun setSlotItemId(slot: SurfaceSlot, id: Long?) {
         surfacePreferences.setItemId(slot, id)
         requestSurfaceUpdate(slot)
