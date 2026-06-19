@@ -1,0 +1,19 @@
+# Local build outputs
+/dist/
+/build/
+/app/build/
+
+# Gradle
+/.gradle/
+/local.properties
+
+# IDE
+/.idea/
+*.iml
+
+# Kotlin
+/.kotlin/
+
+# OS
+.DS_Store
+Thumbs.db
