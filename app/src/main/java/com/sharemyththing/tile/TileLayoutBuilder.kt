@@ -327,9 +327,9 @@ private fun Bitmap.toInlineImageResource(): ResourceBuilders.ImageResource {
 private const val QR_TILE_SIZE_PX = 280
 private const val QR_IN_APP_WIDTH_FRACTION = 0.72f
 private const val QR_IMAGE_INNER_PADDING_DP = 8f
-private const val QR_WHITE_TOP_PADDING_DP = 24f
+private const val QR_WHITE_TOP_PADDING_DP = 28f
 private const val QR_WHITE_HORIZONTAL_PADDING_DP = 24f
-private const val QR_WHITE_BOTTOM_PADDING_DP = 14f
+private const val QR_WHITE_BOTTOM_PADDING_DP = 10f
 private const val TITLE_TOP_PADDING_DP = 8f
 private const val TEXT_CONTENT_TOP_PADDING_DP = 8f
 private const val TILE_TEXT_HORIZONTAL_PADDING_DP = 12f
