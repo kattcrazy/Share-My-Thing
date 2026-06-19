@@ -1,9 +1,11 @@
 package com.sharemyththing.ui.detail
 
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -26,39 +28,52 @@ fun TextDetailScreen(
 ) {
     AppScaffold {
         val listState = rememberTransformingLazyColumnState()
+        val scrollState = rememberScrollState()
         ScreenScaffold(scrollState = listState) { contentPadding ->
-            Box(
+            BoxWithConstraints(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(contentPadding),
-                contentAlignment = Alignment.Center,
             ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .verticalScroll(rememberScrollState()),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                ) {
-                    Text(
-                        text = item.title,
-                        modifier = Modifier.fillMaxWidth(),
-                        style = MaterialTheme.typography.titleMedium,
-                        textAlign = TextAlign.Center,
-                    )
+                val editAreaHeight = 72.dp
+                val textMaxHeight = maxHeight - editAreaHeight
 
-                    Text(
-                        text = item.content,
+                Column(modifier = Modifier.fillMaxSize()) {
+                    Box(
                         modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(top = 8.dp),
-                        style = MaterialTheme.typography.bodyLarge,
-                        textAlign = TextAlign.Center,
-                    )
+                            .weight(1f)
+                            .fillMaxWidth(),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .heightIn(max = textMaxHeight)
+                                .verticalScroll(scrollState),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                        ) {
+                            Text(
+                                text = item.title,
+                                modifier = Modifier.fillMaxWidth(),
+                                style = MaterialTheme.typography.titleMedium,
+                                textAlign = TextAlign.Center,
+                            )
+
+                            Text(
+                                text = item.content,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(top = 8.dp),
+                                style = MaterialTheme.typography.bodyLarge,
+                                textAlign = TextAlign.Center,
+                            )
+                        }
+                    }
 
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(top = 28.dp, bottom = 12.dp),
+                            .padding(top = 8.dp, bottom = 16.dp),
                         contentAlignment = Alignment.Center,
                     ) {
                         DetailEditButton(onEditClick = onEditClick)

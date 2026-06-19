@@ -60,13 +60,6 @@ class ItemsRepository(context: Context) {
         requestSurfaceUpdates()
     }
 
-    suspend fun syncPlacedSurfacesFromSystem() {
-        SurfaceSlot.all.forEach { slot ->
-            surfacePreferences.setPlacedOnWatch(slot, placed = false)
-        }
-        requestSurfaceUpdates()
-    }
-
     fun requestSurfaceUpdates() {
         tileServiceClasses.forEach { serviceClass ->
             TileService.getUpdater(appContext).requestUpdate(serviceClass)

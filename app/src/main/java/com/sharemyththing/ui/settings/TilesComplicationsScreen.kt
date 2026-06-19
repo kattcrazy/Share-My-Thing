@@ -1,10 +1,12 @@
 package com.sharemyththing.ui.settings
 
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
 import androidx.wear.compose.foundation.lazy.TransformingLazyColumn
 import androidx.wear.compose.foundation.lazy.TransformingLazyColumnScope
 import androidx.wear.compose.foundation.lazy.rememberTransformingLazyColumnState
@@ -22,6 +24,7 @@ import androidx.wear.compose.material3.lazy.transformedHeight
 import com.sharemyththing.R
 import com.sharemyththing.data.DisplayItem
 import com.sharemyththing.data.SurfaceSlot
+import com.sharemyththing.ui.bottomScrollSpacer
 
 @Composable
 fun TilesComplicationsScreen(
@@ -30,9 +33,6 @@ fun TilesComplicationsScreen(
     slotAssignments: Map<SurfaceSlot, Long?>,
     onSlotClick: (SurfaceSlot) -> Unit,
 ) {
-    val placedTiles = SurfaceSlot.tiles.filter { it in surfacesPlacedOnWatch }
-    val placedComplications = SurfaceSlot.complications.filter { it in surfacesPlacedOnWatch }
-
     AppScaffold {
         val listState = rememberTransformingLazyColumnState()
         val transformationSpec = rememberTransformationSpec()
@@ -49,83 +49,68 @@ fun TilesComplicationsScreen(
                     }
                 }
 
-                if (placedTiles.isEmpty() && placedComplications.isEmpty()) {
-                    item {
-                        Text(
-                            text = stringResource(R.string.tiles_and_complications_empty),
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .transformedHeight(this, transformationSpec),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            textAlign = TextAlign.Center,
-                        )
-                    }
-                } else {
-                    if (placedTiles.isNotEmpty()) {
-                        item {
-                            Text(
-                                text = stringResource(R.string.tiles_section),
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .transformedHeight(this, transformationSpec),
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                textAlign = TextAlign.Center,
-                            )
-                        }
-                        placedTiles.forEach { slot ->
-                            placedSlotItem(
-                                slot = slot,
-                                items = items,
-                                slotAssignments = slotAssignments,
-                                onSlotClick = onSlotClick,
-                                transformationSpec = transformationSpec,
-                            )
-                        }
-                    }
-
-                    if (placedComplications.isNotEmpty()) {
-                        item {
-                            Text(
-                                text = stringResource(R.string.complications_section),
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .transformedHeight(this, transformationSpec),
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                textAlign = TextAlign.Center,
-                            )
-                        }
-                        placedComplications.forEach { slot ->
-                            placedSlotItem(
-                                slot = slot,
-                                items = items,
-                                slotAssignments = slotAssignments,
-                                onSlotClick = onSlotClick,
-                                transformationSpec = transformationSpec,
-                            )
-                        }
-                    }
-                }
-
                 item {
                     Text(
                         text = stringResource(R.string.tiles_and_complications_help),
                         modifier = Modifier
                             .fillMaxWidth()
+                            .padding(bottom = 4.dp)
                             .transformedHeight(this, transformationSpec),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         textAlign = TextAlign.Center,
                     )
                 }
+
+                item {
+                    Text(
+                        text = stringResource(R.string.tiles_section),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .transformedHeight(this, transformationSpec),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        textAlign = TextAlign.Center,
+                    )
+                }
+                SurfaceSlot.tiles.forEach { slot ->
+                    slotItem(
+                        slot = slot,
+                        items = items,
+                        slotAssignments = slotAssignments,
+                        onSlotClick = onSlotClick,
+                        transformationSpec = transformationSpec,
+                    )
+                }
+
+                item {
+                    Text(
+                        text = stringResource(R.string.complications_section),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .transformedHeight(this, transformationSpec),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        textAlign = TextAlign.Center,
+                    )
+                }
+                SurfaceSlot.complications.forEach { slot ->
+                    slotItem(
+                        slot = slot,
+                        items = items,
+                        slotAssignments = slotAssignments,
+                        onSlotClick = onSlotClick,
+                        transformationSpec = transformationSpec,
+                    )
+                }
+
+                bottomScrollSpacer(transformationSpec = transformationSpec)
             }
         }
     }
 }
 
-private fun TransformingLazyColumnScope.placedSlotItem(
+private fun TransformingLazyColumnScope.slotItem(
     slot: SurfaceSlot,
     items: List<DisplayItem>,
     slotAssignments: Map<SurfaceSlot, Long?>,
@@ -136,7 +121,8 @@ private fun TransformingLazyColumnScope.placedSlotItem(
         val assignedItem = slotAssignments[slot]?.let { itemId ->
             items.firstOrNull { it.id == itemId }
         }
-        val buttonLabel = assignedItem?.title ?: stringResource(R.string.surface_not_set)
+        val slotLabel = stringResource(slot.labelRes)
+        val buttonLabel = assignedItem?.title ?: slotLabel
 
         Button(
             onClick = { onSlotClick(slot) },

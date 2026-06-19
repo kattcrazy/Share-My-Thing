@@ -79,12 +79,13 @@ fun QrDetailScreen(
                 val edgeBleedStart = contentPadding.calculateStartPadding(layoutDirection)
                 val edgeBleedEnd = contentPadding.calculateEndPadding(layoutDirection)
                 val edgeBleedTop = contentPadding.calculateTopPadding()
+                val extraBottomScroll = 40.dp
 
                 TransformingLazyColumn(
                     state = listState,
                     contentPadding = PaddingValues(
                         top = 0.dp,
-                        bottom = edgeBleedTop,
+                        bottom = edgeBleedTop + extraBottomScroll,
                         start = edgeBleedStart,
                         end = edgeBleedEnd,
                     ),
@@ -145,7 +146,7 @@ fun QrDetailScreen(
                             Box(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .padding(top = 28.dp, bottom = 12.dp),
+                                    .padding(top = 28.dp, bottom = 24.dp),
                                 contentAlignment = Alignment.Center,
                             ) {
                                 DetailEditButton(

@@ -18,21 +18,45 @@ abstract class SlotTileService(
     private val slot: SurfaceSlot,
 ) : TileService() {
     override fun onTileRequest(requestParams: RequestBuilders.TileRequest): ListenableFuture<TileBuilders.Tile> {
-        markTilePlacedOnWatch()
-        val item = loadAssignedItem()
-        val resourcesVersion = tileResourcesVersion(item)
-        val layoutElement = buildTileLayout(
-            context = this,
-            deviceConfiguration = requestParams.deviceConfiguration,
-            item = item,
-            configureText = getString(R.string.tile_configure),
-        )
-        return Futures.immediateFuture(
+        return runCatching {
+            markTilePlacedOnWatch()
+            val item = loadAssignedItem()
+            val resourcesVersion = tileResourcesVersion(item)
+            val layoutElement = buildTileLayout(
+                context = this,
+                deviceConfiguration = requestParams.deviceConfiguration,
+                slot = slot,
+                item = item,
+                configureText = getString(R.string.tile_configure),
+            )
             TileBuilders.Tile.Builder()
                 .setResourcesVersion(resourcesVersion)
                 .setTileTimeline(TimelineBuilders.Timeline.fromLayoutElement(layoutElement))
-                .build(),
+                .build()
+        }.fold(
+            onSuccess = { tile -> Futures.immediateFuture(tile) },
+            onFailure = { error ->
+                android.util.Log.e("SlotTileService", "Tile request failed for $slot", error)
+                Futures.immediateFuture(buildFallbackTile(requestParams, error))
+            },
         )
+    }
+
+    private fun buildFallbackTile(
+        requestParams: RequestBuilders.TileRequest,
+        error: Throwable,
+    ): TileBuilders.Tile {
+        val layoutElement = buildTileLayout(
+            context = this,
+            deviceConfiguration = requestParams.deviceConfiguration,
+            slot = slot,
+            item = null,
+            configureText = getString(R.string.tile_configure),
+        )
+        return TileBuilders.Tile.Builder()
+            .setResourcesVersion("error-${error.javaClass.simpleName}")
+            .setTileTimeline(TimelineBuilders.Timeline.fromLayoutElement(layoutElement))
+            .build()
     }
 
     override fun onTileResourcesRequest(

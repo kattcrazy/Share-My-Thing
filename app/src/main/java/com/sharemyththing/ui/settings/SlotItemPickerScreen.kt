@@ -20,6 +20,7 @@ import androidx.wear.compose.material3.lazy.transformedHeight
 import com.sharemyththing.R
 import com.sharemyththing.data.DisplayItem
 import com.sharemyththing.data.SurfaceSlot
+import com.sharemyththing.ui.bottomScrollSpacer
 
 @Composable
 fun SlotItemPickerScreen(
@@ -108,6 +109,8 @@ fun SlotItemPickerScreen(
                         Text(stringResource(R.string.clear_surface))
                     }
                 }
+
+                bottomScrollSpacer(transformationSpec = transformationSpec)
             }
         }
     }

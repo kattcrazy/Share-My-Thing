@@ -44,6 +44,7 @@ import androidx.wear.compose.material3.lazy.transformedHeight
 import com.sharemyththing.R
 import com.sharemyththing.data.DisplayItem
 import com.sharemyththing.data.ItemType
+import com.sharemyththing.ui.bottomScrollSpacer
 
 @Composable
 fun EditItemScreen(
@@ -218,6 +219,8 @@ fun EditItemScreen(
                         }
                     }
                 }
+
+                bottomScrollSpacer(transformationSpec = transformationSpec)
             }
         }
     }

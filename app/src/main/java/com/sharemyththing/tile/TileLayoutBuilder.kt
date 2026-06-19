@@ -11,30 +11,22 @@ import androidx.wear.protolayout.ModifiersBuilders
 import androidx.wear.protolayout.ResourceBuilders
 import androidx.wear.protolayout.material3.MaterialScope
 import androidx.wear.protolayout.material3.Typography.BODY_LARGE
-import androidx.wear.protolayout.material3.Typography.BODY_MEDIUM
-import androidx.wear.protolayout.material3.Typography.TITLE_SMALL
+import androidx.wear.protolayout.material3.Typography.TITLE_MEDIUM
 import androidx.wear.protolayout.material3.materialScope
-import androidx.wear.protolayout.material3.primaryLayout
 import androidx.wear.protolayout.material3.text
 import androidx.wear.protolayout.types.layoutString
 import com.sharemyththing.data.DisplayItem
 import com.sharemyththing.data.ItemType
+import com.sharemyththing.data.SurfaceSlot
 import com.sharemyththing.presentation.MainActivity
 import com.sharemyththing.util.QrCodeGenerator
 
 internal const val QR_IMAGE_RESOURCE_ID = "qr_image"
 
-private const val WRAPPING_MAX_LINES = 100
-
-private fun MaterialScope.wrappingText(
-    value: String,
-    typography: Int,
-) = text(
-    text = value.layoutString,
-    typography = typography,
-    maxLines = WRAPPING_MAX_LINES,
-    overflow = LayoutElementBuilders.TEXT_OVERFLOW_TRUNCATE,
-)
+private fun expandSpacer() = LayoutElementBuilders.Spacer.Builder()
+    .setWidth(DimensionBuilders.expand())
+    .setHeight(DimensionBuilders.expand())
+    .build()
 
 internal fun tileResourcesVersion(item: DisplayItem?): String =
     when (item) {
@@ -61,23 +53,29 @@ internal fun buildTileResources(item: DisplayItem?): ResourceBuilders.Resources 
 internal fun buildTileLayout(
     context: Context,
     deviceConfiguration: DeviceParametersBuilders.DeviceParameters,
+    slot: SurfaceSlot,
     item: DisplayItem?,
     configureText: String,
 ) = materialScope(context, deviceConfiguration) {
     when (item?.type) {
-        ItemType.QR_CODE -> qrTileLayout(context, deviceConfiguration, item)
+        ItemType.QR_CODE -> {
+            val qrBitmap = runCatching {
+                QrCodeGenerator.generate(item.content, QR_TILE_SIZE_PX)
+            }.getOrNull()
+            if (qrBitmap != null) {
+                qrTileLayout(context, deviceConfiguration, item)
+            } else {
+                textTileLayout(context, deviceConfiguration, item)
+            }
+        }
 
-        else -> primaryLayout(
-            mainSlot = {
-                when (item) {
-                    null -> wrappingText(configureText, BODY_LARGE)
-                    else -> textItemColumn(item, openItemModifiers(context, item))
-                }
-            },
-        )
+        null -> configureTileLayout(context, slot, configureText)
+
+        else -> textTileLayout(context, deviceConfiguration, item)
     }
 }
 
+/** Matches [com.sharemyththing.ui.detail.QrDetailScreen]: white QR block + centered title. No content or edit button. */
 private fun MaterialScope.qrTileLayout(
     context: Context,
     deviceConfiguration: DeviceParametersBuilders.DeviceParameters,
@@ -87,46 +85,94 @@ private fun MaterialScope.qrTileLayout(
     .setHeight(DimensionBuilders.expand())
     .setHorizontalAlignment(LayoutElementBuilders.HORIZONTAL_ALIGN_CENTER)
     .setModifiers(openItemModifiers(context, item))
-    .addContent(qrImageSection(deviceConfiguration))
+    .addContent(qrWhiteSection(deviceConfiguration))
+    .addContent(titleSection(item.title))
+    .build()
+
+/** Matches [com.sharemyththing.ui.detail.TextDetailScreen]: centered title + content. No edit button. */
+private fun MaterialScope.textTileLayout(
+    context: Context,
+    deviceConfiguration: DeviceParametersBuilders.DeviceParameters,
+    item: DisplayItem,
+) = LayoutElementBuilders.Column.Builder()
+    .setWidth(DimensionBuilders.expand())
+    .setHeight(DimensionBuilders.expand())
+    .setHorizontalAlignment(LayoutElementBuilders.HORIZONTAL_ALIGN_CENTER)
+    .setModifiers(openItemModifiers(context, item))
+    .addContent(
+        LayoutElementBuilders.Box.Builder()
+            .setWidth(DimensionBuilders.expand())
+            .setHeight(DimensionBuilders.expand())
+            .setHorizontalAlignment(LayoutElementBuilders.HORIZONTAL_ALIGN_CENTER)
+            .setVerticalAlignment(LayoutElementBuilders.VERTICAL_ALIGN_CENTER)
+            .addContent(textTileContent(deviceConfiguration, item))
+            .build(),
+    )
+    .build()
+
+private fun MaterialScope.textTileContent(
+    deviceConfiguration: DeviceParametersBuilders.DeviceParameters,
+    item: DisplayItem,
+) = LayoutElementBuilders.Column.Builder()
+    .setWidth(DimensionBuilders.expand())
+    .setHeight(DimensionBuilders.wrap())
+    .setHorizontalAlignment(LayoutElementBuilders.HORIZONTAL_ALIGN_CENTER)
+    .setModifiers(horizontalTextPadding())
+    .addContent(tileTitleText(item.title))
     .addContent(
         LayoutElementBuilders.Column.Builder()
             .setWidth(DimensionBuilders.expand())
             .setHeight(DimensionBuilders.wrap())
             .setHorizontalAlignment(LayoutElementBuilders.HORIZONTAL_ALIGN_CENTER)
-            .setModifiers(textSectionPadding())
-            .addContent(wrappingText(item.title, TITLE_SMALL))
-            .addContent(wrappingText(item.content, BODY_MEDIUM))
+            .setModifiers(
+                ModifiersBuilders.Modifiers.Builder()
+                    .setPadding(
+                        ModifiersBuilders.Padding.Builder()
+                            .setTop(DimensionBuilders.dp(TEXT_CONTENT_TOP_PADDING_DP))
+                            .build(),
+                    )
+                    .build(),
+            )
+            .addContent(
+                tileBodyText(
+                    value = item.content,
+                    maxLines = textContentMaxLines(deviceConfiguration.screenHeightDp.toFloat()),
+                ),
+            )
             .build(),
     )
     .build()
 
-private fun MaterialScope.textItemColumn(
-    item: DisplayItem,
-    clickableModifiers: ModifiersBuilders.Modifiers,
+private fun MaterialScope.configureTileLayout(
+    context: Context,
+    slot: SurfaceSlot,
+    configureText: String,
 ) = LayoutElementBuilders.Column.Builder()
     .setWidth(DimensionBuilders.expand())
-    .setHeight(DimensionBuilders.wrap())
+    .setHeight(DimensionBuilders.expand())
     .setHorizontalAlignment(LayoutElementBuilders.HORIZONTAL_ALIGN_CENTER)
-    .setModifiers(clickableModifiers)
-    .addContent(wrappingText(item.title, TITLE_SMALL))
-    .addContent(wrappingText(item.content, BODY_LARGE))
+    .setModifiers(openSlotModifiers(context, slot))
+    .addContent(expandSpacer())
+    .addContent(
+        text(
+            text = configureText.layoutString,
+            typography = BODY_LARGE,
+            maxLines = 4,
+            overflow = LayoutElementBuilders.TEXT_OVERFLOW_TRUNCATE,
+        ),
+    )
+    .addContent(expandSpacer())
     .build()
 
-private fun qrImageSizeDp(
+private fun qrWhiteSection(
     deviceConfiguration: DeviceParametersBuilders.DeviceParameters,
-): Float {
-    val maxByWidth = deviceConfiguration.screenWidthDp * QR_TILE_WIDTH_FRACTION
-    val maxByHeight = deviceConfiguration.screenHeightDp * QR_TILE_MAX_HEIGHT_FRACTION
-    return minOf(maxByWidth, maxByHeight)
-}
-
-private fun qrImageSection(
-    deviceConfiguration: DeviceParametersBuilders.DeviceParameters,
-): LayoutElementBuilders.Box {
-    val qrSizeDp = qrImageSizeDp(deviceConfiguration)
-    return LayoutElementBuilders.Box.Builder()
+): LayoutElementBuilders.Column {
+    val qrSizeDp = deviceConfiguration.screenWidthDp * QR_IN_APP_WIDTH_FRACTION
+    val imageSizeDp = (qrSizeDp - QR_IMAGE_INNER_PADDING_DP * 2f).coerceAtLeast(48f)
+    return LayoutElementBuilders.Column.Builder()
         .setWidth(DimensionBuilders.expand())
         .setHeight(DimensionBuilders.wrap())
+        .setHorizontalAlignment(LayoutElementBuilders.HORIZONTAL_ALIGN_CENTER)
         .setModifiers(
             ModifiersBuilders.Modifiers.Builder()
                 .setBackground(
@@ -136,16 +182,18 @@ private fun qrImageSection(
                 )
                 .setPadding(
                     ModifiersBuilders.Padding.Builder()
-                        .setTop(DimensionBuilders.dp(QR_TILE_VERTICAL_PADDING_DP))
-                        .setBottom(DimensionBuilders.dp(QR_TILE_VERTICAL_PADDING_DP))
+                        .setTop(DimensionBuilders.dp(QR_WHITE_TOP_PADDING_DP))
+                        .setStart(DimensionBuilders.dp(QR_WHITE_HORIZONTAL_PADDING_DP))
+                        .setEnd(DimensionBuilders.dp(QR_WHITE_HORIZONTAL_PADDING_DP))
+                        .setBottom(DimensionBuilders.dp(QR_WHITE_BOTTOM_PADDING_DP))
                         .build(),
                 )
                 .build(),
         )
         .addContent(
             LayoutElementBuilders.Image.Builder()
-                .setWidth(DimensionBuilders.dp(qrSizeDp))
-                .setHeight(DimensionBuilders.dp(qrSizeDp))
+                .setWidth(DimensionBuilders.dp(imageSizeDp))
+                .setHeight(DimensionBuilders.dp(imageSizeDp))
                 .setContentScaleMode(LayoutElementBuilders.CONTENT_SCALE_MODE_FIT)
                 .setResourceId(QR_IMAGE_RESOURCE_ID)
                 .build(),
@@ -153,13 +201,76 @@ private fun qrImageSection(
         .build()
 }
 
-private fun textSectionPadding(): ModifiersBuilders.Modifiers =
+private fun MaterialScope.titleSection(title: String) =
+    LayoutElementBuilders.Column.Builder()
+        .setWidth(DimensionBuilders.expand())
+        .setHeight(DimensionBuilders.wrap())
+        .setHorizontalAlignment(LayoutElementBuilders.HORIZONTAL_ALIGN_CENTER)
+        .setModifiers(
+            ModifiersBuilders.Modifiers.Builder()
+                .setPadding(
+                    ModifiersBuilders.Padding.Builder()
+                        .setTop(DimensionBuilders.dp(TITLE_TOP_PADDING_DP))
+                        .setStart(DimensionBuilders.dp(TILE_TEXT_HORIZONTAL_PADDING_DP))
+                        .setEnd(DimensionBuilders.dp(TILE_TEXT_HORIZONTAL_PADDING_DP))
+                        .build(),
+                )
+                .build(),
+        )
+        .addContent(tileTitleText(title))
+        .build()
+
+private fun MaterialScope.tileTitleText(title: String) = text(
+    text = title.layoutString,
+    typography = TITLE_MEDIUM,
+    maxLines = 2,
+    overflow = LayoutElementBuilders.TEXT_OVERFLOW_TRUNCATE,
+)
+
+private fun MaterialScope.tileBodyText(value: String, maxLines: Int) = text(
+    text = value.layoutString,
+    typography = BODY_LARGE,
+    maxLines = maxLines,
+    overflow = LayoutElementBuilders.TEXT_OVERFLOW_TRUNCATE,
+)
+
+private fun horizontalTextPadding(): ModifiersBuilders.Modifiers =
     ModifiersBuilders.Modifiers.Builder()
         .setPadding(
             ModifiersBuilders.Padding.Builder()
                 .setStart(DimensionBuilders.dp(TILE_TEXT_HORIZONTAL_PADDING_DP))
                 .setEnd(DimensionBuilders.dp(TILE_TEXT_HORIZONTAL_PADDING_DP))
-                .setTop(DimensionBuilders.dp(TILE_TEXT_TOP_PADDING_DP))
+                .build(),
+        )
+        .build()
+
+private fun textContentMaxLines(screenHeightDp: Float): Int {
+    val reservedDp = 72f
+    val lineHeightDp = 20f
+    return ((screenHeightDp - reservedDp) / lineHeightDp).toInt().coerceIn(4, 10)
+}
+
+private fun openSlotModifiers(
+    context: Context,
+    slot: SurfaceSlot,
+): ModifiersBuilders.Modifiers =
+    ModifiersBuilders.Modifiers.Builder()
+        .setClickable(
+            ModifiersBuilders.Clickable.Builder()
+                .setOnClick(
+                    ActionBuilders.LaunchAction.Builder()
+                        .setAndroidActivity(
+                            ActionBuilders.AndroidActivity.Builder()
+                                .setPackageName(context.packageName)
+                                .setClassName(MainActivity::class.java.name)
+                                .addKeyToExtraMapping(
+                                    MainActivity.EXTRA_SURFACE_SLOT,
+                                    ActionBuilders.stringExtra(slot.name),
+                                )
+                                .build(),
+                        )
+                        .build(),
+                )
                 .build(),
         )
         .build()
@@ -217,8 +328,11 @@ private fun Bitmap.toInlineImageResource(): ResourceBuilders.ImageResource {
 }
 
 private const val QR_TILE_SIZE_PX = 280
-private const val QR_TILE_WIDTH_FRACTION = 0.72f
-private const val QR_TILE_MAX_HEIGHT_FRACTION = 0.38f
-private const val QR_TILE_VERTICAL_PADDING_DP = 8f
-private const val TILE_TEXT_HORIZONTAL_PADDING_DP = 8f
-private const val TILE_TEXT_TOP_PADDING_DP = 4f
+private const val QR_IN_APP_WIDTH_FRACTION = 0.72f
+private const val QR_IMAGE_INNER_PADDING_DP = 8f
+private const val QR_WHITE_TOP_PADDING_DP = 20f
+private const val QR_WHITE_HORIZONTAL_PADDING_DP = 24f
+private const val QR_WHITE_BOTTOM_PADDING_DP = 14f
+private const val TITLE_TOP_PADDING_DP = 8f
+private const val TEXT_CONTENT_TOP_PADDING_DP = 8f
+private const val TILE_TEXT_HORIZONTAL_PADDING_DP = 12f

@@ -28,5 +28,8 @@ enum class SurfaceSlot(
         val complications = all.filter { it.isComplication }
         const val maxTiles = 5
         const val maxComplications = 5
+
+        fun fromName(name: String?): SurfaceSlot? =
+            name?.let { value -> entries.firstOrNull { it.name == value } }
     }
 }

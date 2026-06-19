@@ -10,6 +10,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import com.sharemyththing.data.DisplayItem
 import com.sharemyththing.data.ItemType
+import com.sharemyththing.data.SurfaceSlot
 import com.sharemyththing.ui.ItemsViewModel
 import com.sharemyththing.ui.detail.QrDetailScreen
 import com.sharemyththing.ui.detail.TextDetailScreen
@@ -23,6 +24,8 @@ fun AppNavHost(
     viewModel: ItemsViewModel,
     startItemId: Long?,
     onStartItemHandled: () -> Unit,
+    startSurfaceSlot: SurfaceSlot?,
+    onStartSurfaceSlotHandled: () -> Unit,
 ) {
     var screen by remember { mutableStateOf<AppScreen>(AppScreen.List) }
     var detailItem by remember { mutableStateOf<DisplayItem?>(null) }
@@ -72,6 +75,12 @@ fun AppNavHost(
             openItem(item)
             onStartItemHandled()
         }
+    }
+
+    LaunchedEffect(startSurfaceSlot) {
+        val slot = startSurfaceSlot ?: return@LaunchedEffect
+        screen = AppScreen.PickSlotItem(slot)
+        onStartSurfaceSlotHandled()
     }
 
     LaunchedEffect(screen) {

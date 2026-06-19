@@ -19,8 +19,7 @@
     <string name="qr_content_description">QR code for %1$s</string>
     <string name="qr_generation_failed">Could not generate QR code.</string>
     <string name="tiles_and_complications">Tiles &amp; Complications</string>
-    <string name="tiles_and_complications_help">Tap a slot to choose which item it shows.</string>
-    <string name="tiles_and_complications_empty">Add a Share My Thing tile or complication on your watch to configure it here.</string>
+    <string name="tiles_and_complications_help">Add tiles or complications on your watch, then tap a slot to choose an item.</string>
     <string name="tiles_section">Tiles</string>
     <string name="complications_section">Complications</string>
     <string name="tile_1">Tile 1</string>
