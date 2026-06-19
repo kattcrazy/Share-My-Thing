@@ -7,6 +7,7 @@ import androidx.wear.watchface.complications.data.PlainComplicationText
 import androidx.wear.watchface.complications.data.ShortTextComplicationData
 import androidx.wear.watchface.complications.datasource.ComplicationRequest
 import androidx.wear.watchface.complications.datasource.SuspendingComplicationDataSourceService
+import com.sharemyththing.ShareMyThingApplication
 import com.sharemyththing.R
 import com.sharemyththing.data.ItemsRepository
 import com.sharemyththing.data.SurfaceSlot
@@ -22,8 +23,8 @@ abstract class SlotComplicationService(
     }
 
     override suspend fun onComplicationRequest(request: ComplicationRequest): ComplicationData {
-        ItemsRepository(this).surfacePreferences.setPlacedOnWatch(slot, placed = true)
-        val repository = ItemsRepository(this)
+        val repository = repository()
+        repository.surfacePreferences.setPlacedOnWatch(slot, placed = true)
         val itemId = repository.surfacePreferences.getItemId(slot)
         val item = itemId?.let { repository.getItem(it) }
         return if (item == null) {
@@ -32,6 +33,9 @@ abstract class SlotComplicationService(
             ComplicationDataFactory.create(this, title = item.title, itemId = item.id)
         }
     }
+
+    private fun repository(): ItemsRepository =
+        (application as ShareMyThingApplication).repository
 }
 
 class Complication1Service : SlotComplicationService(SurfaceSlot.COMPLICATION_1)

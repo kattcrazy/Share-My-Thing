@@ -21,7 +21,12 @@ android {
 
     buildTypes {
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro",
+            )
         }
     }
 
@@ -58,8 +63,6 @@ dependencies {
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.wear.compose.foundation)
     implementation(libs.wear.compose.material3)
-    implementation(libs.compose.ui.tooling.preview)
-    implementation(libs.androidx.wear.compose.ui.tooling)
 
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.room.ktx)
@@ -68,11 +71,13 @@ dependencies {
     implementation(libs.wear.tiles)
     implementation(libs.wear.protolayout)
     implementation(libs.wear.protolayout.material3)
-    implementation(libs.wear.tiles.tooling.preview)
     implementation(libs.wear.watchface.complications.data)
     implementation(libs.wear.watchface.complications.data.source.ktx)
     implementation(libs.guava)
     implementation(libs.zxing.core)
 
+    debugImplementation(libs.compose.ui.tooling.preview)
+    debugImplementation(libs.androidx.wear.compose.ui.tooling)
+    debugImplementation(libs.wear.tiles.tooling.preview)
     debugImplementation(libs.wear.tiles.tooling)
 }

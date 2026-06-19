@@ -29,26 +29,30 @@ class ItemsRepository(context: Context) {
     suspend fun getItem(id: Long): DisplayItem? = dao.getById(id)
 
     suspend fun upsert(item: DisplayItem): Long {
+        val trimmedContent = item.content.trim()
+        val existing = if (item.id != 0L) dao.getById(item.id) else null
         val id = if (item.id == 0L) {
-            dao.insert(item)
+            dao.insert(item.copy(content = trimmedContent))
         } else {
-            dao.update(item)
+            dao.update(item.copy(content = trimmedContent))
             item.id
         }
-        QrCodeGenerator.invalidateCache()
-        requestSurfaceUpdates()
+        existing?.content?.let { QrCodeGenerator.invalidateCacheForContent(it) }
+        QrCodeGenerator.invalidateCacheForContent(trimmedContent)
+        requestSurfaceUpdatesForItem(id)
         return id
     }
 
     suspend fun delete(item: DisplayItem) {
+        val affectedSlots = slotsAssignedTo(item.id)
         dao.delete(item)
         SurfaceSlot.all.forEach { slot ->
             if (surfacePreferences.getItemId(slot) == item.id) {
                 surfacePreferences.setItemId(slot, null)
             }
         }
-        QrCodeGenerator.invalidateCache()
-        requestSurfaceUpdates()
+        QrCodeGenerator.invalidateCacheForContent(item.content)
+        affectedSlots.forEach { requestSurfaceUpdate(it) }
     }
 
     suspend fun initializeOnLaunch() {
@@ -57,17 +61,31 @@ class ItemsRepository(context: Context) {
 
     suspend fun setSlotItemId(slot: SurfaceSlot, id: Long?) {
         surfacePreferences.setItemId(slot, id)
-        requestSurfaceUpdates()
+        requestSurfaceUpdate(slot)
     }
 
     fun requestSurfaceUpdates() {
-        tileServiceClasses.forEach { serviceClass ->
-            TileService.getUpdater(appContext).requestUpdate(serviceClass)
+        SurfaceSlot.all.forEach { requestSurfaceUpdate(it) }
+    }
+
+    private suspend fun requestSurfaceUpdatesForItem(itemId: Long) {
+        slotsAssignedTo(itemId).forEach { requestSurfaceUpdate(it) }
+    }
+
+    private suspend fun slotsAssignedTo(itemId: Long): List<SurfaceSlot> =
+        SurfaceSlot.all.filter { surfacePreferences.getItemId(it) == itemId }
+
+    private fun requestSurfaceUpdate(slot: SurfaceSlot) {
+        val tileIndex = SurfaceSlot.tiles.indexOf(slot)
+        if (tileIndex >= 0) {
+            TileService.getUpdater(appContext).requestUpdate(tileServiceClasses[tileIndex])
+            return
         }
-        complicationServiceClasses.forEach { serviceClass ->
+        val complicationIndex = SurfaceSlot.complications.indexOf(slot)
+        if (complicationIndex >= 0) {
             ComplicationDataSourceUpdateRequester.create(
                 appContext,
-                ComponentName(appContext, serviceClass),
+                ComponentName(appContext, complicationServiceClasses[complicationIndex]),
             ).requestUpdateAll()
         }
     }

@@ -9,6 +9,7 @@ import androidx.wear.tiles.TileService
 import com.google.common.util.concurrent.Futures
 import com.google.common.util.concurrent.ListenableFuture
 import com.sharemyththing.R
+import com.sharemyththing.ShareMyThingApplication
 import com.sharemyththing.data.DisplayItem
 import com.sharemyththing.data.ItemsRepository
 import com.sharemyththing.data.SurfaceSlot
@@ -72,27 +73,24 @@ abstract class SlotTileService(
 
     override fun onTileRemoveEvent(requestParams: EventBuilders.TileRemoveEvent) {
         runBlocking {
-            ItemsRepository(this@SlotTileService).surfacePreferences.setPlacedOnWatch(
-                slot,
-                placed = false,
-            )
+            repository().surfacePreferences.setPlacedOnWatch(slot, placed = false)
         }
     }
 
     private fun loadAssignedItem(): DisplayItem? = runBlocking {
-        ItemsRepository(this@SlotTileService).let { repository ->
-            repository.surfacePreferences.getItemId(slot)?.let { repository.getItem(it) }
+        repository().let { repo ->
+            repo.surfacePreferences.getItemId(slot)?.let { repo.getItem(it) }
         }
     }
 
     private fun markTilePlacedOnWatch() {
         runBlocking {
-            ItemsRepository(this@SlotTileService).surfacePreferences.setPlacedOnWatch(
-                slot,
-                placed = true,
-            )
+            repository().surfacePreferences.setPlacedOnWatch(slot, placed = true)
         }
     }
+
+    private fun repository(): ItemsRepository =
+        (application as ShareMyThingApplication).repository
 }
 
 class Tile1Service : SlotTileService(SurfaceSlot.TILE_1)

@@ -59,10 +59,7 @@ internal fun buildTileLayout(
 ) = materialScope(context, deviceConfiguration) {
     when (item?.type) {
         ItemType.QR_CODE -> {
-            val qrBitmap = runCatching {
-                QrCodeGenerator.generate(item.content, QR_TILE_SIZE_PX)
-            }.getOrNull()
-            if (qrBitmap != null) {
+            if (item.content.isNotBlank()) {
                 qrTileLayout(context, deviceConfiguration, item)
             } else {
                 textTileLayout(context, deviceConfiguration, item)

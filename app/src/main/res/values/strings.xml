@@ -18,6 +18,9 @@
     <string name="content_label">Content</string>
     <string name="qr_content_description">QR code for %1$s</string>
     <string name="qr_generation_failed">Could not generate QR code.</string>
+    <string name="qr_tips_title">QR tips</string>
+    <string name="qr_tips_url">For a web link, include http:// or https:// at the start.</string>
+    <string name="qr_tips_scan">When someone scans the code, their phone will work out what type of content it is.</string>
     <string name="tiles_and_complications">Tiles &amp; Complications</string>
     <string name="tiles_and_complications_help">Add tiles or complications on your watch, then tap a slot to choose an item.</string>
     <string name="tiles_section">Tiles</string>

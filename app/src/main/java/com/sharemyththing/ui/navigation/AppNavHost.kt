@@ -13,6 +13,7 @@ import com.sharemyththing.data.ItemType
 import com.sharemyththing.data.SurfaceSlot
 import com.sharemyththing.ui.ItemsViewModel
 import com.sharemyththing.ui.detail.QrDetailScreen
+import com.sharemyththing.ui.detail.QrTipsScreen
 import com.sharemyththing.ui.detail.TextDetailScreen
 import com.sharemyththing.ui.edit.EditItemScreen
 import com.sharemyththing.ui.list.ItemListScreen
@@ -62,6 +63,7 @@ fun AppNavHost(
 
     BackHandler(enabled = screen != AppScreen.List) {
         screen = when (screen) {
+            is AppScreen.QrTips -> AppScreen.QrDetail((screen as AppScreen.QrTips).itemId)
             is AppScreen.PickSlotItem -> AppScreen.TilesComplications
             AppScreen.TilesComplications -> AppScreen.List
             is AppScreen.Edit -> screenAfterEditCancel()
@@ -112,8 +114,13 @@ fun AppNavHost(
                 QrDetailScreen(
                     item = item,
                     onEditClick = { openEdit(item) },
+                    onTipsClick = { screen = AppScreen.QrTips(item.id) },
                 )
             } ?: run { screen = AppScreen.List }
+        }
+
+        is AppScreen.QrTips -> {
+            QrTipsScreen()
         }
 
         is AppScreen.TextDetail -> {

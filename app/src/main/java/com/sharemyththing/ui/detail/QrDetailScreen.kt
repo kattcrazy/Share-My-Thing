@@ -2,12 +2,15 @@ package com.sharemyththing.ui.detail
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
@@ -61,6 +64,7 @@ private fun Modifier.bleedHorizontal(start: Dp, end: Dp): Modifier = layout { me
 fun QrDetailScreen(
     item: DisplayItem,
     onEditClick: () -> Unit,
+    onTipsClick: () -> Unit,
 ) {
     var qrBitmap by remember(item.content) { mutableStateOf<android.graphics.Bitmap?>(null) }
 
@@ -143,14 +147,20 @@ fun QrDetailScreen(
                                 textAlign = TextAlign.Center,
                             )
 
-                            Box(
+                            Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .padding(top = 28.dp, bottom = 24.dp),
-                                contentAlignment = Alignment.Center,
+                                horizontalArrangement = Arrangement.Center,
+                                verticalAlignment = Alignment.CenterVertically,
                             ) {
                                 DetailEditButton(
                                     onEditClick = onEditClick,
+                                    transformation = SurfaceTransformation(transformationSpec),
+                                )
+                                Spacer(modifier = Modifier.width(12.dp))
+                                DetailHelpButton(
+                                    onHelpClick = onTipsClick,
                                     transformation = SurfaceTransformation(transformationSpec),
                                 )
                             }

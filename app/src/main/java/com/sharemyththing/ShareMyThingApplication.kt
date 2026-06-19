@@ -17,7 +17,6 @@ class ShareMyThingApplication : Application() {
         repository = ItemsRepository(this)
         applicationScope.launch {
             repository.initializeOnLaunch()
-            repository.requestSurfaceUpdates()
         }
     }
 }
