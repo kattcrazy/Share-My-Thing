@@ -1,6 +1,6 @@
 # <img src="app_mark.png" alt="Share My Thing icon" width="36" /> Share My Thing <img src="app_mark.png" alt="Share My Thing icon" width="36" />
 
-A Wear OS app that enables you to share links, contact details, and more via QR code or plain text. An optional phone companion app makes editing easier and allows for multi-line editing with near-instant sync. No account creation required.
+A Wear OS app that enables you to share links, contact details, and more via QR code or plain text. An optional phone companion app makes editing easier and allows for multi-line content with near-instant sync. No account creation required.
 
 ## Features
 
