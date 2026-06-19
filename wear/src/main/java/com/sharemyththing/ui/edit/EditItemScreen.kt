@@ -1,5 +1,6 @@
 package com.sharemyththing.ui.edit
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -9,8 +10,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.text.BasicTextField
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -18,13 +17,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.wear.compose.foundation.lazy.TransformingLazyColumn
@@ -47,6 +41,11 @@ import com.sharemyththing.data.ItemType
 import com.sharemyththing.data.usesQr
 import com.sharemyththing.ui.bottomScrollSpacer
 
+private enum class EditFieldTarget {
+    Title,
+    Content,
+}
+
 @Composable
 fun EditItemScreen(
     existingItem: DisplayItem?,
@@ -65,8 +64,79 @@ fun EditItemScreen(
     }
     var showDeleteConfirm by remember { mutableStateOf(false) }
     var validationError by remember { mutableStateOf<String?>(null) }
+    var activeField by remember { mutableStateOf<EditFieldTarget?>(null) }
     val validationRequiredMessage = stringResource(R.string.validation_required)
+    val titleLabel = stringResource(R.string.field_title)
+    val contentLabel = stringResource(R.string.field_content)
 
+    BackHandler(enabled = activeField != null) {
+        activeField = null
+    }
+
+    when (activeField) {
+        EditFieldTarget.Title -> {
+            EditFieldScreen(
+                fieldLabel = titleLabel,
+                value = title,
+                onValueChange = {
+                    title = it
+                    validationError = null
+                },
+                onDone = { activeField = null },
+            )
+        }
+
+        EditFieldTarget.Content -> {
+            EditFieldScreen(
+                fieldLabel = contentLabel,
+                value = content,
+                onValueChange = {
+                    content = it
+                    validationError = null
+                },
+                onDone = { activeField = null },
+                keyboardType = if (type.usesQr) KeyboardType.Uri else KeyboardType.Text,
+            )
+        }
+
+        null -> EditItemMainScreen(
+            existingItem = existingItem,
+            title = title,
+            content = content,
+            type = type,
+            validationError = validationError,
+            showDeleteConfirm = showDeleteConfirm,
+            validationRequiredMessage = validationRequiredMessage,
+            onTitleClick = { activeField = EditFieldTarget.Title },
+            onContentClick = { activeField = EditFieldTarget.Content },
+            onTypeChange = { type = it },
+            onSave = onSave,
+            onDelete = onDelete,
+            onCancel = onCancel,
+            onShowDeleteConfirm = { showDeleteConfirm = true },
+            onValidationFailed = { validationError = validationRequiredMessage },
+        )
+    }
+}
+
+@Composable
+private fun EditItemMainScreen(
+    existingItem: DisplayItem?,
+    title: String,
+    content: String,
+    type: ItemType,
+    validationError: String?,
+    showDeleteConfirm: Boolean,
+    validationRequiredMessage: String,
+    onTitleClick: () -> Unit,
+    onContentClick: () -> Unit,
+    onTypeChange: (ItemType) -> Unit,
+    onSave: (title: String, content: String, type: ItemType) -> Unit,
+    onDelete: (() -> Unit)?,
+    onCancel: () -> Unit,
+    onShowDeleteConfirm: () -> Unit,
+    onValidationFailed: () -> Unit,
+) {
     AppScaffold {
         val listState = rememberTransformingLazyColumnState()
         val transformationSpec = rememberTransformationSpec()
@@ -90,13 +160,10 @@ fun EditItemScreen(
                 }
 
                 item {
-                    WearEditableField(
+                    WearFieldSummaryRow(
                         fieldLabel = stringResource(R.string.field_title),
                         value = title,
-                        onValueChange = { updated ->
-                            title = updated
-                            validationError = null
-                        },
+                        onClick = onTitleClick,
                         modifier = Modifier
                             .fillMaxWidth()
                             .transformedHeight(this, transformationSpec),
@@ -104,14 +171,10 @@ fun EditItemScreen(
                 }
 
                 item {
-                    WearEditableField(
+                    WearFieldSummaryRow(
                         fieldLabel = stringResource(R.string.field_content),
                         value = content,
-                        onValueChange = { updated ->
-                            content = updated
-                            validationError = null
-                        },
-                        keyboardType = if (type.usesQr) KeyboardType.Uri else KeyboardType.Text,
+                        onClick = onContentClick,
                         modifier = Modifier
                             .fillMaxWidth()
                             .transformedHeight(this, transformationSpec),
@@ -130,13 +193,13 @@ fun EditItemScreen(
                             selected = type == ItemType.TEXT,
                             iconRes = R.drawable.ic_item_text,
                             contentDescription = stringResource(R.string.type_text),
-                            onClick = { type = ItemType.TEXT },
+                            onClick = { onTypeChange(ItemType.TEXT) },
                             modifier = Modifier.weight(1f),
                             transformation = SurfaceTransformation(transformationSpec),
                         )
                         TypeBothToggle(
                             selected = type == ItemType.BOTH,
-                            onClick = { type = ItemType.BOTH },
+                            onClick = { onTypeChange(ItemType.BOTH) },
                             modifier = Modifier.weight(1f),
                             transformation = SurfaceTransformation(transformationSpec),
                         )
@@ -144,7 +207,7 @@ fun EditItemScreen(
                             selected = type == ItemType.QR_CODE,
                             iconRes = R.drawable.ic_item_qr,
                             contentDescription = stringResource(R.string.type_qr),
-                            onClick = { type = ItemType.QR_CODE },
+                            onClick = { onTypeChange(ItemType.QR_CODE) },
                             modifier = Modifier.weight(1f),
                             transformation = SurfaceTransformation(transformationSpec),
                         )
@@ -167,7 +230,7 @@ fun EditItemScreen(
                     Button(
                         onClick = {
                             if (title.isBlank() || content.isBlank()) {
-                                validationError = validationRequiredMessage
+                                onValidationFailed()
                             } else {
                                 onSave(title.trim(), content.trim(), type)
                             }
@@ -204,7 +267,7 @@ fun EditItemScreen(
                                 if (showDeleteConfirm) {
                                     onDelete()
                                 } else {
-                                    showDeleteConfirm = true
+                                    onShowDeleteConfirm()
                                 }
                             },
                             modifier = Modifier
@@ -234,75 +297,44 @@ fun EditItemScreen(
 }
 
 @Composable
-private fun WearEditableField(
+private fun WearFieldSummaryRow(
     fieldLabel: String,
     value: String,
-    onValueChange: (String) -> Unit,
+    onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    keyboardType: KeyboardType = KeyboardType.Text,
 ) {
-    val focusRequester = remember { FocusRequester() }
-
     Row(
         modifier = modifier
             .padding(horizontal = 12.dp, vertical = 8.dp)
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = null,
-            ) { focusRequester.requestFocus() },
+                onClick = onClick,
+            ),
         verticalAlignment = Alignment.Top,
     ) {
-        BasicTextField(
-            value = value,
-            onValueChange = onValueChange,
-            textStyle = MaterialTheme.typography.bodyMedium.copy(
-                color = androidx.compose.ui.graphics.Color.Transparent,
-            ),
-            cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
-            keyboardOptions = KeyboardOptions(
-                capitalization = KeyboardCapitalization.Sentences,
-                keyboardType = keyboardType,
-                imeAction = ImeAction.Done,
-            ),
-            modifier = Modifier
-                .weight(1f)
-                .focusRequester(focusRequester),
-            decorationBox = { innerTextField ->
-                Column(modifier = Modifier.fillMaxWidth()) {
-                    Text(
-                        text = fieldLabel,
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                    Box(modifier = Modifier.fillMaxWidth()) {
-                        if (value.isEmpty()) {
-                            Text(
-                                text = fieldLabel,
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            )
-                        } else {
-                            Text(
-                                text = value,
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurface,
-                            )
-                        }
-                        innerTextField()
-                    }
-                }
-            },
-        )
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = fieldLabel,
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Text(
+                text = value.ifBlank { fieldLabel },
+                style = MaterialTheme.typography.bodyMedium,
+                color = if (value.isBlank()) {
+                    MaterialTheme.colorScheme.onSurfaceVariant
+                } else {
+                    MaterialTheme.colorScheme.onSurface
+                },
+            )
+        }
         Icon(
             painter = painterResource(R.drawable.ic_edit),
             contentDescription = stringResource(R.string.edit_item),
             modifier = Modifier
                 .padding(start = 8.dp)
-                .size(24.dp)
-                .clickable(
-                    interactionSource = remember { MutableInteractionSource() },
-                    indication = null,
-                ) { focusRequester.requestFocus() },
+                .size(24.dp),
             tint = MaterialTheme.colorScheme.onSurfaceVariant,
         )
     }
