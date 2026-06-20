@@ -31,6 +31,7 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withLink
 import androidx.compose.ui.unit.dp
 import com.sharemyththing.R
+import com.sharemyththing.presentation.theme.appNameTextStyle
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -80,7 +81,7 @@ fun AboutScreen(
         ) {
             Text(
                 text = stringResource(R.string.app_name_short),
-                style = MaterialTheme.typography.headlineSmall,
+                style = appNameTextStyle(MaterialTheme.typography.headlineSmall),
             )
 
             Text(

@@ -27,7 +27,6 @@ fun AppNavHost(
     onStartItemHandled: () -> Unit,
     startSurfaceSlot: SurfaceSlot?,
     onStartSurfaceSlotHandled: () -> Unit,
-    onSyncClick: () -> Unit,
 ) {
     var screen by remember { mutableStateOf<AppScreen>(AppScreen.List) }
     var detailItem by remember { mutableStateOf<DisplayItem?>(null) }
@@ -36,6 +35,7 @@ fun AppNavHost(
     val items by viewModel.items.collectAsState()
     val slotAssignments by viewModel.slotAssignments.collectAsState()
     val surfacesPlacedOnWatch by viewModel.surfacesPlacedOnWatch.collectAsState()
+    val syncFeedback by viewModel.syncFeedback.collectAsState()
 
     fun openItem(item: DisplayItem) {
         detailItem = item
@@ -108,7 +108,9 @@ fun AppNavHost(
                 },
                 onTilesComplicationsClick = { screen = AppScreen.TilesComplications },
                 onCommitItemOrder = viewModel::commitItemOrder,
-                onSyncClick = onSyncClick,
+                onSyncClick = { viewModel.syncWithWatch(manual = true) },
+                syncFeedback = syncFeedback,
+                onSyncFeedbackShown = viewModel::clearSyncFeedback,
             )
         }
 

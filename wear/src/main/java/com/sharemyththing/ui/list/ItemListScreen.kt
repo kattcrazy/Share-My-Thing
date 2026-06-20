@@ -1,6 +1,11 @@
 package com.sharemyththing.ui.list
 
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -41,8 +46,10 @@ import androidx.wear.compose.material3.lazy.rememberTransformationSpec
 import androidx.wear.compose.material3.lazy.transformedHeight
 import com.sharemyththing.R
 import com.sharemyththing.data.DisplayItem
+import com.sharemyththing.ui.SyncFeedback
 import com.sharemyththing.ui.edgeButtonBottomScrollSpacer
 import com.sharemyththing.ui.edgeButtonTopScrollSpacer
+import kotlinx.coroutines.delay
 
 @Composable
 fun ItemListScreen(
@@ -52,13 +59,45 @@ fun ItemListScreen(
     onTilesComplicationsClick: () -> Unit,
     onCommitItemOrder: (List<Long>) -> Unit,
     onSyncClick: () -> Unit,
+    syncFeedback: SyncFeedback?,
+    onSyncFeedbackShown: () -> Unit,
 ) {
     var listItems by remember { mutableStateOf(items) }
+
+    val isSyncing = syncFeedback == SyncFeedback.Syncing
+    val isSyncError = syncFeedback is SyncFeedback.Error || syncFeedback == SyncFeedback.NoWatchConnected
+
+    LaunchedEffect(syncFeedback) {
+        when (syncFeedback) {
+            SyncFeedback.Success -> {
+                delay(SYNC_SUCCESS_DISPLAY_MS)
+                onSyncFeedbackShown()
+            }
+            is SyncFeedback.Error, SyncFeedback.NoWatchConnected -> {
+                delay(SYNC_ERROR_DISPLAY_MS)
+                onSyncFeedbackShown()
+            }
+            else -> Unit
+        }
+    }
+
+    val infiniteTransition = rememberInfiniteTransition(label = "syncSpin")
+    val spinningRotation by infiniteTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = 360f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = 900, easing = LinearEasing),
+            repeatMode = RepeatMode.Restart,
+        ),
+        label = "syncRotation",
+    )
+    val syncRotation = if (isSyncing) spinningRotation else 0f
 
     val listState = rememberTransformingLazyColumnState()
     val transformationSpec = rememberTransformationSpec()
     val reorderState = rememberWearListReorderState(
         itemCount = { listItems.size },
+        indexOfItem = { id -> listItems.indexOfFirst { it.id == id } },
         onMove = { from, to ->
             listItems = listItems.toMutableList().apply {
                 add(to, removeAt(from))
@@ -107,19 +146,33 @@ fun ItemListScreen(
                     ) {
                         Button(
                             onClick = onSyncClick,
+                            enabled = !isSyncing,
                             modifier = Modifier
                                 .size(44.dp)
                                 .clip(CircleShape),
                             transformation = SurfaceTransformation(transformationSpec),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                                contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
-                            ),
+                            colors = if (isSyncError) {
+                                ButtonDefaults.buttonColors(
+                                    containerColor = MaterialTheme.colorScheme.errorContainer,
+                                    contentColor = MaterialTheme.colorScheme.onErrorContainer,
+                                    disabledContainerColor = MaterialTheme.colorScheme.errorContainer,
+                                    disabledContentColor = MaterialTheme.colorScheme.onErrorContainer,
+                                )
+                            } else {
+                                ButtonDefaults.buttonColors(
+                                    containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                                    contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                                )
+                            },
                         ) {
                             Icon(
                                 imageVector = Icons.Outlined.Sync,
                                 contentDescription = stringResource(R.string.sync_with_watch),
-                                modifier = Modifier.size(20.dp),
+                                modifier = Modifier
+                                    .size(20.dp)
+                                    .graphicsLayer {
+                                        rotationZ = syncRotation
+                                    },
                             )
                         }
                     }
@@ -139,9 +192,9 @@ fun ItemListScreen(
                         )
                     }
                 } else {
-                    listItems.forEachIndexed { index, item ->
+                    listItems.forEach { item ->
                         item(key = item.id) {
-                            val isDragging = reorderState.draggingIndex == index
+                            val isDragging = reorderState.draggingItemId == item.id
                             val scale by animateFloatAsState(
                                 targetValue = if (isDragging) DRAGGING_ITEM_SCALE else 1f,
                                 animationSpec = tween(durationMillis = 150),
@@ -151,7 +204,13 @@ fun ItemListScreen(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .zIndex(if (isDragging) DRAGGING_ITEM_Z_INDEX else 0f)
-                                    .animateItem()
+                                    .then(
+                                        if (reorderState.isDragging) {
+                                            Modifier
+                                        } else {
+                                            Modifier.animateItem()
+                                        },
+                                    )
                                     .transformedHeight(this, transformationSpec)
                                     .graphicsLayer {
                                         scaleX = scale
@@ -175,7 +234,7 @@ fun ItemListScreen(
                                             imageVector = Icons.Filled.DragHandle,
                                             contentDescription = stringResource(R.string.reorder_drag_handle),
                                             modifier = Modifier
-                                                .wearListReorderHandle(reorderState, index)
+                                                .wearListReorderHandle(reorderState, item.id)
                                                 .padding(start = 4.dp, end = 8.dp)
                                                 .size(18.dp),
                                             tint = MaterialTheme.colorScheme.onPrimary,
@@ -216,3 +275,5 @@ fun ItemListScreen(
 
 private const val DRAGGING_ITEM_SCALE = 0.92f
 private const val DRAGGING_ITEM_Z_INDEX = 100f
+private const val SYNC_SUCCESS_DISPLAY_MS = 600L
+private const val SYNC_ERROR_DISPLAY_MS = 2_500L

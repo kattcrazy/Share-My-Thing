@@ -46,6 +46,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.sharemyththing.R
+import com.sharemyththing.presentation.theme.appNameTextStyle
 import com.sharemyththing.data.DisplayItem
 import com.sharemyththing.ui.SyncFeedback
 import com.sharemyththing.ui.components.SupportBanner
@@ -143,7 +144,12 @@ fun ItemListScreen(
         topBar = {
             Column {
                 TopAppBar(
-                    title = { Text(stringResource(R.string.app_name_short)) },
+                    title = {
+                        Text(
+                            text = stringResource(R.string.app_name_short),
+                            style = appNameTextStyle(),
+                        )
+                    },
                     actions = {
                         IconButton(onClick = onAboutClick) {
                             Icon(

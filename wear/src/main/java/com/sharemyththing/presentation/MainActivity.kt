@@ -12,17 +12,19 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
-import androidx.lifecycle.lifecycleScope
 import com.sharemyththing.ShareMyThingApplication
 import com.sharemyththing.data.SurfaceSlot
 import com.sharemyththing.presentation.theme.ShareMyThingTheme
 import com.sharemyththing.ui.ItemsViewModel
 import com.sharemyththing.ui.navigation.AppNavHost
-import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
     private val viewModel: ItemsViewModel by viewModels {
-        ItemsViewModel.Factory((application as ShareMyThingApplication).repository)
+        val app = application as ShareMyThingApplication
+        ItemsViewModel.Factory(
+            repository = app.repository,
+            syncRepository = app.syncRepository,
+        )
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -33,8 +35,6 @@ class MainActivity : ComponentActivity() {
             if (id == NO_ITEM_ID) null else id
         }
         val startSurfaceSlot = SurfaceSlot.fromName(intent.getStringExtra(EXTRA_SURFACE_SLOT))
-
-        val app = application as ShareMyThingApplication
 
         setContent {
             ShareMyThingTheme {
@@ -47,11 +47,6 @@ class MainActivity : ComponentActivity() {
                     onStartItemHandled = { pendingStartItemId = NO_ITEM_ID },
                     startSurfaceSlot = pendingStartSurfaceSlot,
                     onStartSurfaceSlotHandled = { pendingStartSurfaceSlot = null },
-                    onSyncClick = {
-                        lifecycleScope.launch {
-                            runCatching { app.syncRepository.syncWithWatch() }
-                        }
-                    },
                 )
             }
         }
@@ -59,10 +54,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onResume() {
         super.onResume()
-        val app = application as ShareMyThingApplication
-        lifecycleScope.launch {
-            runCatching { app.syncRepository.syncWithWatch() }
-        }
+        viewModel.syncWithWatch(manual = false)
     }
 
     override fun onNewIntent(intent: Intent) {

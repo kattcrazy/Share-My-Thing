@@ -7,13 +7,25 @@ import com.sharemyththing.data.DisplayItem
 import com.sharemyththing.data.ItemType
 import com.sharemyththing.data.ItemsRepository
 import com.sharemyththing.data.SurfaceSlot
+import com.sharemyththing.sync.SyncRepository
+import com.sharemyththing.sync.SyncResult
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
+sealed interface SyncFeedback {
+    data object Syncing : SyncFeedback
+    data object Success : SyncFeedback
+    data object NoWatchConnected : SyncFeedback
+    data class Error(val message: String) : SyncFeedback
+}
+
 class ItemsViewModel(
     private val repository: ItemsRepository,
+    private val syncRepository: SyncRepository,
 ) : ViewModel() {
     val items: StateFlow<List<DisplayItem>> =
         repository.items.stateIn(
@@ -36,7 +48,43 @@ class ItemsViewModel(
             initialValue = emptySet(),
         )
 
+    private val _syncFeedback = MutableStateFlow<SyncFeedback?>(null)
+    val syncFeedback: StateFlow<SyncFeedback?> = _syncFeedback.asStateFlow()
+
     suspend fun getItem(id: Long): DisplayItem? = repository.getItem(id)
+
+    fun syncWithWatch(manual: Boolean = false) {
+        viewModelScope.launch {
+            if (manual) {
+                _syncFeedback.value = SyncFeedback.Syncing
+            }
+            reportSyncResult(syncRepository.syncWithWatch(), manual = manual)
+        }
+    }
+
+    private fun reportSyncResult(result: SyncResult, manual: Boolean) {
+        when (result) {
+            SyncResult.Success -> {
+                if (manual) {
+                    _syncFeedback.value = SyncFeedback.Success
+                }
+            }
+            SyncResult.NoWatchConnected -> {
+                if (manual) {
+                    _syncFeedback.value = SyncFeedback.NoWatchConnected
+                }
+            }
+            is SyncResult.Error -> {
+                if (manual) {
+                    _syncFeedback.value = SyncFeedback.Error(result.message)
+                }
+            }
+        }
+    }
+
+    fun clearSyncFeedback() {
+        _syncFeedback.value = null
+    }
 
     fun saveItem(
         id: Long?,
@@ -84,10 +132,11 @@ class ItemsViewModel(
 
     class Factory(
         private val repository: ItemsRepository,
+        private val syncRepository: SyncRepository,
     ) : ViewModelProvider.Factory {
         @Suppress("UNCHECKED_CAST")
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
-            return ItemsViewModel(repository) as T
+            return ItemsViewModel(repository, syncRepository) as T
         }
     }
 }
