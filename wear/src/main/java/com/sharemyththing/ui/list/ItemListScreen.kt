@@ -22,6 +22,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -50,6 +51,7 @@ import com.sharemyththing.ui.SyncFeedback
 import com.sharemyththing.ui.edgeButtonBottomScrollSpacer
 import com.sharemyththing.ui.edgeButtonTopScrollSpacer
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 @Composable
 fun ItemListScreen(
@@ -95,6 +97,7 @@ fun ItemListScreen(
 
     val listState = rememberTransformingLazyColumnState()
     val transformationSpec = rememberTransformationSpec()
+    val scope = rememberCoroutineScope()
     val reorderState = rememberWearListReorderState(
         itemCount = { listItems.size },
         indexOfItem = { id -> listItems.indexOfFirst { it.id == id } },
@@ -104,7 +107,10 @@ fun ItemListScreen(
             }
         },
         onDragEnd = {
-            onCommitItemOrder(listItems.map { it.id })
+            val orderedIds = listItems.map { it.id }
+            scope.launch {
+                onCommitItemOrder(orderedIds)
+            }
         },
     )
 
@@ -204,13 +210,6 @@ fun ItemListScreen(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .zIndex(if (isDragging) DRAGGING_ITEM_Z_INDEX else 0f)
-                                    .then(
-                                        if (reorderState.isDragging) {
-                                            Modifier
-                                        } else {
-                                            Modifier.animateItem()
-                                        },
-                                    )
                                     .transformedHeight(this, transformationSpec)
                                     .graphicsLayer {
                                         scaleX = scale
