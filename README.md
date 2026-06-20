@@ -27,3 +27,7 @@ This project uses the [GNU General Public License v3.0](https://www.gnu.org/lice
 Inspired by my own need to be able to share my website link, phone number, and have contact details easily accessible on the watchface. Please [open an issue](https://github.com/kattcrazy/Share-My-Thing/issues) if something breaks or you have an idea.
 
 If Share My Thing is helpful, consider supporting me [here](https://kattcrazy.nz/product/support-me/) :)
+
+Fun stats...
+
+![Alt](https://repobeats.axiom.co/api/embed/72f608b99914a6e47ee606eb0beb13f556ef41e0.svg "Repobeats analytics image")
