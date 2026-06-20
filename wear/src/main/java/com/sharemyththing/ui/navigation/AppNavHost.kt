@@ -32,10 +32,11 @@ fun AppNavHost(
     var detailItem by remember { mutableStateOf<DisplayItem?>(null) }
     var editItem by remember { mutableStateOf<DisplayItem?>(null) }
 
-    val items by viewModel.items.collectAsState()
+    val watchVisibleItems by viewModel.watchVisibleItems.collectAsState()
     val slotAssignments by viewModel.slotAssignments.collectAsState()
     val surfacesPlacedOnWatch by viewModel.surfacesPlacedOnWatch.collectAsState()
     val syncFeedback by viewModel.syncFeedback.collectAsState()
+    val isPeerAvailable by viewModel.isPeerAvailable.collectAsState()
 
     fun openItem(item: DisplayItem) {
         detailItem = item
@@ -72,9 +73,9 @@ fun AppNavHost(
         }
     }
 
-    LaunchedEffect(startItemId, items) {
+    LaunchedEffect(startItemId, watchVisibleItems) {
         val itemId = startItemId ?: return@LaunchedEffect
-        items.firstOrNull { it.id == itemId }?.let { item ->
+        watchVisibleItems.firstOrNull { it.id == itemId }?.let { item ->
             openItem(item)
             onStartItemHandled()
         }
@@ -82,7 +83,9 @@ fun AppNavHost(
 
     LaunchedEffect(startSurfaceSlot) {
         val slot = startSurfaceSlot ?: return@LaunchedEffect
-        screen = AppScreen.PickSlotItem(slot)
+        if (slot.isWatchSurface) {
+            screen = AppScreen.PickSlotItem(slot)
+        }
         onStartSurfaceSlotHandled()
     }
 
@@ -100,14 +103,14 @@ fun AppNavHost(
     when (screen) {
         AppScreen.List -> {
             ItemListScreen(
-                items = items,
+                items = watchVisibleItems,
+                isPeerAvailable = isPeerAvailable,
                 onItemClick = ::openItem,
                 onAddClick = {
                     editItem = null
                     screen = AppScreen.Edit()
                 },
                 onTilesComplicationsClick = { screen = AppScreen.TilesComplications },
-                onCommitItemOrder = viewModel::commitItemOrder,
                 onSyncClick = { viewModel.syncWithWatch(manual = true) },
                 syncFeedback = syncFeedback,
                 onSyncFeedbackShown = viewModel::clearSyncFeedback,
@@ -167,7 +170,7 @@ fun AppNavHost(
 
         AppScreen.TilesComplications -> {
             TilesComplicationsScreen(
-                items = items,
+                items = watchVisibleItems,
                 surfacesPlacedOnWatch = surfacesPlacedOnWatch,
                 slotAssignments = slotAssignments,
                 onSlotClick = { slot -> screen = AppScreen.PickSlotItem(slot) },
@@ -178,7 +181,7 @@ fun AppNavHost(
             val pickSlotScreen = screen as AppScreen.PickSlotItem
             SlotItemPickerScreen(
                 slot = pickSlotScreen.slot,
-                items = items,
+                items = watchVisibleItems,
                 selectedItemId = slotAssignments[pickSlotScreen.slot],
                 onSelectItem = { itemId ->
                     viewModel.setSlotItemId(pickSlotScreen.slot, itemId)

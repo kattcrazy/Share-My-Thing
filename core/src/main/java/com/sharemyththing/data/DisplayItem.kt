@@ -18,6 +18,7 @@ data class DisplayItem(
     val sortOrder: Int = 0,
     val updatedAtMillis: Long = 0L,
     val deleted: Boolean = false,
+    val visibleOnWatch: Boolean = true,
 ) {
     companion object {
         fun newItem(

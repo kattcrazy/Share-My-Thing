@@ -11,7 +11,7 @@ import java.util.UUID
 
 @Database(
     entities = [DisplayItem::class],
-    version = 3,
+    version = 4,
     exportSchema = false,
 )
 @TypeConverters(ItemTypeConverters::class)
@@ -75,6 +75,14 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
+        private val MIGRATION_3_4 = object : Migration(3, 4) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    "ALTER TABLE display_items ADD COLUMN visibleOnWatch INTEGER NOT NULL DEFAULT 1",
+                )
+            }
+        }
+
         fun getInstance(context: Context): AppDatabase {
             return instance ?: synchronized(this) {
                 instance ?: Room.databaseBuilder(
@@ -82,7 +90,7 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "share_my_thing.db",
                 )
-                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
+                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)
                     .build()
                     .also { instance = it }
             }

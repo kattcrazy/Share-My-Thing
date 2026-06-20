@@ -23,6 +23,66 @@
             </intent-filter>
         </activity>
 
+        <receiver
+            android:name=".widget.PhoneWidget1Receiver"
+            android:exported="true"
+            android:label="@string/phone_widget_1">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/phone_widget_info" />
+        </receiver>
+
+        <receiver
+            android:name=".widget.PhoneWidget2Receiver"
+            android:exported="true"
+            android:label="@string/phone_widget_2">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/phone_widget_info" />
+        </receiver>
+
+        <receiver
+            android:name=".widget.PhoneWidget3Receiver"
+            android:exported="true"
+            android:label="@string/phone_widget_3">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/phone_widget_info" />
+        </receiver>
+
+        <receiver
+            android:name=".widget.PhoneWidget4Receiver"
+            android:exported="true"
+            android:label="@string/phone_widget_4">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/phone_widget_info" />
+        </receiver>
+
+        <receiver
+            android:name=".widget.PhoneWidget5Receiver"
+            android:exported="true"
+            android:label="@string/phone_widget_5">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/phone_widget_info" />
+        </receiver>
+
     </application>
 
 </manifest>

@@ -15,4 +15,10 @@ val SurfaceSlot.labelRes: Int
         SurfaceSlot.COMPLICATION_3 -> R.string.complication_3
         SurfaceSlot.COMPLICATION_4 -> R.string.complication_4
         SurfaceSlot.COMPLICATION_5 -> R.string.complication_5
+        SurfaceSlot.PHONE_WIDGET_1,
+        SurfaceSlot.PHONE_WIDGET_2,
+        SurfaceSlot.PHONE_WIDGET_3,
+        SurfaceSlot.PHONE_WIDGET_4,
+        SurfaceSlot.PHONE_WIDGET_5,
+        -> R.string.surface_not_set
     }

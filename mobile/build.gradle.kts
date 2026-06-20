@@ -69,6 +69,8 @@ dependencies {
     implementation("androidx.compose.material:material-icons-extended")
     implementation(libs.androidx.navigation.compose)
     implementation(libs.reorderable)
+    implementation(libs.androidx.glance.appwidget)
+    implementation(libs.androidx.glance.material3)
 
     debugImplementation(libs.compose.ui.tooling.preview)
     debugImplementation("androidx.compose.ui:ui-tooling")

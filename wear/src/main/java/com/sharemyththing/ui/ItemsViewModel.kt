@@ -1,5 +1,6 @@
 package com.sharemyththing.ui
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
@@ -7,6 +8,7 @@ import com.sharemyththing.data.DisplayItem
 import com.sharemyththing.data.ItemType
 import com.sharemyththing.data.ItemsRepository
 import com.sharemyththing.data.SurfaceSlot
+import com.sharemyththing.sync.PeerAvailability
 import com.sharemyththing.sync.SyncRepository
 import com.sharemyththing.sync.SyncResult
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -26,13 +28,22 @@ sealed interface SyncFeedback {
 class ItemsViewModel(
     private val repository: ItemsRepository,
     private val syncRepository: SyncRepository,
+    appContext: Context,
 ) : ViewModel() {
-    val items: StateFlow<List<DisplayItem>> =
-        repository.items.stateIn(
+    val watchVisibleItems: StateFlow<List<DisplayItem>> =
+        repository.watchVisibleItems.stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5_000),
             initialValue = emptyList(),
         )
+
+    val isPeerAvailable: StateFlow<Boolean> =
+        PeerAvailability.observePeerConnected(appContext)
+            .stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.WhileSubscribed(5_000),
+                initialValue = false,
+            )
 
     val slotAssignments: StateFlow<Map<SurfaceSlot, Long?>> =
         repository.slotAssignments.stateIn(
@@ -102,8 +113,9 @@ class ItemsViewModel(
                     title = title.trim(),
                     content = content.trim(),
                     type = type,
-                    sortOrder = existing?.sortOrder ?: items.value.size,
+                    sortOrder = existing?.sortOrder ?: watchVisibleItems.value.size,
                     updatedAtMillis = existing?.updatedAtMillis ?: 0L,
+                    visibleOnWatch = existing?.visibleOnWatch ?: true,
                 ),
             )
             onSaved(savedId)
@@ -123,20 +135,14 @@ class ItemsViewModel(
         }
     }
 
-    fun commitItemOrder(orderedIds: List<Long>) {
-        if (orderedIds.isEmpty()) return
-        viewModelScope.launch {
-            repository.reorderItems(orderedIds)
-        }
-    }
-
     class Factory(
         private val repository: ItemsRepository,
         private val syncRepository: SyncRepository,
+        private val appContext: Context,
     ) : ViewModelProvider.Factory {
         @Suppress("UNCHECKED_CAST")
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
-            return ItemsViewModel(repository, syncRepository) as T
+            return ItemsViewModel(repository, syncRepository, appContext) as T
         }
     }
 }

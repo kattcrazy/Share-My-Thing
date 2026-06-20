@@ -6,6 +6,7 @@ import com.sharemyththing.data.ItemsRepository
 import com.sharemyththing.sync.SyncFeedbackBridge
 import com.sharemyththing.sync.SyncPaths
 import com.sharemyththing.sync.SyncRepository
+import com.sharemyththing.widget.PhoneWidgetUpdater
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -17,13 +18,16 @@ class ShareMyThingApplication : Application() {
 
     lateinit var repository: ItemsRepository
         private set
+    lateinit var surfaceUpdater: PhoneWidgetUpdater
+        private set
     lateinit var syncRepository: SyncRepository
         private set
 
     override fun onCreate() {
         super.onCreate()
-        repository = ItemsRepository(this)
-        syncRepository = SyncRepository(this, repository)
+        surfaceUpdater = PhoneWidgetUpdater(this, applicationScope)
+        repository = ItemsRepository(this, surfaceUpdater)
+        syncRepository = SyncRepository(this, repository, surfaceUpdater)
         repository.onLocalDataChanged = {
             applicationScope.launch {
                 SyncFeedbackBridge.emitFailure(syncRepository.syncWithWatch())
@@ -36,6 +40,9 @@ class ShareMyThingApplication : Application() {
         applicationScope.launch {
             Wearable.getCapabilityClient(this@ShareMyThingApplication)
                 .addLocalCapability(SyncPaths.CAPABILITY)
+        }
+        applicationScope.launch {
+            surfaceUpdater.requestUpdateAll()
         }
     }
 }

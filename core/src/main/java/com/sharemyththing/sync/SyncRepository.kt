@@ -2,9 +2,7 @@ package com.sharemyththing.sync
 
 import android.content.Context
 import com.google.android.gms.tasks.Tasks
-import com.google.android.gms.wearable.CapabilityClient
 import com.google.android.gms.wearable.MessageClient
-import com.google.android.gms.wearable.Node
 import com.google.android.gms.wearable.Wearable
 import com.sharemyththing.data.ItemsRepository
 import com.sharemyththing.data.SurfaceUpdateListener
@@ -44,7 +42,7 @@ class SyncRepository(
 
     suspend fun syncWithWatch(): SyncResult = outgoingMutex.withLock {
         runCatching {
-            val node = findPeerNode() ?: return SyncResult.NoWatchConnected
+            val node = PeerAvailability.findPeerNode(appContext) ?: return SyncResult.NoWatchConnected
             val localPayload = itemsRepository.buildSyncPayload()
             val responseBytes = withTimeout(SYNC_RESPONSE_TIMEOUT_MS) {
                 Wearable.getMessageClient(appContext)
@@ -73,19 +71,6 @@ class SyncRepository(
                 surfaceUpdateListener = surfaceUpdateListener,
             )
         }
-    }
-
-    private suspend fun findPeerNode(): Node? {
-        val localNodeId = Wearable.getNodeClient(appContext).localNode.await().id
-        val capabilityNodes = runCatching {
-            Wearable.getCapabilityClient(appContext)
-                .getCapability(SyncPaths.CAPABILITY, CapabilityClient.FILTER_REACHABLE)
-                .await()
-                .nodes
-        }.getOrDefault(emptySet())
-        capabilityNodes.firstOrNull { it.id != localNodeId }?.let { return it }
-        val connectedNodes = Wearable.getNodeClient(appContext).connectedNodes.await()
-        return connectedNodes.firstOrNull { it.isNearby } ?: connectedNodes.firstOrNull()
     }
 
     private companion object {

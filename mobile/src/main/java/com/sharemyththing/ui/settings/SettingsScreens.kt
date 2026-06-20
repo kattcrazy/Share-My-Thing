@@ -118,7 +118,7 @@ fun TilesComplicationsScreen(
 }
 
 @Composable
-private fun SlotRow(
+internal fun SlotRow(
     slot: SurfaceSlot,
     items: List<DisplayItem>,
     slotAssignments: Map<SurfaceSlot, Long?>,

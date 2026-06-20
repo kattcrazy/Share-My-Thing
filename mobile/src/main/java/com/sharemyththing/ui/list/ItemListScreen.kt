@@ -12,12 +12,15 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.HelpOutline
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.DragHandle
 import androidx.compose.material.icons.outlined.ChevronRight
+import androidx.compose.material.icons.outlined.Watch
+import androidx.compose.material.icons.outlined.WatchOff
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -58,10 +61,13 @@ import sh.calvin.reorderable.rememberReorderableLazyListState
 @Composable
 fun ItemListScreen(
     items: List<DisplayItem>,
+    isPeerAvailable: Boolean,
     onItemClick: (DisplayItem) -> Unit,
     onAddClick: () -> Unit,
+    onPhoneWidgetsClick: () -> Unit,
     onTilesComplicationsClick: () -> Unit,
     onAboutClick: () -> Unit,
+    onSetVisibleOnWatch: (DisplayItem, Boolean) -> Unit,
     onCommitItemOrder: (List<Long>) -> Unit,
     onSyncClick: () -> Unit,
     syncFeedback: StateFlow<SyncFeedback?>,
@@ -171,73 +177,133 @@ fun ItemListScreen(
             }
         },
     ) { padding ->
-        PullToRefreshBox(
-            isRefreshing = isRefreshing,
-            onRefresh = onSyncClick,
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding),
-        ) {
-            LazyColumn(
-                modifier = Modifier.fillMaxSize(),
-                state = lazyListState,
-                contentPadding = PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
+        val listModifier = Modifier
+            .fillMaxSize()
+            .padding(padding)
+
+        if (isPeerAvailable) {
+            PullToRefreshBox(
+                isRefreshing = isRefreshing,
+                onRefresh = onSyncClick,
+                modifier = listModifier,
             ) {
-            if (listItems.isEmpty()) {
-                item(key = "empty") {
-                    Text(
-                        text = stringResource(R.string.empty_items),
+                ItemListContent(
+                    listItems = listItems,
+                    lazyListState = lazyListState,
+                    isPeerAvailable = isPeerAvailable,
+                    reorderableState = reorderableState,
+                    onItemClick = onItemClick,
+                    onSetVisibleOnWatch = onSetVisibleOnWatch,
+                    onPhoneWidgetsClick = onPhoneWidgetsClick,
+                    onTilesComplicationsClick = onTilesComplicationsClick,
+                )
+            }
+        } else {
+            ItemListContent(
+                listItems = listItems,
+                lazyListState = lazyListState,
+                isPeerAvailable = isPeerAvailable,
+                reorderableState = reorderableState,
+                onItemClick = onItemClick,
+                onSetVisibleOnWatch = onSetVisibleOnWatch,
+                onPhoneWidgetsClick = onPhoneWidgetsClick,
+                onTilesComplicationsClick = onTilesComplicationsClick,
+                modifier = listModifier,
+            )
+        }
+    }
+}
+
+@Composable
+private fun ItemListContent(
+    listItems: List<DisplayItem>,
+    lazyListState: LazyListState,
+    isPeerAvailable: Boolean,
+    reorderableState: sh.calvin.reorderable.ReorderableLazyListState,
+    onItemClick: (DisplayItem) -> Unit,
+    onSetVisibleOnWatch: (DisplayItem, Boolean) -> Unit,
+    onPhoneWidgetsClick: () -> Unit,
+    onTilesComplicationsClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    LazyColumn(
+        modifier = modifier.fillMaxSize(),
+        state = lazyListState,
+        contentPadding = PaddingValues(16.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        if (listItems.isEmpty()) {
+            item(key = "empty") {
+                Text(
+                    text = stringResource(R.string.empty_items),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 8.dp),
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+        } else {
+            items(listItems, key = { it.id }) { item ->
+                ReorderableItem(reorderableState, key = item.id) { isDragging ->
+                    val scale by animateFloatAsState(
+                        targetValue = if (isDragging) DRAGGING_ITEM_SCALE else 1f,
+                        animationSpec = tween(durationMillis = 150),
+                        label = "dragScale",
+                    )
+                    Card(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(vertical = 8.dp),
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
-            } else {
-                items(listItems, key = { it.id }) { item ->
-                    ReorderableItem(reorderableState, key = item.id) { isDragging ->
-                        val scale by animateFloatAsState(
-                            targetValue = if (isDragging) DRAGGING_ITEM_SCALE else 1f,
-                            animationSpec = tween(durationMillis = 150),
-                            label = "dragScale",
-                        )
-                        Card(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .graphicsLayer {
-                                    scaleX = scale
-                                    scaleY = scale
-                                },
-                            colors = CardDefaults.cardColors(
-                                containerColor = MaterialTheme.colorScheme.primary,
-                                contentColor = MaterialTheme.colorScheme.onPrimary,
-                            ),
+                            .graphicsLayer {
+                                scaleX = scale
+                                scaleY = scale
+                            },
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.primary,
+                            contentColor = MaterialTheme.colorScheme.onPrimary,
+                        ),
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
                         ) {
+                            Icon(
+                                imageVector = Icons.Filled.DragHandle,
+                                contentDescription = stringResource(R.string.reorder_drag_handle),
+                                modifier = Modifier
+                                    .draggableHandle()
+                                    .padding(start = 8.dp, top = 16.dp, bottom = 16.dp),
+                                tint = MaterialTheme.colorScheme.onPrimary,
+                            )
                             Row(
-                                modifier = Modifier.fillMaxWidth(),
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .clickable { onItemClick(item) }
+                                    .padding(start = 12.dp, end = 8.dp, top = 16.dp, bottom = 16.dp),
                                 verticalAlignment = Alignment.CenterVertically,
                             ) {
-                                Icon(
-                                    imageVector = Icons.Filled.DragHandle,
-                                    contentDescription = stringResource(R.string.reorder_drag_handle),
-                                    modifier = Modifier
-                                        .draggableHandle()
-                                        .padding(start = 8.dp, top = 16.dp, bottom = 16.dp),
-                                    tint = MaterialTheme.colorScheme.onPrimary,
+                                Text(
+                                    text = item.title,
+                                    modifier = Modifier.fillMaxWidth(),
+                                    style = MaterialTheme.typography.titleMedium,
                                 )
-                                Row(
-                                    modifier = Modifier
-                                        .weight(1f)
-                                        .clickable { onItemClick(item) }
-                                        .padding(start = 12.dp, end = 16.dp, top = 16.dp, bottom = 16.dp),
-                                    verticalAlignment = Alignment.CenterVertically,
+                            }
+                            if (isPeerAvailable) {
+                                IconButton(
+                                    onClick = { onSetVisibleOnWatch(item, !item.visibleOnWatch) },
                                 ) {
-                                    Text(
-                                        text = item.title,
-                                        modifier = Modifier.fillMaxWidth(),
-                                        style = MaterialTheme.typography.titleMedium,
+                                    Icon(
+                                        imageVector = if (item.visibleOnWatch) {
+                                            Icons.Outlined.Watch
+                                        } else {
+                                            Icons.Outlined.WatchOff
+                                        },
+                                        contentDescription = if (item.visibleOnWatch) {
+                                            stringResource(R.string.watch_visible_on)
+                                        } else {
+                                            stringResource(R.string.watch_visible_off)
+                                        },
+                                        tint = MaterialTheme.colorScheme.onPrimary,
                                     )
                                 }
                             }
@@ -245,7 +311,25 @@ fun ItemListScreen(
                     }
                 }
             }
+        }
 
+        item(key = "widgets_heading") {
+            Text(
+                text = stringResource(R.string.list_widgets_section),
+                modifier = Modifier.padding(top = 8.dp, bottom = 4.dp),
+                style = MaterialTheme.typography.titleSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+
+        item(key = "phone_widgets") {
+            SectionCard(
+                title = stringResource(R.string.phone_widgets),
+                onClick = onPhoneWidgetsClick,
+            )
+        }
+
+        if (isPeerAvailable) {
             item(key = "watch_heading") {
                 Text(
                     text = stringResource(R.string.list_watch_section),
@@ -256,36 +340,46 @@ fun ItemListScreen(
             }
 
             item(key = "tiles_complications") {
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable(onClick = onTilesComplicationsClick),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                        contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
-                    ),
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                    ) {
-                        Text(
-                            text = stringResource(R.string.tiles_and_complications),
-                            style = MaterialTheme.typography.titleMedium,
-                            modifier = Modifier.weight(1f),
-                        )
-                        Icon(
-                            imageVector = Icons.Outlined.ChevronRight,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onSecondaryContainer,
-                        )
-                    }
-                }
+                SectionCard(
+                    title = stringResource(R.string.tiles_and_complications),
+                    onClick = onTilesComplicationsClick,
+                )
             }
-            }
+        }
+    }
+}
+
+@Composable
+private fun SectionCard(
+    title: String,
+    onClick: () -> Unit,
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.secondaryContainer,
+            contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+        ),
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween,
+        ) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleMedium,
+                modifier = Modifier.weight(1f),
+            )
+            Icon(
+                imageVector = Icons.Outlined.ChevronRight,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSecondaryContainer,
+            )
         }
     }
 }

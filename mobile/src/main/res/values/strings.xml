@@ -46,6 +46,17 @@
     <string name="support_banner">Finding Share My Thing helpful? Support development</string>
     <string name="support_banner_url">https://kattcrazy.nz/product/support-me/</string>
     <string name="list_watch_section">Watch</string>
+    <string name="list_widgets_section">Widgets</string>
+    <string name="phone_widgets">Home-screen widgets</string>
+    <string name="phone_widgets_help">Assign items to phone home-screen widgets. Add a Share My Thing widget on your launcher, then pick an item for each slot.</string>
+    <string name="phone_widget_1">Widget 1</string>
+    <string name="phone_widget_2">Widget 2</string>
+    <string name="phone_widget_3">Widget 3</string>
+    <string name="phone_widget_4">Widget 4</string>
+    <string name="phone_widget_5">Widget 5</string>
+    <string name="widget_configure">Tap to choose an item</string>
+    <string name="watch_visible_on">Show on watch</string>
+    <string name="watch_visible_off">Hide from watch</string>
     <string name="about_title">About</string>
     <string name="about_version">Version %1$s</string>
     <string name="about_developer_heading">About the developer</string>

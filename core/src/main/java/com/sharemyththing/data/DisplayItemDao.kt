@@ -56,6 +56,7 @@ interface DisplayItemDao {
                     sortOrder = record.sortOrder,
                     updatedAtMillis = record.updatedAtMillis,
                     deleted = false,
+                    visibleOnWatch = record.visibleOnWatch,
                 ),
             )
             return
@@ -74,6 +75,7 @@ interface DisplayItemDao {
                     sortOrder = record.sortOrder,
                     updatedAtMillis = record.updatedAtMillis,
                     deleted = false,
+                    visibleOnWatch = record.visibleOnWatch,
                 ),
             )
         }
@@ -88,4 +90,5 @@ data class SyncRecordApply(
     val sortOrder: Int,
     val updatedAtMillis: Long,
     val deleted: Boolean,
+    val visibleOnWatch: Boolean = true,
 )

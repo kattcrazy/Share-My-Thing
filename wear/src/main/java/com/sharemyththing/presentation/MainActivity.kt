@@ -24,6 +24,7 @@ class MainActivity : ComponentActivity() {
         ItemsViewModel.Factory(
             repository = app.repository,
             syncRepository = app.syncRepository,
+            appContext = applicationContext,
         )
     }
 

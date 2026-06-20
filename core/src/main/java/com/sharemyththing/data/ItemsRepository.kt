@@ -6,6 +6,7 @@ import com.sharemyththing.sync.SyncPayload
 import com.sharemyththing.sync.SyncSlotAssignment
 import com.sharemyththing.util.QrCodeGenerator
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 
 class ItemsRepository(
     context: Context,
@@ -18,10 +19,26 @@ class ItemsRepository(
     val surfacePreferences = SurfacePreferences(appContext)
 
     val items: Flow<List<DisplayItem>> = dao.observeAll()
+    val watchVisibleItems: Flow<List<DisplayItem>> =
+        items.map { list -> list.filter { it.visibleOnWatch } }
     val slotAssignments: Flow<Map<SurfaceSlot, Long?>> = surfacePreferences.assignments
     val surfacesPlacedOnWatch: Flow<Set<SurfaceSlot>> = surfacePreferences.placedOnWatch
 
     suspend fun getItem(id: Long): DisplayItem? = dao.getById(id)
+
+    suspend fun setVisibleOnWatch(itemId: Long, visible: Boolean) {
+        val item = dao.getById(itemId) ?: return
+        if (item.visibleOnWatch == visible) return
+        val now = System.currentTimeMillis()
+        dao.update(item.copy(visibleOnWatch = visible, updatedAtMillis = now))
+        val affectedSlots = if (!visible) {
+            clearWatchSlotsForItem(itemId, now)
+        } else {
+            emptyList()
+        }
+        requestSurfaceUpdates(affectedSlots)
+        notifyLocalDataChanged()
+    }
 
     suspend fun upsert(item: DisplayItem): Long {
         val now = System.currentTimeMillis()
@@ -48,6 +65,7 @@ class ItemsRepository(
                     type = item.type,
                     sortOrder = item.sortOrder,
                     updatedAtMillis = now,
+                    visibleOnWatch = item.visibleOnWatch,
                 ),
             )
             existing.id
@@ -103,6 +121,7 @@ class ItemsRepository(
                 sortOrder = item.sortOrder,
                 updatedAtMillis = item.updatedAtMillis,
                 deleted = item.deleted,
+                visibleOnWatch = item.visibleOnWatch,
             )
         }
         val slotAssignments = SurfaceSlot.all.mapNotNull { slot ->
@@ -131,11 +150,15 @@ class ItemsRepository(
                     sortOrder = record.sortOrder,
                     updatedAtMillis = record.updatedAtMillis,
                     deleted = record.deleted,
+                    visibleOnWatch = record.visibleOnWatch,
                 ),
             )
             if (!record.deleted && record.uuid.isNotBlank()) {
                 dao.getByUuid(record.uuid)?.let { item ->
                     uuidToId[record.uuid] = item.id
+                    if (!record.visibleOnWatch) {
+                        affectedSlots.addAll(clearWatchSlotsForItem(item.id, record.updatedAtMillis))
+                    }
                 }
                 QrCodeGenerator.invalidateCacheForContent(record.content.trim())
             } else if (record.deleted && record.uuid.isNotBlank()) {
@@ -167,6 +190,17 @@ class ItemsRepository(
         }
 
         return affectedSlots
+    }
+
+    private suspend fun clearWatchSlotsForItem(itemId: Long, updatedAtMillis: Long): List<SurfaceSlot> {
+        val cleared = mutableListOf<SurfaceSlot>()
+        SurfaceSlot.watchSurfaces.forEach { slot ->
+            if (surfacePreferences.getItemId(slot) == itemId) {
+                surfacePreferences.setItemId(slot, null, updatedAtMillis = updatedAtMillis)
+                cleared.add(slot)
+            }
+        }
+        return cleared
     }
 
     private suspend fun requestSurfaceUpdatesForItem(itemId: Long) {

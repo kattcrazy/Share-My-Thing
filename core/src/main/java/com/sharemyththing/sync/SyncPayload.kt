@@ -12,6 +12,7 @@ data class SyncItemRecord(
     val sortOrder: Int,
     val updatedAtMillis: Long,
     val deleted: Boolean,
+    val visibleOnWatch: Boolean = true,
 )
 
 data class SyncSlotAssignment(
@@ -39,6 +40,7 @@ data class SyncPayload(
                     put("sortOrder", item.sortOrder)
                     put("updatedAtMillis", item.updatedAtMillis)
                     put("deleted", item.deleted)
+                    put("visibleOnWatch", item.visibleOnWatch)
                 },
             )
         }
@@ -74,6 +76,7 @@ data class SyncPayload(
                             sortOrder = itemJson.getInt("sortOrder"),
                             updatedAtMillis = itemJson.getLong("updatedAtMillis"),
                             deleted = itemJson.getBoolean("deleted"),
+                            visibleOnWatch = itemJson.optBoolean("visibleOnWatch", true),
                         ),
                     )
                 }

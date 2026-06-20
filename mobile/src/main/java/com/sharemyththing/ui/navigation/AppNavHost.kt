@@ -18,18 +18,25 @@ import com.sharemyththing.ui.detail.QrTipsScreen
 import com.sharemyththing.ui.detail.TextDetailScreen
 import com.sharemyththing.ui.edit.EditItemScreen
 import com.sharemyththing.ui.list.ItemListScreen
+import com.sharemyththing.ui.settings.PhoneWidgetsScreen
 import com.sharemyththing.ui.settings.SlotItemPickerScreen
 import com.sharemyththing.ui.settings.TilesComplicationsScreen
 
 @Composable
 fun AppNavHost(
     viewModel: ItemsViewModel,
+    startItemId: Long? = null,
+    onStartItemHandled: () -> Unit = {},
+    startSurfaceSlot: SurfaceSlot? = null,
+    onStartSurfaceSlotHandled: () -> Unit = {},
 ) {
     var screen by remember { mutableStateOf<AppScreen>(AppScreen.List) }
     var detailItem by remember { mutableStateOf<DisplayItem?>(null) }
     var editItem by remember { mutableStateOf<DisplayItem?>(null) }
 
     val items by viewModel.items.collectAsState()
+    val watchVisibleItems by viewModel.watchVisibleItems.collectAsState()
+    val isPeerAvailable by viewModel.isPeerAvailable.collectAsState()
     val slotAssignments by viewModel.slotAssignments.collectAsState()
 
     fun openItem(item: DisplayItem) {
@@ -57,12 +64,15 @@ fun AppNavHost(
         }
     }
 
+    fun parentScreenForSlot(slot: SurfaceSlot): AppScreen =
+        if (slot.isPhoneWidget) AppScreen.PhoneWidgets else AppScreen.TilesComplications
+
     fun navigateBack() {
-        screen = when (screen) {
+        screen = when (val current = screen) {
             AppScreen.QrTips -> detailItem?.let { AppScreen.QrDetail(it.id) } ?: AppScreen.List
-            is AppScreen.PickSlotItem -> AppScreen.TilesComplications
+            is AppScreen.PickSlotItem -> parentScreenForSlot(current.slot)
             AppScreen.About -> AppScreen.List
-            AppScreen.TilesComplications -> AppScreen.List
+            AppScreen.TilesComplications, AppScreen.PhoneWidgets -> AppScreen.List
             is AppScreen.Edit -> screenAfterEditCancel()
             is AppScreen.QrDetail, is AppScreen.TextDetail -> AppScreen.List
             AppScreen.List -> AppScreen.List
@@ -71,6 +81,24 @@ fun AppNavHost(
 
     BackHandler(enabled = screen != AppScreen.List) {
         navigateBack()
+    }
+
+    LaunchedEffect(startItemId, items) {
+        val itemId = startItemId ?: return@LaunchedEffect
+        items.firstOrNull { it.id == itemId }?.let { item ->
+            openItem(item)
+            onStartItemHandled()
+        }
+    }
+
+    LaunchedEffect(startSurfaceSlot) {
+        val slot = startSurfaceSlot ?: return@LaunchedEffect
+        screen = if (slot.isPhoneWidget) {
+            AppScreen.PickSlotItem(slot)
+        } else {
+            AppScreen.PickSlotItem(slot)
+        }
+        onStartSurfaceSlotHandled()
     }
 
     LaunchedEffect(screen) {
@@ -88,13 +116,16 @@ fun AppNavHost(
         AppScreen.List -> {
             ItemListScreen(
                 items = items,
+                isPeerAvailable = isPeerAvailable,
                 onItemClick = ::openItem,
                 onAddClick = {
                     editItem = null
                     screen = AppScreen.Edit()
                 },
+                onPhoneWidgetsClick = { screen = AppScreen.PhoneWidgets },
                 onTilesComplicationsClick = { screen = AppScreen.TilesComplications },
                 onAboutClick = { screen = AppScreen.About },
+                onSetVisibleOnWatch = viewModel::setVisibleOnWatch,
                 onCommitItemOrder = viewModel::commitItemOrder,
                 onSyncClick = { viewModel.syncWithWatch(manual = true) },
                 syncFeedback = viewModel.syncFeedback,
@@ -161,6 +192,15 @@ fun AppNavHost(
 
         AppScreen.TilesComplications -> {
             TilesComplicationsScreen(
+                items = watchVisibleItems,
+                slotAssignments = slotAssignments,
+                onSlotClick = { slot -> screen = AppScreen.PickSlotItem(slot) },
+                onBack = ::navigateBack,
+            )
+        }
+
+        AppScreen.PhoneWidgets -> {
+            PhoneWidgetsScreen(
                 items = items,
                 slotAssignments = slotAssignments,
                 onSlotClick = { slot -> screen = AppScreen.PickSlotItem(slot) },
@@ -170,17 +210,18 @@ fun AppNavHost(
 
         is AppScreen.PickSlotItem -> {
             val pickSlotScreen = screen as AppScreen.PickSlotItem
+            val pickerItems = if (pickSlotScreen.slot.isPhoneWidget) items else watchVisibleItems
             SlotItemPickerScreen(
                 slot = pickSlotScreen.slot,
-                items = items,
+                items = pickerItems,
                 selectedItemId = slotAssignments[pickSlotScreen.slot],
                 onSelectItem = { itemId ->
                     viewModel.setSlotItemId(pickSlotScreen.slot, itemId)
-                    screen = AppScreen.TilesComplications
+                    screen = parentScreenForSlot(pickSlotScreen.slot)
                 },
                 onClear = {
                     viewModel.setSlotItemId(pickSlotScreen.slot, null)
-                    screen = AppScreen.TilesComplications
+                    screen = parentScreenForSlot(pickSlotScreen.slot)
                 },
                 onBack = ::navigateBack,
             )

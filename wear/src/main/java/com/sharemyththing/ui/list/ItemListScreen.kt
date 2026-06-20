@@ -3,27 +3,20 @@ package com.sharemyththing.ui.list
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.DragHandle
 import androidx.compose.material.icons.outlined.Sync
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -31,7 +24,6 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.zIndex
 import androidx.wear.compose.foundation.lazy.TransformingLazyColumn
 import androidx.wear.compose.foundation.lazy.rememberTransformingLazyColumnState
 import androidx.wear.compose.material3.AppScaffold
@@ -51,21 +43,18 @@ import com.sharemyththing.ui.SyncFeedback
 import com.sharemyththing.ui.edgeButtonBottomScrollSpacer
 import com.sharemyththing.ui.edgeButtonTopScrollSpacer
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 
 @Composable
 fun ItemListScreen(
     items: List<DisplayItem>,
+    isPeerAvailable: Boolean,
     onItemClick: (DisplayItem) -> Unit,
     onAddClick: () -> Unit,
     onTilesComplicationsClick: () -> Unit,
-    onCommitItemOrder: (List<Long>) -> Unit,
     onSyncClick: () -> Unit,
     syncFeedback: SyncFeedback?,
     onSyncFeedbackShown: () -> Unit,
 ) {
-    var listItems by remember { mutableStateOf(items) }
-
     val isSyncing = syncFeedback == SyncFeedback.Syncing
     val isSyncError = syncFeedback is SyncFeedback.Error || syncFeedback == SyncFeedback.NoWatchConnected
 
@@ -97,28 +86,6 @@ fun ItemListScreen(
 
     val listState = rememberTransformingLazyColumnState()
     val transformationSpec = rememberTransformationSpec()
-    val scope = rememberCoroutineScope()
-    val reorderState = rememberWearListReorderState(
-        itemCount = { listItems.size },
-        indexOfItem = { id -> listItems.indexOfFirst { it.id == id } },
-        onMove = { from, to ->
-            listItems = listItems.toMutableList().apply {
-                add(to, removeAt(from))
-            }
-        },
-        onDragEnd = {
-            val orderedIds = listItems.map { it.id }
-            scope.launch {
-                onCommitItemOrder(orderedIds)
-            }
-        },
-    )
-
-    LaunchedEffect(items, reorderState.isDragging) {
-        if (!reorderState.isDragging) {
-            listItems = items
-        }
-    }
 
     AppScaffold {
         ScreenScaffold(
@@ -141,50 +108,52 @@ fun ItemListScreen(
             ) {
                 edgeButtonTopScrollSpacer(transformationSpec = transformationSpec)
 
-                item(key = "sync") {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(top = 4.dp, bottom = 16.dp)
-                            .transformedHeight(this, transformationSpec),
-                        horizontalArrangement = Arrangement.Center,
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        Button(
-                            onClick = onSyncClick,
-                            enabled = !isSyncing,
+                if (isPeerAvailable) {
+                    item(key = "sync") {
+                        Row(
                             modifier = Modifier
-                                .size(44.dp)
-                                .clip(CircleShape),
-                            transformation = SurfaceTransformation(transformationSpec),
-                            colors = if (isSyncError) {
-                                ButtonDefaults.buttonColors(
-                                    containerColor = MaterialTheme.colorScheme.errorContainer,
-                                    contentColor = MaterialTheme.colorScheme.onErrorContainer,
-                                    disabledContainerColor = MaterialTheme.colorScheme.errorContainer,
-                                    disabledContentColor = MaterialTheme.colorScheme.onErrorContainer,
-                                )
-                            } else {
-                                ButtonDefaults.buttonColors(
-                                    containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                                    contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
-                                )
-                            },
+                                .fillMaxWidth()
+                                .padding(top = 4.dp, bottom = 16.dp)
+                                .transformedHeight(this, transformationSpec),
+                            horizontalArrangement = Arrangement.Center,
+                            verticalAlignment = Alignment.CenterVertically,
                         ) {
-                            Icon(
-                                imageVector = Icons.Outlined.Sync,
-                                contentDescription = stringResource(R.string.sync_with_watch),
+                            Button(
+                                onClick = onSyncClick,
+                                enabled = !isSyncing,
                                 modifier = Modifier
-                                    .size(20.dp)
-                                    .graphicsLayer {
-                                        rotationZ = syncRotation
-                                    },
-                            )
+                                    .size(44.dp)
+                                    .clip(CircleShape),
+                                transformation = SurfaceTransformation(transformationSpec),
+                                colors = if (isSyncError) {
+                                    ButtonDefaults.buttonColors(
+                                        containerColor = MaterialTheme.colorScheme.errorContainer,
+                                        contentColor = MaterialTheme.colorScheme.onErrorContainer,
+                                        disabledContainerColor = MaterialTheme.colorScheme.errorContainer,
+                                        disabledContentColor = MaterialTheme.colorScheme.onErrorContainer,
+                                    )
+                                } else {
+                                    ButtonDefaults.buttonColors(
+                                        containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                                        contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                                    )
+                                },
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Outlined.Sync,
+                                    contentDescription = stringResource(R.string.sync_with_watch),
+                                    modifier = Modifier
+                                        .size(20.dp)
+                                        .graphicsLayer {
+                                            rotationZ = syncRotation
+                                        },
+                                )
+                            }
                         }
                     }
                 }
 
-                if (listItems.isEmpty()) {
+                if (items.isEmpty()) {
                     item(key = "empty") {
                         Text(
                             text = stringResource(R.string.empty_items),
@@ -198,52 +167,19 @@ fun ItemListScreen(
                         )
                     }
                 } else {
-                    listItems.forEach { item ->
+                    items.forEach { item ->
                         item(key = item.id) {
-                            val isDragging = reorderState.draggingItemId == item.id
-                            val scale by animateFloatAsState(
-                                targetValue = if (isDragging) DRAGGING_ITEM_SCALE else 1f,
-                                animationSpec = tween(durationMillis = 150),
-                                label = "dragScale",
-                            )
-                            Box(
+                            Button(
+                                onClick = { onItemClick(item) },
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .zIndex(if (isDragging) DRAGGING_ITEM_Z_INDEX else 0f)
-                                    .transformedHeight(this, transformationSpec)
-                                    .graphicsLayer {
-                                        scaleX = scale
-                                        scaleY = scale
-                                        clip = false
-                                        if (isDragging) {
-                                            translationY = reorderState.dragOffset
-                                        }
-                                    },
+                                    .transformedHeight(this, transformationSpec),
+                                transformation = SurfaceTransformation(transformationSpec),
                             ) {
-                                Button(
-                                    onClick = { onItemClick(item) },
+                                Text(
+                                    text = item.title,
                                     modifier = Modifier.fillMaxWidth(),
-                                    transformation = SurfaceTransformation(transformationSpec),
-                                ) {
-                                    Row(
-                                        modifier = Modifier.fillMaxWidth(),
-                                        verticalAlignment = Alignment.CenterVertically,
-                                    ) {
-                                        Icon(
-                                            imageVector = Icons.Filled.DragHandle,
-                                            contentDescription = stringResource(R.string.reorder_drag_handle),
-                                            modifier = Modifier
-                                                .wearListReorderHandle(reorderState, item.id)
-                                                .padding(start = 4.dp, end = 8.dp)
-                                                .size(18.dp),
-                                            tint = MaterialTheme.colorScheme.onPrimary,
-                                        )
-                                        Text(
-                                            text = item.title,
-                                            modifier = Modifier.weight(1f),
-                                        )
-                                    }
-                                }
+                                )
                             }
                         }
                     }
@@ -272,7 +208,5 @@ fun ItemListScreen(
     }
 }
 
-private const val DRAGGING_ITEM_SCALE = 0.92f
-private const val DRAGGING_ITEM_Z_INDEX = 100f
 private const val SYNC_SUCCESS_DISPLAY_MS = 600L
 private const val SYNC_ERROR_DISPLAY_MS = 2_500L
