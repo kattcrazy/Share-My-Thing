@@ -28,18 +28,21 @@ class ShareMyThingApplication : Application() {
         surfaceUpdater = PhoneWidgetUpdater(this, applicationScope)
         repository = ItemsRepository(this, surfaceUpdater)
         syncRepository = SyncRepository(this, repository, surfaceUpdater)
+        val wearSyncSupported = com.sharemyththing.sync.WearSyncSupport.isSupported(this)
         repository.onLocalDataChanged = {
-            applicationScope.launch {
+            if (wearSyncSupported) {
                 SyncFeedbackBridge.emitFailure(syncRepository.syncWithWatch())
             }
         }
-        applicationScope.launch {
-            delay(1_500)
-            SyncFeedbackBridge.emitFailure(syncRepository.syncWithWatch())
-        }
-        applicationScope.launch {
-            Wearable.getCapabilityClient(this@ShareMyThingApplication)
-                .addLocalCapability(SyncPaths.CAPABILITY)
+        if (wearSyncSupported) {
+            applicationScope.launch {
+                delay(1_500)
+                SyncFeedbackBridge.emitFailure(syncRepository.syncWithWatch())
+            }
+            applicationScope.launch {
+                Wearable.getCapabilityClient(this@ShareMyThingApplication)
+                    .addLocalCapability(SyncPaths.CAPABILITY)
+            }
         }
         applicationScope.launch {
             surfaceUpdater.requestUpdateAll()

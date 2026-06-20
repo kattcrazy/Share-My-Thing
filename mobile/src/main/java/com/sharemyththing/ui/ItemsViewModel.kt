@@ -12,6 +12,7 @@ import com.sharemyththing.sync.PeerAvailability
 import com.sharemyththing.sync.SyncFeedbackBridge
 import com.sharemyththing.sync.SyncRepository
 import com.sharemyththing.sync.SyncResult
+import com.sharemyththing.sync.WearSyncSupport
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -71,10 +72,12 @@ class ItemsViewModel(
     private val _syncFeedback = MutableStateFlow<SyncFeedback?>(null)
     val syncFeedback: StateFlow<SyncFeedback?> = _syncFeedback.asStateFlow()
 
+    private val wearSyncSupported = WearSyncSupport.isSupported(appContext)
+
     init {
         viewModelScope.launch {
             SyncFeedbackBridge.failures.collect { result ->
-                if (result == SyncResult.Success) return@collect
+                if (result == SyncResult.Success || !wearSyncSupported) return@collect
                 _syncFeedback.value = SyncFeedback.AutoFailed
             }
         }
@@ -83,6 +86,7 @@ class ItemsViewModel(
     suspend fun getItem(id: Long): DisplayItem? = repository.getItem(id)
 
     fun syncWithWatch(manual: Boolean = false) {
+        if (!wearSyncSupported) return
         viewModelScope.launch {
             if (manual) {
                 _syncFeedback.value = SyncFeedback.Syncing
@@ -92,11 +96,10 @@ class ItemsViewModel(
     }
 
     private fun reportSyncResult(result: SyncResult, manual: Boolean) {
+        if (!manual) return
         when (result) {
             SyncResult.Success -> {
-                if (manual) {
-                    _syncFeedback.value = SyncFeedback.Success
-                }
+                _syncFeedback.value = SyncFeedback.Success
             }
             SyncResult.NoWatchConnected -> {
                 _syncFeedback.value = SyncFeedback.NoWatchConnected

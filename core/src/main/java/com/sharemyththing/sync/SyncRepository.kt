@@ -30,17 +30,22 @@ class SyncRepository(
     private val outgoingMutex = Mutex()
 
     init {
-        val rpcService = MessageClient.RpcService { _, _, request ->
-            Tasks.forResult(
-                runBlocking {
-                    mergeIncomingRequest(request).toJsonBytes()
-                },
-            )
+        if (WearSyncSupport.isSupported(appContext)) {
+            val rpcService = MessageClient.RpcService { _, _, request ->
+                Tasks.forResult(
+                    runBlocking {
+                        mergeIncomingRequest(request).toJsonBytes()
+                    },
+                )
+            }
+            Wearable.getMessageClient(appContext).addRpcService(rpcService, SyncPaths.REQUEST)
         }
-        Wearable.getMessageClient(appContext).addRpcService(rpcService, SyncPaths.REQUEST)
     }
 
     suspend fun syncWithWatch(): SyncResult = outgoingMutex.withLock {
+        if (!WearSyncSupport.isSupported(appContext)) {
+            return SyncResult.NoWatchConnected
+        }
         runCatching {
             val node = PeerAvailability.findPeerNode(appContext) ?: return SyncResult.NoWatchConnected
             val localPayload = itemsRepository.buildSyncPayload()

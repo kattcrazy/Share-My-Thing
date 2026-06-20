@@ -1,8 +1,6 @@
 package com.sharemyththing.ui.edit
 
 import androidx.activity.compose.BackHandler
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -157,24 +155,28 @@ private fun EditItemMainScreen(
                 }
 
                 item {
-                    WearFieldSummaryRow(
+                    WearFieldButton(
                         fieldLabel = stringResource(R.string.field_title),
                         value = title,
                         onClick = onTitleClick,
                         modifier = Modifier
                             .fillMaxWidth()
+                            .padding(bottom = 4.dp)
                             .transformedHeight(this, transformationSpec),
+                        transformation = SurfaceTransformation(transformationSpec),
                     )
                 }
 
                 item {
-                    WearFieldSummaryRow(
+                    WearFieldButton(
                         fieldLabel = stringResource(R.string.field_content),
                         value = content,
                         onClick = onContentClick,
                         modifier = Modifier
                             .fillMaxWidth()
+                            .padding(bottom = 4.dp)
                             .transformedHeight(this, transformationSpec),
+                        transformation = SurfaceTransformation(transformationSpec),
                     )
                 }
 
@@ -182,7 +184,7 @@ private fun EditItemMainScreen(
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 8.dp)
+                            .padding(horizontal = 8.dp, vertical = 4.dp)
                             .transformedHeight(this, transformationSpec),
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
@@ -234,6 +236,7 @@ private fun EditItemMainScreen(
                         },
                         modifier = Modifier
                             .fillMaxWidth()
+                            .padding(top = 4.dp)
                             .transformedHeight(this, transformationSpec),
                         transformation = SurfaceTransformation(transformationSpec),
                     ) {
@@ -294,23 +297,23 @@ private fun EditItemMainScreen(
 }
 
 @Composable
-private fun WearFieldSummaryRow(
+private fun WearFieldButton(
     fieldLabel: String,
     value: String,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
+    transformation: SurfaceTransformation,
 ) {
-    Row(
-        modifier = modifier
-            .padding(horizontal = 12.dp, vertical = 8.dp)
-            .clickable(
-                interactionSource = remember { MutableInteractionSource() },
-                indication = null,
-                onClick = onClick,
-            ),
-        verticalAlignment = Alignment.Top,
+    Button(
+        onClick = onClick,
+        modifier = modifier,
+        transformation = transformation,
+        colors = ButtonDefaults.buttonColors(
+            containerColor = MaterialTheme.colorScheme.secondaryContainer,
+            contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+        ),
     ) {
-        Column(modifier = Modifier.weight(1f)) {
+        Column(modifier = Modifier.fillMaxWidth()) {
             Text(
                 text = fieldLabel,
                 style = MaterialTheme.typography.labelSmall,
@@ -324,16 +327,9 @@ private fun WearFieldSummaryRow(
                 } else {
                     MaterialTheme.colorScheme.onSurface
                 },
+                maxLines = 2,
             )
         }
-        Icon(
-            painter = painterResource(R.drawable.ic_edit),
-            contentDescription = stringResource(R.string.edit_item),
-            modifier = Modifier
-                .padding(start = 8.dp)
-                .size(24.dp),
-            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
     }
 }
 

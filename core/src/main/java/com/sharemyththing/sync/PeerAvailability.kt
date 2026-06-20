@@ -19,7 +19,11 @@ import kotlinx.coroutines.tasks.await
 object PeerAvailability {
     private fun capabilityUri(): Uri = Uri.parse("wear://*/${SyncPaths.CAPABILITY}")
 
-    fun observePeerConnected(context: Context): Flow<Boolean> = callbackFlow {
+    fun observePeerConnected(context: Context): Flow<Boolean> {
+        if (!WearSyncSupport.isSupported(context)) {
+            return kotlinx.coroutines.flow.flowOf(false)
+        }
+        return callbackFlow {
         val appContext = context.applicationContext
         val capabilityClient = Wearable.getCapabilityClient(appContext)
         val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
@@ -41,9 +45,13 @@ object PeerAvailability {
             scope.cancel()
             capabilityClient.removeListener(listener)
         }
-    }.distinctUntilChanged()
+        }.distinctUntilChanged()
+    }
 
     suspend fun findPeerNode(context: Context): Node? {
+        if (!WearSyncSupport.isSupported(context)) {
+            return null
+        }
         val appContext = context.applicationContext
         val localNodeId = Wearable.getNodeClient(appContext).localNode.await().id
         val capabilityNodes = runCatching {
