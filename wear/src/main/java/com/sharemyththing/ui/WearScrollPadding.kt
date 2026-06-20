@@ -11,7 +11,8 @@ import androidx.wear.compose.material3.lazy.TransformationSpec
 import androidx.wear.compose.material3.lazy.transformedHeight
 
 private val DefaultListBottomSpacer = 20.dp
-private val EdgeButtonListBottomSpacer = 16.dp
+private val EdgeButtonListBottomSpacer = 6.dp
+private val EdgeButtonListTopSpacer = 20.dp
 
 fun TransformingLazyColumnScope.bottomScrollSpacer(
     transformationSpec: TransformationSpec,
@@ -34,4 +35,17 @@ fun TransformingLazyColumnScope.edgeButtonBottomScrollSpacer(
         transformationSpec = transformationSpec,
         height = EdgeButtonListBottomSpacer,
     )
+}
+
+fun TransformingLazyColumnScope.edgeButtonTopScrollSpacer(
+    transformationSpec: TransformationSpec,
+) {
+    item(key = "top_scroll_spacer") {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(EdgeButtonListTopSpacer)
+                .transformedHeight(this, transformationSpec),
+        )
+    }
 }

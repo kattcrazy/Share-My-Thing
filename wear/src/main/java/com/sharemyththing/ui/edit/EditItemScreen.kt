@@ -19,7 +19,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.wear.compose.foundation.lazy.TransformingLazyColumn
 import androidx.wear.compose.foundation.lazy.rememberTransformingLazyColumnState
@@ -38,7 +37,6 @@ import androidx.wear.compose.material3.lazy.transformedHeight
 import com.sharemyththing.R
 import com.sharemyththing.data.DisplayItem
 import com.sharemyththing.data.ItemType
-import com.sharemyththing.data.usesQr
 import com.sharemyththing.ui.bottomScrollSpacer
 
 private enum class EditFieldTarget {
@@ -95,7 +93,6 @@ fun EditItemScreen(
                     validationError = null
                 },
                 onDone = { activeField = null },
-                keyboardType = if (type.usesQr) KeyboardType.Uri else KeyboardType.Text,
             )
         }
 

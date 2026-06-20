@@ -2,6 +2,8 @@
 <resources>
     <string name="app_name">Share My Thing - QR Code &amp; Text</string>
     <string name="app_name_short">Share My Thing</string>
+    <string name="reorder_drag_handle">Reorder item</string>
+    <string name="sync_with_watch">Sync with phone</string>
     <string name="add_item">Add</string>
     <string name="edit_item">Edit</string>
     <string name="save">Save</string>

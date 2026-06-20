@@ -8,15 +8,21 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.wear.compose.foundation.lazy.TransformingLazyColumn
 import androidx.wear.compose.foundation.lazy.rememberTransformingLazyColumnState
@@ -41,12 +47,22 @@ fun EditFieldScreen(
     keyboardType: KeyboardType = KeyboardType.Text,
 ) {
     val focusRequester = remember { FocusRequester() }
+    val focusManager = LocalFocusManager.current
+    var textFieldValue by remember(fieldLabel, value) {
+        mutableStateOf(TextFieldValue(value, TextRange(value.length)))
+    }
 
     LaunchedEffect(Unit) {
         focusRequester.requestFocus()
     }
 
-    BackHandler(onBack = onDone)
+    fun finishEditing() {
+        focusManager.clearFocus()
+        onValueChange(textFieldValue.text)
+        onDone()
+    }
+
+    BackHandler(onBack = ::finishEditing)
 
     AppScaffold {
         val listState = rememberTransformingLazyColumnState()
@@ -66,8 +82,10 @@ fun EditFieldScreen(
 
                 item {
                     BasicTextField(
-                        value = value,
-                        onValueChange = onValueChange,
+                        value = textFieldValue,
+                        onValueChange = { updated ->
+                            textFieldValue = updated
+                        },
                         textStyle = MaterialTheme.typography.bodyMedium.copy(
                             color = MaterialTheme.colorScheme.onSurface,
                         ),
@@ -77,7 +95,7 @@ fun EditFieldScreen(
                             keyboardType = keyboardType,
                             imeAction = ImeAction.Done,
                         ),
-                        keyboardActions = KeyboardActions(onDone = { onDone() }),
+                        keyboardActions = KeyboardActions(onDone = { finishEditing() }),
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(horizontal = 12.dp, vertical = 8.dp)
@@ -88,7 +106,7 @@ fun EditFieldScreen(
 
                 item {
                     Button(
-                        onClick = onDone,
+                        onClick = ::finishEditing,
                         modifier = Modifier
                             .fillMaxWidth()
                             .transformedHeight(this, transformationSpec),

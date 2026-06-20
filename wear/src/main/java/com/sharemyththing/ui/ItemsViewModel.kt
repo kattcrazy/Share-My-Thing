@@ -75,14 +75,10 @@ class ItemsViewModel(
         }
     }
 
-    fun reorderItems(fromIndex: Int, toIndex: Int) {
-        if (fromIndex == toIndex) return
+    fun commitItemOrder(orderedIds: List<Long>) {
+        if (orderedIds.isEmpty()) return
         viewModelScope.launch {
-            val current = items.value.toMutableList()
-            if (fromIndex !in current.indices || toIndex !in current.indices) return@launch
-            val item = current.removeAt(fromIndex)
-            current.add(toIndex, item)
-            repository.reorderItems(current.map { it.id })
+            repository.reorderItems(orderedIds)
         }
     }
 

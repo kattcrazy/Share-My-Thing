@@ -1,7 +1,10 @@
 package com.sharemyththing
 
 import android.app.Application
+import com.google.android.gms.wearable.Wearable
 import com.sharemyththing.data.ItemsRepository
+import com.sharemyththing.sync.SyncFeedbackBridge
+import com.sharemyththing.sync.SyncPaths
 import com.sharemyththing.sync.SyncRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -23,12 +26,16 @@ class ShareMyThingApplication : Application() {
         syncRepository = SyncRepository(this, repository)
         repository.onLocalDataChanged = {
             applicationScope.launch {
-                runCatching { syncRepository.syncWithWatch() }
+                SyncFeedbackBridge.emitFailure(syncRepository.syncWithWatch())
             }
         }
         applicationScope.launch {
             delay(1_500)
-            runCatching { syncRepository.syncWithWatch() }
+            SyncFeedbackBridge.emitFailure(syncRepository.syncWithWatch())
+        }
+        applicationScope.launch {
+            Wearable.getCapabilityClient(this@ShareMyThingApplication)
+                .addLocalCapability(SyncPaths.CAPABILITY)
         }
     }
 }

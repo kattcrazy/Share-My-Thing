@@ -1,7 +1,9 @@
 package com.sharemyththing
 
 import android.app.Application
+import com.google.android.gms.wearable.Wearable
 import com.sharemyththing.data.ItemsRepository
+import com.sharemyththing.sync.SyncPaths
 import com.sharemyththing.sync.SyncRepository
 import com.sharemyththing.wear.WearSurfaceUpdater
 import kotlinx.coroutines.CoroutineScope
@@ -33,6 +35,10 @@ class ShareMyThingApplication : Application() {
         applicationScope.launch {
             delay(1_500)
             runCatching { syncRepository.syncWithWatch() }
+        }
+        applicationScope.launch {
+            Wearable.getCapabilityClient(this@ShareMyThingApplication)
+                .addLocalCapability(SyncPaths.CAPABILITY)
         }
     }
 }

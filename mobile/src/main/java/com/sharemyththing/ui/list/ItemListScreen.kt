@@ -1,5 +1,7 @@
 package com.sharemyththing.ui.list
 
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -24,16 +26,30 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.sharemyththing.R
 import com.sharemyththing.data.DisplayItem
+import com.sharemyththing.ui.SyncFeedback
 import com.sharemyththing.ui.components.SupportBanner
+import kotlinx.coroutines.flow.StateFlow
 import sh.calvin.reorderable.ReorderableItem
 import sh.calvin.reorderable.rememberReorderableLazyListState
 
@@ -45,14 +61,85 @@ fun ItemListScreen(
     onAddClick: () -> Unit,
     onTilesComplicationsClick: () -> Unit,
     onAboutClick: () -> Unit,
-    onReorder: (fromIndex: Int, toIndex: Int) -> Unit,
+    onCommitItemOrder: (List<Long>) -> Unit,
+    onSyncClick: () -> Unit,
+    syncFeedback: StateFlow<SyncFeedback?>,
+    onSyncFeedbackShown: () -> Unit,
 ) {
     val lazyListState = rememberLazyListState()
+    var listItems by remember { mutableStateOf(items) }
     val reorderableState = rememberReorderableLazyListState(lazyListState) { from, to ->
-        onReorder(from.index, to.index)
+        listItems = listItems.toMutableList().apply {
+            add(to.index, removeAt(from.index))
+        }
+    }
+    LaunchedEffect(items, reorderableState.isAnyItemDragging) {
+        if (!reorderableState.isAnyItemDragging) {
+            listItems = items
+        }
+    }
+    var wasDragging by remember { mutableStateOf(false) }
+    LaunchedEffect(reorderableState.isAnyItemDragging) {
+        if (wasDragging && !reorderableState.isAnyItemDragging) {
+            onCommitItemOrder(listItems.map { it.id })
+        }
+        wasDragging = reorderableState.isAnyItemDragging
+    }
+    val snackbarHostState = remember { SnackbarHostState() }
+    val feedback by syncFeedback.collectAsState()
+    val syncInProgressMessage = stringResource(R.string.sync_in_progress)
+    val syncSuccessMessage = stringResource(R.string.sync_success)
+    val syncNoWatchMessage = stringResource(R.string.sync_no_watch)
+    val syncAutoFailedMessage = stringResource(R.string.sync_auto_failed)
+    val isRefreshing = feedback == SyncFeedback.Syncing
+    val context = LocalContext.current
+
+    LaunchedEffect(feedback) {
+        when (val current = feedback) {
+            null -> Unit
+            SyncFeedback.Syncing -> {
+                snackbarHostState.showSnackbar(
+                    message = syncInProgressMessage,
+                    duration = SnackbarDuration.Indefinite,
+                )
+            }
+            SyncFeedback.Success -> {
+                snackbarHostState.currentSnackbarData?.dismiss()
+                snackbarHostState.showSnackbar(
+                    message = syncSuccessMessage,
+                    duration = SnackbarDuration.Short,
+                )
+                onSyncFeedbackShown()
+            }
+            SyncFeedback.NoWatchConnected -> {
+                snackbarHostState.currentSnackbarData?.dismiss()
+                snackbarHostState.showSnackbar(
+                    message = syncNoWatchMessage,
+                    duration = SnackbarDuration.Long,
+                )
+                onSyncFeedbackShown()
+            }
+            SyncFeedback.AutoFailed -> {
+                snackbarHostState.currentSnackbarData?.dismiss()
+                snackbarHostState.showSnackbar(
+                    message = syncAutoFailedMessage,
+                    duration = SnackbarDuration.Long,
+                )
+                onSyncFeedbackShown()
+            }
+            is SyncFeedback.Error -> {
+                snackbarHostState.currentSnackbarData?.dismiss()
+                snackbarHostState.showSnackbar(
+                    message = context.getString(R.string.sync_error, current.message),
+                    duration = SnackbarDuration.Long,
+                )
+                onSyncFeedbackShown()
+            }
+        }
     }
 
     Scaffold(
+        snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         topBar = {
             Column {
                 TopAppBar(
@@ -78,15 +165,20 @@ fun ItemListScreen(
             }
         },
     ) { padding ->
-        LazyColumn(
+        PullToRefreshBox(
+            isRefreshing = isRefreshing,
+            onRefresh = onSyncClick,
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding),
-            state = lazyListState,
-            contentPadding = PaddingValues(16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            if (items.isEmpty()) {
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                state = lazyListState,
+                contentPadding = PaddingValues(16.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+            if (listItems.isEmpty()) {
                 item(key = "empty") {
                     Text(
                         text = stringResource(R.string.empty_items),
@@ -98,10 +190,20 @@ fun ItemListScreen(
                     )
                 }
             } else {
-                items(items, key = { it.id }) { item ->
-                    ReorderableItem(reorderableState, key = item.id) { _ ->
+                items(listItems, key = { it.id }) { item ->
+                    ReorderableItem(reorderableState, key = item.id) { isDragging ->
+                        val scale by animateFloatAsState(
+                            targetValue = if (isDragging) DRAGGING_ITEM_SCALE else 1f,
+                            animationSpec = tween(durationMillis = 150),
+                            label = "dragScale",
+                        )
                         Card(
-                            modifier = Modifier.fillMaxWidth(),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .graphicsLayer {
+                                    scaleX = scale
+                                    scaleY = scale
+                                },
                             colors = CardDefaults.cardColors(
                                 containerColor = MaterialTheme.colorScheme.primary,
                                 contentColor = MaterialTheme.colorScheme.onPrimary,
@@ -125,14 +227,12 @@ fun ItemListScreen(
                                         .clickable { onItemClick(item) }
                                         .padding(start = 12.dp, end = 16.dp, top = 16.dp, bottom = 16.dp),
                                     verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.SpaceBetween,
                                 ) {
                                     Text(
                                         text = item.title,
-                                        modifier = Modifier.weight(1f),
+                                        modifier = Modifier.fillMaxWidth(),
                                         style = MaterialTheme.typography.titleMedium,
                                     )
-                                    ItemTypeIcons(type = item.type)
                                 }
                             }
                         }
@@ -179,6 +279,9 @@ fun ItemListScreen(
                     }
                 }
             }
+            }
         }
     }
 }
+
+private const val DRAGGING_ITEM_SCALE = 0.92f

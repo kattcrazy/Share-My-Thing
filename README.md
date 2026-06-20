@@ -16,7 +16,7 @@ A Wear OS app that enables you to share links, contact details, and more via QR 
 
 ## Privacy
 
-See [docs/PRIVACY.md](docs/PRIVACY.md). In short: your items stay on your devices; there is no analytics or background server.
+See [docs/PRIVACY.md](docs/PRIVACY.md). In short: your items stay on your devices, the developer cannot access any of your items.
 
 ## License
 

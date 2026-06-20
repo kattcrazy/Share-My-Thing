@@ -11,8 +11,10 @@ import com.sharemyththing.ui.navigation.AppNavHost
 
 class MainActivity : ComponentActivity() {
     private val viewModel: ItemsViewModel by viewModels {
+        val app = application as ShareMyThingApplication
         ItemsViewModel.Factory(
-            repository = (application as ShareMyThingApplication).repository,
+            repository = app.repository,
+            syncRepository = app.syncRepository,
         )
     }
 
@@ -23,5 +25,10 @@ class MainActivity : ComponentActivity() {
                 AppNavHost(viewModel = viewModel)
             }
         }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        viewModel.syncWithWatch(manual = false)
     }
 }

@@ -95,7 +95,10 @@ fun AppNavHost(
                 },
                 onTilesComplicationsClick = { screen = AppScreen.TilesComplications },
                 onAboutClick = { screen = AppScreen.About },
-                onReorder = viewModel::reorderItems,
+                onCommitItemOrder = viewModel::commitItemOrder,
+                onSyncClick = { viewModel.syncWithWatch(manual = true) },
+                syncFeedback = viewModel.syncFeedback,
+                onSyncFeedbackShown = viewModel::clearSyncFeedback,
             )
         }
 
@@ -129,11 +132,12 @@ fun AppNavHost(
         }
 
         is AppScreen.Edit -> {
+            val editingItemId = (screen as AppScreen.Edit).itemId
             EditItemScreen(
                 existingItem = editItem,
                 onSave = { title, content, type ->
                     viewModel.saveItem(
-                        id = editItem?.id,
+                        id = editingItemId ?: editItem?.id,
                         title = title,
                         content = content,
                         type = type,

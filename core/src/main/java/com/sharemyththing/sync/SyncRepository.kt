@@ -1,19 +1,18 @@
 package com.sharemyththing.sync
 
 import android.content.Context
+import com.google.android.gms.tasks.Tasks
+import com.google.android.gms.wearable.CapabilityClient
 import com.google.android.gms.wearable.MessageClient
 import com.google.android.gms.wearable.Node
 import com.google.android.gms.wearable.Wearable
 import com.sharemyththing.data.ItemsRepository
 import com.sharemyththing.data.SurfaceUpdateListener
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withTimeout
-import java.util.concurrent.ConcurrentHashMap
-import kotlin.coroutines.resume
-import kotlin.coroutines.resumeWithException
-import kotlin.coroutines.suspendCoroutine
 
 sealed interface SyncResult {
     data object Success : SyncResult
@@ -27,38 +26,37 @@ class SyncRepository(
     private val surfaceUpdateListener: SurfaceUpdateListener? = null,
 ) {
     private val appContext = context.applicationContext
-    private val pendingResponses = ConcurrentHashMap<Int, PendingResponse>()
-    private val syncMutex = Mutex()
-
-    private data class PendingResponse(
-        val onComplete: (Result<ByteArray>) -> Unit,
-    )
+    /** Protects local DB merge/apply only. Must not be held while waiting on the data layer. */
+    private val dbMutex = Mutex()
+    /** Prevents overlapping outgoing sync requests from the same device. */
+    private val outgoingMutex = Mutex()
 
     init {
-        val messageClient = Wearable.getMessageClient(appContext)
-        messageClient.addListener { messageEvent ->
-            if (messageEvent.path != SyncPaths.RESPONSE) {
-                return@addListener
-            }
-            pendingResponses.remove(messageEvent.requestId)?.onComplete?.invoke(
-                Result.success(messageEvent.data),
+        val rpcService = MessageClient.RpcService { _, _, request ->
+            Tasks.forResult(
+                runBlocking {
+                    mergeIncomingRequest(request).toJsonBytes()
+                },
             )
         }
+        Wearable.getMessageClient(appContext).addRpcService(rpcService, SyncPaths.REQUEST)
     }
 
-    suspend fun syncWithWatch(): SyncResult = syncMutex.withLock {
+    suspend fun syncWithWatch(): SyncResult = outgoingMutex.withLock {
         runCatching {
-            val node = findWatchNode() ?: return SyncResult.NoWatchConnected
+            val node = findPeerNode() ?: return SyncResult.NoWatchConnected
             val localPayload = itemsRepository.buildSyncPayload()
-            val responseBytes = sendMessageAndAwaitResponse(
-                nodeId = node.id,
-                path = SyncPaths.REQUEST,
-                data = localPayload.toJsonBytes(),
-            )
-            val mergedPayload = SyncPayload.fromJsonBytes(responseBytes)
-            val affectedSlots = itemsRepository.applySyncPayload(mergedPayload)
-            if (affectedSlots.isNotEmpty()) {
-                surfaceUpdateListener?.onSurfaceUpdatesNeeded(affectedSlots)
+            val responseBytes = withTimeout(SYNC_RESPONSE_TIMEOUT_MS) {
+                Wearable.getMessageClient(appContext)
+                    .sendRequest(node.id, SyncPaths.REQUEST, localPayload.toJsonBytes())
+                    .await()
+            }
+            dbMutex.withLock {
+                val mergedPayload = SyncPayload.fromJsonBytes(responseBytes)
+                val affectedSlots = itemsRepository.applySyncPayload(mergedPayload)
+                if (affectedSlots.isNotEmpty()) {
+                    surfaceUpdateListener?.onSurfaceUpdatesNeeded(affectedSlots)
+                }
             }
             SyncResult.Success
         }.getOrElse { error ->
@@ -66,45 +64,28 @@ class SyncRepository(
         }
     }
 
-    suspend fun handleIncomingSyncRequest(sourceNodeId: String, requestBytes: ByteArray) =
-        syncMutex.withLock {
+    private suspend fun mergeIncomingRequest(requestBytes: ByteArray): SyncPayload {
+        return dbMutex.withLock {
             val remotePayload = SyncPayload.fromJsonBytes(requestBytes)
-            val mergedPayload = SyncEngine.performSync(
+            SyncEngine.performSync(
                 repository = itemsRepository,
                 remotePayload = remotePayload,
                 surfaceUpdateListener = surfaceUpdateListener,
             )
-            Wearable.getMessageClient(appContext)
-                .sendMessage(sourceNodeId, SyncPaths.RESPONSE, mergedPayload.toJsonBytes())
-                .await()
         }
-
-    private suspend fun findWatchNode(): Node? {
-        val nodes = Wearable.getNodeClient(appContext).connectedNodes.await()
-        return nodes.firstOrNull { it.isNearby } ?: nodes.firstOrNull()
     }
 
-    private suspend fun sendMessageAndAwaitResponse(
-        nodeId: String,
-        path: String,
-        data: ByteArray,
-    ): ByteArray = withTimeout(SYNC_RESPONSE_TIMEOUT_MS) {
-        suspendCoroutine { continuation ->
-            val messageClient = Wearable.getMessageClient(appContext)
-            messageClient.sendMessage(nodeId, path, data)
-                .addOnSuccessListener { requestId ->
-                    pendingResponses[requestId] = PendingResponse { result ->
-                        pendingResponses.remove(requestId)
-                        result.fold(
-                            onSuccess = { continuation.resume(it) },
-                            onFailure = { continuation.resumeWithException(it) },
-                        )
-                    }
-                }
-                .addOnFailureListener { error ->
-                    continuation.resumeWithException(error)
-                }
-        }
+    private suspend fun findPeerNode(): Node? {
+        val localNodeId = Wearable.getNodeClient(appContext).localNode.await().id
+        val capabilityNodes = runCatching {
+            Wearable.getCapabilityClient(appContext)
+                .getCapability(SyncPaths.CAPABILITY, CapabilityClient.FILTER_REACHABLE)
+                .await()
+                .nodes
+        }.getOrDefault(emptySet())
+        capabilityNodes.firstOrNull { it.id != localNodeId }?.let { return it }
+        val connectedNodes = Wearable.getNodeClient(appContext).connectedNodes.await()
+        return connectedNodes.firstOrNull { it.isNearby } ?: connectedNodes.firstOrNull()
     }
 
     private companion object {

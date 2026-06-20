@@ -7,13 +7,27 @@ import com.sharemyththing.data.DisplayItem
 import com.sharemyththing.data.ItemType
 import com.sharemyththing.data.ItemsRepository
 import com.sharemyththing.data.SurfaceSlot
+import com.sharemyththing.sync.SyncFeedbackBridge
+import com.sharemyththing.sync.SyncRepository
+import com.sharemyththing.sync.SyncResult
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
+sealed interface SyncFeedback {
+    data object Syncing : SyncFeedback
+    data object Success : SyncFeedback
+    data object NoWatchConnected : SyncFeedback
+    data object AutoFailed : SyncFeedback
+    data class Error(val message: String) : SyncFeedback
+}
+
 class ItemsViewModel(
     private val repository: ItemsRepository,
+    private val syncRepository: SyncRepository,
 ) : ViewModel() {
     val items: StateFlow<List<DisplayItem>> =
         repository.items.stateIn(
@@ -36,7 +50,48 @@ class ItemsViewModel(
             initialValue = emptySet(),
         )
 
+    private val _syncFeedback = MutableStateFlow<SyncFeedback?>(null)
+    val syncFeedback: StateFlow<SyncFeedback?> = _syncFeedback.asStateFlow()
+
+    init {
+        viewModelScope.launch {
+            SyncFeedbackBridge.failures.collect { result ->
+                if (result == SyncResult.Success) return@collect
+                _syncFeedback.value = SyncFeedback.AutoFailed
+            }
+        }
+    }
+
     suspend fun getItem(id: Long): DisplayItem? = repository.getItem(id)
+
+    fun syncWithWatch(manual: Boolean = false) {
+        viewModelScope.launch {
+            if (manual) {
+                _syncFeedback.value = SyncFeedback.Syncing
+            }
+            reportSyncResult(syncRepository.syncWithWatch(), manual = manual)
+        }
+    }
+
+    private fun reportSyncResult(result: SyncResult, manual: Boolean) {
+        when (result) {
+            SyncResult.Success -> {
+                if (manual) {
+                    _syncFeedback.value = SyncFeedback.Success
+                }
+            }
+            SyncResult.NoWatchConnected -> {
+                _syncFeedback.value = SyncFeedback.NoWatchConnected
+            }
+            is SyncResult.Error -> {
+                _syncFeedback.value = SyncFeedback.Error(result.message)
+            }
+        }
+    }
+
+    fun clearSyncFeedback() {
+        _syncFeedback.value = null
+    }
 
     fun saveItem(
         id: Long?,
@@ -75,23 +130,20 @@ class ItemsViewModel(
         }
     }
 
-    fun reorderItems(fromIndex: Int, toIndex: Int) {
-        if (fromIndex == toIndex) return
+    fun commitItemOrder(orderedIds: List<Long>) {
+        if (orderedIds.isEmpty()) return
         viewModelScope.launch {
-            val current = items.value.toMutableList()
-            if (fromIndex !in current.indices || toIndex !in current.indices) return@launch
-            val item = current.removeAt(fromIndex)
-            current.add(toIndex, item)
-            repository.reorderItems(current.map { it.id })
+            repository.reorderItems(orderedIds)
         }
     }
 
     class Factory(
         private val repository: ItemsRepository,
+        private val syncRepository: SyncRepository,
     ) : ViewModelProvider.Factory {
         @Suppress("UNCHECKED_CAST")
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
-            return ItemsViewModel(repository) as T
+            return ItemsViewModel(repository, syncRepository) as T
         }
     }
 }

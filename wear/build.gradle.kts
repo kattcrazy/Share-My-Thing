@@ -75,6 +75,7 @@ dependencies {
     implementation(libs.play.services.wearable)
 
     implementation(libs.reorderable)
+    implementation("androidx.compose.material:material-icons-extended")
 
     debugImplementation(libs.compose.ui.tooling.preview)
     debugImplementation(libs.androidx.wear.compose.ui.tooling)

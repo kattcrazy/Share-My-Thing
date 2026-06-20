@@ -27,6 +27,7 @@ fun AppNavHost(
     onStartItemHandled: () -> Unit,
     startSurfaceSlot: SurfaceSlot?,
     onStartSurfaceSlotHandled: () -> Unit,
+    onSyncClick: () -> Unit,
 ) {
     var screen by remember { mutableStateOf<AppScreen>(AppScreen.List) }
     var detailItem by remember { mutableStateOf<DisplayItem?>(null) }
@@ -106,7 +107,8 @@ fun AppNavHost(
                     screen = AppScreen.Edit()
                 },
                 onTilesComplicationsClick = { screen = AppScreen.TilesComplications },
-                onReorder = viewModel::reorderItems,
+                onCommitItemOrder = viewModel::commitItemOrder,
+                onSyncClick = onSyncClick,
             )
         }
 
@@ -134,11 +136,12 @@ fun AppNavHost(
         }
 
         is AppScreen.Edit -> {
+            val editingItemId = (screen as AppScreen.Edit).itemId
             EditItemScreen(
                 existingItem = editItem,
                 onSave = { title, content, type ->
                     viewModel.saveItem(
-                        id = editItem?.id,
+                        id = editingItemId ?: editItem?.id,
                         title = title,
                         content = content,
                         type = type,

@@ -155,7 +155,8 @@ private fun InlineLinkParagraph(
 
     Text(
         text = buildAnnotatedString {
-            append(prefix)
+            append(prefix.trimEnd())
+            append(' ')
             withLink(
                 LinkAnnotation.Url(
                     url = url,
