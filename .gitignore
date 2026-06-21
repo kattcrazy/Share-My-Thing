@@ -4,6 +4,10 @@
 **/build/
 /app/build/
 
+# Local build scripts (machine-specific; keep on your dev PC only)
+/build-local.ps1
+/build-local.bat
+
 # Gradle
 /.gradle/
 /local.properties
