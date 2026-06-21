@@ -10,9 +10,13 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.emitAll
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 
@@ -21,74 +25,134 @@ object PeerAvailability {
 
     fun observePeerConnected(context: Context): Flow<Boolean> {
         if (!WearSyncSupport.isSupported(context)) {
-            return kotlinx.coroutines.flow.flowOf(false)
+            return flowOf(false)
         }
-        return callbackFlow {
+        return flow {
+            if (!WearSyncSupport.isWearDataLayerAvailable(context)) {
+                emit(false)
+                return@flow
+            }
+            emitAll(observePeerConnectedInternal(context))
+        }.distinctUntilChanged()
+    }
+
+    private fun observePeerConnectedInternal(context: Context): Flow<Boolean> = callbackFlow {
         val appContext = context.applicationContext
         val capabilityClient = Wearable.getCapabilityClient(appContext)
         val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
-        val listener = CapabilityClient.OnCapabilityChangedListener { capabilityInfo ->
-            scope.launch {
-                trySend(hasReachablePeer(appContext, capabilityInfo.nodes.map { it.id }.toSet()))
+        suspend fun emitCurrentState() {
+            val connected = runCatching {
+                hasReachablePeer(appContext, findReachablePeerNodeIds(appContext))
+            }.getOrDefault(false)
+            trySend(connected)
+        }
+
+        val capabilityListener = CapabilityClient.OnCapabilityChangedListener {
+            scope.launch { emitCurrentState() }
+        }
+
+        val listenerRegistered = runCatching {
+            capabilityClient.addListener(
+                capabilityListener,
+                capabilityUri(),
+                CapabilityClient.FILTER_REACHABLE,
+            )
+        }.isSuccess
+
+        if (!listenerRegistered) {
+            trySend(false)
+            awaitClose { scope.cancel() }
+            return@callbackFlow
+        }
+
+        scope.launch {
+            emitCurrentState()
+            delay(2_000)
+            emitCurrentState()
+            delay(3_000)
+            emitCurrentState()
+            while (true) {
+                delay(10_000)
+                emitCurrentState()
             }
         }
-        capabilityClient.addListener(
-            listener,
-            capabilityUri(),
-            CapabilityClient.FILTER_REACHABLE,
-        )
-        scope.launch {
-            trySend(hasReachablePeer(appContext, findReachablePeerNodeIds(appContext)))
-        }
+
         awaitClose {
             scope.cancel()
-            capabilityClient.removeListener(listener)
+            runCatching { capabilityClient.removeListener(capabilityListener) }
         }
-        }.distinctUntilChanged()
     }
 
     suspend fun findPeerNode(context: Context): Node? {
-        if (!WearSyncSupport.isSupported(context)) {
+        if (!WearSyncSupport.isWearDataLayerAvailable(context)) {
             return null
         }
-        val appContext = context.applicationContext
-        val localNodeId = Wearable.getNodeClient(appContext).localNode.await().id
-        val capabilityNodes = runCatching {
-            Wearable.getCapabilityClient(appContext)
-                .getCapability(SyncPaths.CAPABILITY, CapabilityClient.FILTER_REACHABLE)
+        return runCatching {
+            val appContext = context.applicationContext
+            val localNodeId = Wearable.getNodeClient(appContext).localNode.await().id
+            findPeerInCapability(appContext, localNodeId, CapabilityClient.FILTER_REACHABLE)
+                ?: findPeerInCapability(appContext, localNodeId, CapabilityClient.FILTER_ALL)
+                ?: run {
+                    val connectedNodes = Wearable.getNodeClient(appContext).connectedNodes.await()
+                    connectedNodes.firstOrNull { it.isNearby && it.id != localNodeId }
+                        ?: connectedNodes.firstOrNull { it.id != localNodeId }
+                }
+        }.getOrNull()
+    }
+
+    private suspend fun findPeerInCapability(
+        context: Context,
+        localNodeId: String,
+        filter: Int,
+    ): Node? {
+        return runCatching {
+            Wearable.getCapabilityClient(context)
+                .getCapability(SyncPaths.CAPABILITY, filter)
                 .await()
                 .nodes
-        }.getOrDefault(emptySet())
-        capabilityNodes.firstOrNull { it.id != localNodeId }?.let { return it }
-        val connectedNodes = Wearable.getNodeClient(appContext).connectedNodes.await()
-        return connectedNodes.firstOrNull { it.isNearby && it.id != localNodeId }
-            ?: connectedNodes.firstOrNull { it.id != localNodeId }
+                .firstOrNull { it.id != localNodeId }
+        }.getOrNull()
     }
 
     private suspend fun findReachablePeerNodeIds(context: Context): Set<String> {
-        val appContext = context.applicationContext
-        val localNodeId = Wearable.getNodeClient(appContext).localNode.await().id
-        val capabilityNodes = runCatching {
-            Wearable.getCapabilityClient(appContext)
-                .getCapability(SyncPaths.CAPABILITY, CapabilityClient.FILTER_REACHABLE)
+        return runCatching {
+            val appContext = context.applicationContext
+            val localNodeId = Wearable.getNodeClient(appContext).localNode.await().id
+            val capabilityNodes = capabilityPeerIds(appContext, localNodeId, CapabilityClient.FILTER_REACHABLE)
+            if (capabilityNodes.isNotEmpty()) return capabilityNodes
+            val allCapabilityNodes = capabilityPeerIds(appContext, localNodeId, CapabilityClient.FILTER_ALL)
+            if (allCapabilityNodes.isNotEmpty()) return allCapabilityNodes
+            val connectedNodes = Wearable.getNodeClient(appContext).connectedNodes.await()
+            connectedNodes
+                .firstOrNull { it.isNearby && it.id != localNodeId }
+                ?.let { setOf(it.id) }
+                ?: connectedNodes.firstOrNull { it.id != localNodeId }?.let { setOf(it.id) }
+                ?: emptySet()
+        }.getOrDefault(emptySet())
+    }
+
+    private suspend fun capabilityPeerIds(
+        context: Context,
+        localNodeId: String,
+        filter: Int,
+    ): Set<String> {
+        return runCatching {
+            Wearable.getCapabilityClient(context)
+                .getCapability(SyncPaths.CAPABILITY, filter)
                 .await()
                 .nodes
                 .map { it.id }
+                .filter { it != localNodeId }
                 .toSet()
         }.getOrDefault(emptySet())
-        capabilityNodes.firstOrNull { it != localNodeId }?.let { return setOf(it) }
-        val connectedNodes = Wearable.getNodeClient(appContext).connectedNodes.await()
-        return connectedNodes
-            .firstOrNull { it.isNearby && it.id != localNodeId }
-            ?.let { setOf(it.id) }
-            ?: connectedNodes.firstOrNull { it.id != localNodeId }?.let { setOf(it.id) }
-            ?: emptySet()
     }
 
     private suspend fun hasReachablePeer(context: Context, nodeIds: Set<String>): Boolean {
         if (nodeIds.isEmpty()) return false
-        val localNodeId = Wearable.getNodeClient(context.applicationContext).localNode.await().id
-        return nodeIds.any { it != localNodeId }
+        return runCatching {
+            val localNodeId = Wearable.getNodeClient(context.applicationContext).localNode.await().id
+            nodeIds.any { it != localNodeId }
+        }.getOrDefault(false)
     }
 }

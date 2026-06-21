@@ -26,6 +26,7 @@ abstract class SlotTileService(
             val layoutElement = buildTileLayout(
                 context = this,
                 deviceConfiguration = requestParams.deviceConfiguration,
+                protoLayoutScope = requestParams.scope,
                 slot = slot,
                 item = item,
                 configureText = getString(R.string.tile_configure),
@@ -50,6 +51,7 @@ abstract class SlotTileService(
         val layoutElement = buildTileLayout(
             context = this,
             deviceConfiguration = requestParams.deviceConfiguration,
+            protoLayoutScope = requestParams.scope,
             slot = slot,
             item = null,
             configureText = getString(R.string.tile_configure),

@@ -31,7 +31,7 @@ sealed interface SyncFeedback {
 class ItemsViewModel(
     private val repository: ItemsRepository,
     private val syncRepository: SyncRepository,
-    appContext: Context,
+    private val appContext: Context,
 ) : ViewModel() {
     val items: StateFlow<List<DisplayItem>> =
         repository.items.stateIn(
@@ -72,12 +72,10 @@ class ItemsViewModel(
     private val _syncFeedback = MutableStateFlow<SyncFeedback?>(null)
     val syncFeedback: StateFlow<SyncFeedback?> = _syncFeedback.asStateFlow()
 
-    private val wearSyncSupported = WearSyncSupport.isSupported(appContext)
-
     init {
         viewModelScope.launch {
             SyncFeedbackBridge.failures.collect { result ->
-                if (result == SyncResult.Success || !wearSyncSupported) return@collect
+                if (result == SyncResult.Success || !WearSyncSupport.isSupported(appContext)) return@collect
                 _syncFeedback.value = SyncFeedback.AutoFailed
             }
         }
@@ -86,12 +84,17 @@ class ItemsViewModel(
     suspend fun getItem(id: Long): DisplayItem? = repository.getItem(id)
 
     fun syncWithWatch(manual: Boolean = false) {
-        if (!wearSyncSupported) return
         viewModelScope.launch {
+            if (!WearSyncSupport.isSupportedAsync(appContext)) {
+                if (manual) {
+                    _syncFeedback.value = SyncFeedback.NoWatchConnected
+                }
+                return@launch
+            }
             if (manual) {
                 _syncFeedback.value = SyncFeedback.Syncing
             }
-            reportSyncResult(syncRepository.syncWithWatch(), manual = manual)
+            reportSyncResult(syncRepository.syncWithWatch(force = manual), manual = manual)
         }
     }
 

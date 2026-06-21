@@ -1,4 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <style name="Theme.ShareMyThing" parent="android:Theme.Material.Light.NoActionBar" />
+
+    <style name="Theme.ShareMyThing.AppWidgetContainerParent" parent="@android:style/Theme.DeviceDefault.DayNight">
+        <item name="appWidgetRadius">16dp</item>
+        <item name="appWidgetInnerRadius">8dp</item>
+    </style>
+
+    <style name="Theme.ShareMyThing.AppWidgetContainer" parent="Theme.ShareMyThing.AppWidgetContainerParent">
+        <item name="appWidgetPadding">0dp</item>
+    </style>
 </resources>

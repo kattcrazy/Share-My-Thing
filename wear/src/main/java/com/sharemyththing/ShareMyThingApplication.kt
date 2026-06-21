@@ -1,16 +1,14 @@
 package com.sharemyththing
 
 import android.app.Application
-import com.google.android.gms.wearable.Wearable
 import com.sharemyththing.data.ItemsRepository
-import com.sharemyththing.sync.SyncPaths
+import com.sharemyththing.sync.SyncBootstrap
 import com.sharemyththing.sync.SyncRepository
+import com.sharemyththing.sync.WearSyncSupport
 import com.sharemyththing.wear.WearSurfaceUpdater
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 
 class ShareMyThingApplication : Application() {
     private val applicationScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
@@ -28,17 +26,14 @@ class ShareMyThingApplication : Application() {
         repository = ItemsRepository(this, surfaceUpdater)
         syncRepository = SyncRepository(this, repository, surfaceUpdater)
         repository.onLocalDataChanged = {
-            applicationScope.launch {
-                runCatching { syncRepository.syncWithWatch() }
+            if (WearSyncSupport.isSupportedAsync(this@ShareMyThingApplication)) {
+                runCatching { syncRepository.syncWithWatch(force = true) }
             }
         }
-        applicationScope.launch {
-            delay(1_500)
-            runCatching { syncRepository.syncWithWatch() }
-        }
-        applicationScope.launch {
-            Wearable.getCapabilityClient(this@ShareMyThingApplication)
-                .addLocalCapability(SyncPaths.CAPABILITY)
-        }
+        SyncBootstrap.start(
+            scope = applicationScope,
+            context = this,
+            syncRepository = syncRepository,
+        )
     }
 }

@@ -11,6 +11,7 @@ import com.sharemyththing.data.SurfaceSlot
 import com.sharemyththing.sync.PeerAvailability
 import com.sharemyththing.sync.SyncRepository
 import com.sharemyththing.sync.SyncResult
+import com.sharemyththing.sync.WearSyncSupport
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -28,7 +29,7 @@ sealed interface SyncFeedback {
 class ItemsViewModel(
     private val repository: ItemsRepository,
     private val syncRepository: SyncRepository,
-    appContext: Context,
+    private val appContext: Context,
 ) : ViewModel() {
     val watchVisibleItems: StateFlow<List<DisplayItem>> =
         repository.watchVisibleItems.stateIn(
@@ -66,10 +67,16 @@ class ItemsViewModel(
 
     fun syncWithWatch(manual: Boolean = false) {
         viewModelScope.launch {
+            if (!WearSyncSupport.isSupportedAsync(appContext)) {
+                if (manual) {
+                    _syncFeedback.value = SyncFeedback.NoWatchConnected
+                }
+                return@launch
+            }
             if (manual) {
                 _syncFeedback.value = SyncFeedback.Syncing
             }
-            reportSyncResult(syncRepository.syncWithWatch(), manual = manual)
+            reportSyncResult(syncRepository.syncWithWatch(force = manual), manual = manual)
         }
     }
 

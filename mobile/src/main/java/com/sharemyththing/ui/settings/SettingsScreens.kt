@@ -205,10 +205,22 @@ fun SlotItemPickerScreen(
                 }
             } else {
                 items(items, key = { it.id }) { item ->
+                    val isSelected = selectedItemId == item.id
                     Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable { onSelectItem(item.id) },
+                        onClick = { onSelectItem(item.id) },
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = CardDefaults.cardColors(
+                            containerColor = if (isSelected) {
+                                MaterialTheme.colorScheme.primary
+                            } else {
+                                MaterialTheme.colorScheme.secondaryContainer
+                            },
+                            contentColor = if (isSelected) {
+                                MaterialTheme.colorScheme.onPrimary
+                            } else {
+                                MaterialTheme.colorScheme.onSecondaryContainer
+                            },
+                        ),
                     ) {
                         Text(
                             text = item.title,
@@ -216,11 +228,7 @@ fun SlotItemPickerScreen(
                                 .fillMaxWidth()
                                 .padding(16.dp),
                             textAlign = TextAlign.Center,
-                            color = if (selectedItemId == item.id) {
-                                MaterialTheme.colorScheme.primary
-                            } else {
-                                MaterialTheme.colorScheme.onSurface
-                            },
+                            style = MaterialTheme.typography.titleMedium,
                         )
                     }
                 }
@@ -228,9 +236,12 @@ fun SlotItemPickerScreen(
 
             item {
                 Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable(onClick = onClear),
+                    onClick = onClear,
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.errorContainer,
+                        contentColor = MaterialTheme.colorScheme.onErrorContainer,
+                    ),
                 ) {
                     Text(
                         text = stringResource(R.string.clear_surface),
@@ -238,7 +249,7 @@ fun SlotItemPickerScreen(
                             .fillMaxWidth()
                             .padding(16.dp),
                         textAlign = TextAlign.Center,
-                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.titleMedium,
                     )
                 }
             }

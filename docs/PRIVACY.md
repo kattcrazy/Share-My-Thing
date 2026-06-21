@@ -1,6 +1,6 @@
 # Privacy Policy for Share My Thing
 
-This policy describes how the Share My Thing apps handle information. It applies to both the watch and phone builds.
+This policy describes how the Share My Thing apps handle information. It applies to the **Android phone/tablet** app and the **Wear OS watch** app.
 
 ## Summary
 
@@ -13,6 +13,7 @@ When you use the app, you may enter data such as:
 - Item titles and body text  
 - URLs or other strings encoded as QR codes  
 - Assignments of items to watch tile or complication slots  
+- Assignments of items to phone home-screen widget slots  
 
 This data is saved locally using Android storage on each device where the app is installed.
 
@@ -20,15 +21,15 @@ This data is saved locally using Android storage on each device where the app is
 
 Your data is used only to:
 
-- Display items in the app and on watch tiles/complications  
+- Display items in the app, on watch tiles/complications, and on phone home-screen widgets  
 - Generate QR codes from your content  
-- Sync items and slot assignments between your paired phone and watch  
+- Sync items and slot assignments between your paired phone (or tablet) and watch  
 
 The developer does not receive, access, or sell your item content.
 
 ## Sync between phone and watch
 
-When phone and watch are paired and both apps are installed, data syncs directly between your devices using Google’s Wear OS / Play services data layer (Bluetooth/Wi‑Fi as managed by the system). Sync payloads are JSON messages between the two apps.
+When a phone or tablet and watch are paired and both apps are installed, data syncs directly between your devices using Google’s Wear OS / Play services data layer (Bluetooth/Wi‑Fi as managed by the system). Sync payloads are JSON messages between the two apps.
 
 Google’s handling of Play services is governed by [Google’s privacy policy](https://policies.google.com/privacy).
 

@@ -1,15 +1,16 @@
 package com.sharemyththing.widget
 
 import android.content.Context
-import android.content.res.Configuration
 import android.graphics.Bitmap
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.glance.GlanceModifier
 import androidx.glance.Image
 import androidx.glance.ImageProvider
+import androidx.glance.LocalContext
 import androidx.glance.LocalSize
 import androidx.glance.action.clickable
 import androidx.glance.appwidget.action.actionStartActivity
@@ -18,10 +19,9 @@ import androidx.glance.layout.Alignment
 import androidx.glance.layout.Box
 import androidx.glance.layout.Column
 import androidx.glance.layout.ContentScale
-import androidx.glance.layout.fillMaxHeight
+import androidx.glance.layout.ColumnScope
 import androidx.glance.layout.fillMaxSize
 import androidx.glance.layout.fillMaxWidth
-import androidx.glance.layout.height
 import androidx.glance.layout.padding
 import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
@@ -34,8 +34,9 @@ import com.sharemyththing.data.ItemType
 import com.sharemyththing.data.SurfaceSlot
 import com.sharemyththing.data.usesQr
 import com.sharemyththing.presentation.MainActivity
+import kotlin.math.floor
+import kotlin.math.max
 import kotlin.math.min
-
 internal data class WidgetColors(
     val background: ColorProvider,
     val onSurface: ColorProvider,
@@ -47,12 +48,20 @@ internal data class PhoneWidgetState(
     val item: DisplayItem?,
     val qrBitmap: Bitmap?,
     val configureText: String,
-    val colors: WidgetColors,
+)
+
+private data class WidgetLayoutMetrics(
+    val titleFontSp: Float,
+    val bodyFontSp: Float,
+    val titleMaxLines: Int,
+    val bodyMaxLines: Int,
+    val titleVerticalPadding: Dp,
 )
 
 @Composable
 internal fun PhoneWidgetContent(state: PhoneWidgetState) {
-    val context = androidx.glance.LocalContext.current
+    val context = LocalContext.current
+    val colors = widgetColors()
     val clickModifier = when (val item = state.item) {
         null -> GlanceModifier.clickable(
             actionStartActivity(
@@ -67,7 +76,8 @@ internal fun PhoneWidgetContent(state: PhoneWidgetState) {
     Column(
         modifier = GlanceModifier
             .fillMaxSize()
-            .background(state.colors.background)
+            .fillMaxWidth()
+            .background(colors.background)
             .then(clickModifier),
         horizontalAlignment = Alignment.Horizontal.CenterHorizontally,
     ) {
@@ -80,7 +90,7 @@ internal fun PhoneWidgetContent(state: PhoneWidgetState) {
                     Text(
                         text = state.configureText,
                         style = TextStyle(
-                            color = state.colors.onSurfaceVariant,
+                            color = colors.onSurfaceVariant,
                             fontSize = 14.sp,
                             textAlign = TextAlign.Center,
                         ),
@@ -94,20 +104,20 @@ internal fun PhoneWidgetContent(state: PhoneWidgetState) {
                 ItemType.QR_CODE -> QrCodeWidgetLayout(
                     title = item.title,
                     qrBitmap = state.qrBitmap,
-                    colors = state.colors,
+                    colors = colors,
                 )
 
                 ItemType.BOTH -> BothWidgetLayout(
                     title = item.title,
                     content = item.content,
                     qrBitmap = state.qrBitmap,
-                    colors = state.colors,
+                    colors = colors,
                 )
 
                 ItemType.TEXT -> TextWidgetLayout(
                     title = item.title,
                     content = item.content,
-                    colors = state.colors,
+                    colors = colors,
                 )
             }
         }
@@ -120,32 +130,21 @@ private fun QrCodeWidgetLayout(
     qrBitmap: Bitmap?,
     colors: WidgetColors,
 ) {
-    val widgetSize = LocalSize.current
-    val qrHeight = min(widgetSize.width.value, widgetSize.height.value * 0.72f).dp
-    Column(modifier = GlanceModifier.fillMaxSize()) {
-        Box(
-            modifier = GlanceModifier
-                .fillMaxWidth()
-                .height(qrHeight)
-                .background(ColorProvider(Color.White)),
-            contentAlignment = Alignment.Center,
-        ) {
-            if (qrBitmap != null) {
-                Image(
-                    provider = ImageProvider(qrBitmap),
-                    contentDescription = null,
-                    modifier = GlanceModifier
-                        .fillMaxWidth()
-                        .fillMaxHeight()
-                        .padding(6.dp),
-                    contentScale = ContentScale.Fit,
-                )
-            }
-        }
-        TitleText(
+    val metrics = widgetLayoutMetrics(includeBody = false)
+    Column(
+        modifier = GlanceModifier
+            .fillMaxSize()
+            .fillMaxWidth(),
+    ) {
+        QrWhiteBlock(
+            qrBitmap = qrBitmap,
+        )
+        TitleBand(
             title = title,
             colors = colors,
-            modifier = GlanceModifier.padding(horizontal = 10.dp, vertical = 8.dp),
+            fontSizeSp = metrics.titleFontSp,
+            maxLines = metrics.titleMaxLines,
+            verticalPadding = metrics.titleVerticalPadding,
         )
     }
 }
@@ -157,39 +156,42 @@ private fun BothWidgetLayout(
     qrBitmap: Bitmap?,
     colors: WidgetColors,
 ) {
-    val widgetSize = LocalSize.current
-    val qrHeight = min(widgetSize.width.value / 1.4f, widgetSize.height.value * 0.42f).dp
-    Column(modifier = GlanceModifier.fillMaxSize()) {
+    val metrics = widgetLayoutMetrics(
+        includeBody = content.isNotBlank(),
+        hasQrBlock = qrBitmap != null && content.isNotBlank(),
+    )
+    Column(
+        modifier = GlanceModifier
+            .fillMaxSize()
+            .fillMaxWidth(),
+    ) {
         if (qrBitmap != null && content.isNotBlank()) {
-            Box(
-                modifier = GlanceModifier
-                    .fillMaxWidth()
-                    .height(qrHeight)
-                    .background(ColorProvider(Color.White)),
-                contentAlignment = Alignment.Center,
-            ) {
-                Image(
-                    provider = ImageProvider(qrBitmap),
-                    contentDescription = null,
-                    modifier = GlanceModifier
-                        .fillMaxWidth()
-                        .fillMaxHeight()
-                        .padding(4.dp),
-                    contentScale = ContentScale.Fit,
-                )
-            }
+            QrWhiteBlock(
+                qrBitmap = qrBitmap,
+            )
         }
         Column(
             modifier = GlanceModifier
                 .fillMaxWidth()
-                .padding(horizontal = 10.dp, vertical = 6.dp),
+                .padding(
+                    horizontal = 10.dp,
+                    vertical = metrics.titleVerticalPadding,
+                ),
+            horizontalAlignment = Alignment.Horizontal.CenterHorizontally,
+            verticalAlignment = Alignment.Vertical.CenterVertically,
         ) {
-            TitleText(title = title, colors = colors)
+            CenteredTitleText(
+                title = title,
+                colors = colors,
+                fontSizeSp = metrics.titleFontSp,
+                maxLines = metrics.titleMaxLines,
+            )
             if (content.isNotBlank()) {
-                BodyText(
+                CenteredBodyText(
                     value = content,
                     colors = colors,
-                    maxLines = 4,
+                    fontSizeSp = metrics.bodyFontSp,
+                    maxLines = metrics.bodyMaxLines,
                 )
             }
         }
@@ -202,58 +204,219 @@ private fun TextWidgetLayout(
     content: String,
     colors: WidgetColors,
 ) {
+    val metrics = widgetLayoutMetrics(includeBody = content.isNotBlank())
     Column(
         modifier = GlanceModifier
             .fillMaxSize()
+            .fillMaxWidth()
             .padding(horizontal = 10.dp, vertical = 8.dp),
         horizontalAlignment = Alignment.Horizontal.CenterHorizontally,
         verticalAlignment = Alignment.Vertical.CenterVertically,
     ) {
-        TitleText(title = title, colors = colors)
+        CenteredTitleText(
+            title = title,
+            colors = colors,
+            fontSizeSp = metrics.titleFontSp,
+            maxLines = metrics.titleMaxLines,
+        )
         if (content.isNotBlank()) {
-            BodyText(value = content, colors = colors, maxLines = 8)
+            CenteredBodyText(
+                value = content,
+                colors = colors,
+                fontSizeSp = metrics.bodyFontSp,
+                maxLines = metrics.bodyMaxLines,
+            )
         }
     }
 }
 
 @Composable
-private fun TitleText(
-    title: String,
-    colors: WidgetColors,
-    modifier: GlanceModifier = GlanceModifier,
+private fun ColumnScope.QrWhiteBlock(
+    qrBitmap: Bitmap?,
 ) {
-    Text(
-        text = breakForWidgetWrap(title),
-        modifier = modifier.fillMaxWidth(),
-        style = TextStyle(
-            color = colors.onSurface,
-            fontSize = 14.sp,
-            fontWeight = FontWeight.Medium,
-            textAlign = TextAlign.Center,
-        ),
-        maxLines = 2,
-    )
+    Box(
+        modifier = GlanceModifier
+            .defaultWeight()
+            .fillMaxWidth()
+            .background(ColorProvider(Color.White)),
+        contentAlignment = Alignment.Center,
+    ) {
+        if (qrBitmap != null) {
+            Image(
+                provider = ImageProvider(qrBitmap),
+                contentDescription = null,
+                modifier = GlanceModifier.fillMaxSize(),
+                contentScale = ContentScale.Fit,
+            )
+        }
+    }
 }
 
 @Composable
-private fun BodyText(
-    value: String,
+private fun TitleBand(
+    title: String,
     colors: WidgetColors,
+    fontSizeSp: Float,
+    maxLines: Int,
+    verticalPadding: Dp,
+) {
+    Box(
+        modifier = GlanceModifier
+            .fillMaxWidth()
+            .padding(horizontal = 8.dp, vertical = verticalPadding),
+        contentAlignment = Alignment.Center,
+    ) {
+        CenteredTitleText(
+            title = title,
+            colors = colors,
+            fontSizeSp = fontSizeSp,
+            maxLines = maxLines,
+        )
+    }
+}
+
+@Composable
+private fun widgetLayoutMetrics(
+    includeBody: Boolean,
+    hasQrBlock: Boolean = false,
+): WidgetLayoutMetrics {
+    val size = LocalSize.current
+    return computeWidgetLayoutMetrics(
+        widthDp = size.width.value,
+        heightDp = size.height.value,
+        includeBody = includeBody,
+        hasQrBlock = hasQrBlock,
+    )
+}
+
+private fun computeWidgetLayoutMetrics(
+    widthDp: Float,
+    heightDp: Float,
+    includeBody: Boolean,
+    hasQrBlock: Boolean = false,
+): WidgetLayoutMetrics {
+    val safeHeight = heightDp.coerceAtLeast(110f)
+    val compact = safeHeight < 120f
+    val veryCompact = safeHeight < 100f
+    val titleMaxLines = if (compact) 1 else 2
+    val titleFontSp = when {
+        veryCompact -> 9f
+        compact -> 10f
+        else -> (safeHeight * 0.038f + 9f).coerceIn(10f, 15f)
+    }
+    val bodyFontSp = when {
+        veryCompact -> 8f
+        compact -> 9f
+        else -> (safeHeight * 0.032f + 8f).coerceIn(9f, 13f)
+    }
+
+    val titleVerticalPadding = when {
+        veryCompact -> 2.dp
+        compact -> 4.dp
+        else -> 6.dp
+    }
+
+    val bodyMaxLines = if (!includeBody) {
+        0
+    } else {
+        fitBodyMaxLines(
+            heightDp = safeHeight,
+            widthDp = widthDp,
+            titleMaxLines = titleMaxLines,
+            titleFontSp = titleFontSp,
+            bodyFontSp = bodyFontSp,
+            titleVerticalPaddingDp = titleVerticalPadding.value,
+            hasQrBlock = hasQrBlock,
+        )
+    }
+
+    return WidgetLayoutMetrics(
+        titleFontSp = titleFontSp,
+        bodyFontSp = bodyFontSp,
+        titleMaxLines = titleMaxLines,
+        bodyMaxLines = bodyMaxLines,
+        titleVerticalPadding = titleVerticalPadding,
+    )
+}
+
+private fun fitBodyMaxLines(
+    heightDp: Float,
+    widthDp: Float,
+    titleMaxLines: Int,
+    titleFontSp: Float,
+    bodyFontSp: Float,
+    titleVerticalPaddingDp: Float,
+    hasQrBlock: Boolean,
+): Int {
+    val titleLineHeight = titleFontSp * LINE_HEIGHT_MULTIPLIER
+    val bodyLineHeight = bodyFontSp * LINE_HEIGHT_MULTIPLIER
+    val titleBlockHeight = titleMaxLines * titleLineHeight + 2f
+
+    val reservedHeight = if (hasQrBlock) {
+        val minQrHeight = min(widthDp, heightDp * 0.55f).coerceAtLeast(48f)
+        minQrHeight + titleBlockHeight + titleVerticalPaddingDp * 2f
+    } else {
+        titleBlockHeight + TEXT_WIDGET_VERTICAL_PADDING_DP * 2f
+    }
+
+    val remaining = heightDp - reservedHeight
+    if (remaining <= 0f) return 1
+    return max(1, min(MAX_BODY_LINES, floor(remaining / bodyLineHeight).toInt()))
+}
+
+private const val LINE_HEIGHT_MULTIPLIER = 1.35f
+private const val TEXT_WIDGET_VERTICAL_PADDING_DP = 8f
+private const val MAX_BODY_LINES = 64
+
+@Composable
+private fun CenteredTitleText(
+    title: String,
+    colors: WidgetColors,
+    fontSizeSp: Float,
     maxLines: Int,
     modifier: GlanceModifier = GlanceModifier,
 ) {
-    Text(
-        text = breakForWidgetWrap(value),
+    Box(
+        modifier = modifier.fillMaxWidth(),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(
+            text = breakForWidgetWrap(title),
+            style = TextStyle(
+                color = colors.onSurface,
+                fontSize = fontSizeSp.sp,
+                fontWeight = FontWeight.Medium,
+                textAlign = TextAlign.Center,
+            ),
+            maxLines = maxLines,
+        )
+    }
+}
+
+@Composable
+private fun CenteredBodyText(
+    value: String,
+    colors: WidgetColors,
+    fontSizeSp: Float,
+    maxLines: Int,
+    modifier: GlanceModifier = GlanceModifier,
+) {
+    Box(
         modifier = modifier
             .fillMaxWidth()
-            .padding(top = 4.dp),
-        style = TextStyle(
-            color = colors.onSurfaceVariant,
-            fontSize = 12.sp,
-            textAlign = TextAlign.Center,
-        ),
-        maxLines = maxLines,
-    )
+            .padding(top = 2.dp),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(
+            text = breakForWidgetWrap(value),
+            style = TextStyle(
+                color = colors.onSurfaceVariant,
+                fontSize = fontSizeSp.sp,
+                textAlign = TextAlign.Center,
+            ),
+            maxLines = maxLines,
+        )
+    }
 }
 
 internal fun breakForWidgetWrap(text: String): String {
@@ -269,23 +432,13 @@ internal fun breakForWidgetWrap(text: String): String {
     }
 }
 
-internal fun widgetColorsFor(context: Context): WidgetColors {
-    val isDark = (context.resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) ==
-        Configuration.UI_MODE_NIGHT_YES
-    return if (isDark) {
-        WidgetColors(
-            background = ColorProvider(Color(0xFF1B1B1F)),
-            onSurface = ColorProvider(Color(0xFFE3E2E6)),
-            onSurfaceVariant = ColorProvider(Color(0xFFC4C6D0)),
-        )
-    } else {
-        WidgetColors(
-            background = ColorProvider(Color(0xFFFEFBFF)),
-            onSurface = ColorProvider(Color(0xFF1B1B1F)),
-            onSurfaceVariant = ColorProvider(Color(0xFF44474E)),
-        )
-    }
-}
+@Composable
+private fun widgetColors(): WidgetColors =
+    WidgetColors(
+        background = ColorProvider(R.color.widget_background),
+        onSurface = ColorProvider(R.color.widget_on_surface),
+        onSurfaceVariant = ColorProvider(R.color.widget_on_surface_variant),
+    )
 
 internal suspend fun loadPhoneWidgetState(
     context: Context,
@@ -306,7 +459,6 @@ internal suspend fun loadPhoneWidgetState(
         item = item,
         qrBitmap = qrBitmap,
         configureText = context.getString(R.string.widget_configure),
-        colors = widgetColorsFor(context),
     )
 }
 

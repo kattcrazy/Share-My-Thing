@@ -10,6 +10,10 @@ import androidx.wear.compose.material3.ColorScheme as WearColorScheme
 object ShareMyThingColorSchemes {
     val BrandBlue = Color(0xFF6495ED)
 
+    /** Brief sync-success flash on watch; kept lighter so it reads on black OLED. */
+    val watchSyncSuccessContainer = Color(0xFF6BAA80)
+    val watchSyncSuccessOn = Color(0xFFE8F5EB)
+
     val light: ColorScheme = lightColorScheme(
         primary = Color(0xFF235CB1),
         onPrimary = Color(0xFFFFFFFF),

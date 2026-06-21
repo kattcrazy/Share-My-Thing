@@ -26,7 +26,8 @@
         <receiver
             android:name=".widget.PhoneWidget1Receiver"
             android:exported="true"
-            android:label="@string/phone_widget_1">
+            android:label="@string/phone_widget_1"
+            android:theme="@style/Theme.ShareMyThing.AppWidgetContainer">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
             </intent-filter>
@@ -38,7 +39,8 @@
         <receiver
             android:name=".widget.PhoneWidget2Receiver"
             android:exported="true"
-            android:label="@string/phone_widget_2">
+            android:label="@string/phone_widget_2"
+            android:theme="@style/Theme.ShareMyThing.AppWidgetContainer">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
             </intent-filter>
@@ -50,7 +52,8 @@
         <receiver
             android:name=".widget.PhoneWidget3Receiver"
             android:exported="true"
-            android:label="@string/phone_widget_3">
+            android:label="@string/phone_widget_3"
+            android:theme="@style/Theme.ShareMyThing.AppWidgetContainer">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
             </intent-filter>
@@ -62,7 +65,8 @@
         <receiver
             android:name=".widget.PhoneWidget4Receiver"
             android:exported="true"
-            android:label="@string/phone_widget_4">
+            android:label="@string/phone_widget_4"
+            android:theme="@style/Theme.ShareMyThing.AppWidgetContainer">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
             </intent-filter>
@@ -74,7 +78,8 @@
         <receiver
             android:name=".widget.PhoneWidget5Receiver"
             android:exported="true"
-            android:label="@string/phone_widget_5">
+            android:label="@string/phone_widget_5"
+            android:theme="@style/Theme.ShareMyThing.AppWidgetContainer">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
             </intent-filter>

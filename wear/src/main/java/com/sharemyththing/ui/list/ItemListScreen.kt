@@ -39,6 +39,7 @@ import androidx.wear.compose.material3.lazy.rememberTransformationSpec
 import androidx.wear.compose.material3.lazy.transformedHeight
 import com.sharemyththing.R
 import com.sharemyththing.data.DisplayItem
+import com.sharemyththing.theme.ShareMyThingColorSchemes
 import com.sharemyththing.ui.SyncFeedback
 import com.sharemyththing.ui.edgeButtonBottomScrollSpacer
 import com.sharemyththing.ui.edgeButtonTopScrollSpacer
@@ -56,6 +57,7 @@ fun ItemListScreen(
     onSyncFeedbackShown: () -> Unit,
 ) {
     val isSyncing = syncFeedback == SyncFeedback.Syncing
+    val isSyncSuccess = syncFeedback == SyncFeedback.Success
     val isSyncError = syncFeedback is SyncFeedback.Error || syncFeedback == SyncFeedback.NoWatchConnected
 
     LaunchedEffect(syncFeedback) {
@@ -125,15 +127,20 @@ fun ItemListScreen(
                                     .size(44.dp)
                                     .clip(CircleShape),
                                 transformation = SurfaceTransformation(transformationSpec),
-                                colors = if (isSyncError) {
-                                    ButtonDefaults.buttonColors(
+                                colors = when {
+                                    isSyncError -> ButtonDefaults.buttonColors(
                                         containerColor = MaterialTheme.colorScheme.errorContainer,
                                         contentColor = MaterialTheme.colorScheme.onErrorContainer,
                                         disabledContainerColor = MaterialTheme.colorScheme.errorContainer,
                                         disabledContentColor = MaterialTheme.colorScheme.onErrorContainer,
                                     )
-                                } else {
-                                    ButtonDefaults.buttonColors(
+                                    isSyncSuccess || isSyncing -> ButtonDefaults.buttonColors(
+                                        containerColor = ShareMyThingColorSchemes.watchSyncSuccessContainer,
+                                        contentColor = ShareMyThingColorSchemes.watchSyncSuccessOn,
+                                        disabledContainerColor = ShareMyThingColorSchemes.watchSyncSuccessContainer,
+                                        disabledContentColor = ShareMyThingColorSchemes.watchSyncSuccessOn,
+                                    )
+                                    else -> ButtonDefaults.buttonColors(
                                         containerColor = MaterialTheme.colorScheme.secondaryContainer,
                                         contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
                                     )

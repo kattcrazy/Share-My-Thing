@@ -1,16 +1,17 @@
 package com.sharemyththing
 
 import android.app.Application
-import com.google.android.gms.wearable.Wearable
+import android.content.ComponentCallbacks2
+import android.content.res.Configuration
 import com.sharemyththing.data.ItemsRepository
+import com.sharemyththing.sync.SyncBootstrap
 import com.sharemyththing.sync.SyncFeedbackBridge
-import com.sharemyththing.sync.SyncPaths
 import com.sharemyththing.sync.SyncRepository
+import com.sharemyththing.sync.WearSyncSupport
 import com.sharemyththing.widget.PhoneWidgetUpdater
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 class ShareMyThingApplication : Application() {
@@ -28,24 +29,30 @@ class ShareMyThingApplication : Application() {
         surfaceUpdater = PhoneWidgetUpdater(this, applicationScope)
         repository = ItemsRepository(this, surfaceUpdater)
         syncRepository = SyncRepository(this, repository, surfaceUpdater)
-        val wearSyncSupported = com.sharemyththing.sync.WearSyncSupport.isSupported(this)
         repository.onLocalDataChanged = {
-            if (wearSyncSupported) {
-                SyncFeedbackBridge.emitFailure(syncRepository.syncWithWatch())
+            if (WearSyncSupport.isSupportedAsync(this@ShareMyThingApplication)) {
+                SyncFeedbackBridge.emitFailure(syncRepository.syncWithWatch(force = true))
             }
         }
-        if (wearSyncSupported) {
-            applicationScope.launch {
-                delay(1_500)
-                SyncFeedbackBridge.emitFailure(syncRepository.syncWithWatch())
-            }
-            applicationScope.launch {
-                Wearable.getCapabilityClient(this@ShareMyThingApplication)
-                    .addLocalCapability(SyncPaths.CAPABILITY)
-            }
-        }
+        SyncBootstrap.start(
+            scope = applicationScope,
+            context = this,
+            syncRepository = syncRepository,
+            onInitialSyncComplete = { result ->
+                SyncFeedbackBridge.emitFailure(result)
+            },
+        )
         applicationScope.launch {
             surfaceUpdater.requestUpdateAll()
         }
+        registerComponentCallbacks(object : ComponentCallbacks2 {
+            override fun onConfigurationChanged(newConfig: Configuration) {
+                surfaceUpdater.requestUpdateAll()
+            }
+
+            override fun onLowMemory() = Unit
+
+            override fun onTrimMemory(level: Int) = Unit
+        })
     }
 }

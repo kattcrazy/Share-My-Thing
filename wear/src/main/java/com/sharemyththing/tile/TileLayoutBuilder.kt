@@ -8,11 +8,12 @@ import androidx.wear.protolayout.DeviceParametersBuilders
 import androidx.wear.protolayout.DimensionBuilders
 import androidx.wear.protolayout.LayoutElementBuilders
 import androidx.wear.protolayout.ModifiersBuilders
+import androidx.wear.protolayout.ProtoLayoutScope
 import androidx.wear.protolayout.ResourceBuilders
 import androidx.wear.protolayout.material3.MaterialScope
 import androidx.wear.protolayout.material3.Typography.BODY_LARGE
 import androidx.wear.protolayout.material3.Typography.TITLE_MEDIUM
-import androidx.wear.protolayout.material3.materialScope
+import androidx.wear.protolayout.material3.materialScopeWithResources
 import androidx.wear.protolayout.material3.text
 import androidx.wear.protolayout.types.layoutString
 import com.sharemyththing.data.DisplayItem
@@ -23,8 +24,6 @@ import com.sharemyththing.presentation.MainActivity
 import com.sharemyththing.theme.ShareMyThingColorSchemes
 import com.sharemyththing.theme.toProtolayoutColorScheme
 import com.sharemyththing.util.QrCodeGenerator
-
-internal const val QR_IMAGE_RESOURCE_ID = "qr_image"
 
 private fun expandSpacer() = LayoutElementBuilders.Spacer.Builder()
     .setWidth(DimensionBuilders.expand())
@@ -37,30 +36,21 @@ internal fun tileResourcesVersion(item: DisplayItem?): String =
         else -> "${item.id}-${item.type}-${item.title.hashCode()}-${item.content.hashCode()}"
     }
 
-internal fun buildTileResources(item: DisplayItem?): ResourceBuilders.Resources {
-    val builder = ResourceBuilders.Resources.Builder()
+internal fun buildTileResources(item: DisplayItem?): ResourceBuilders.Resources =
+    ResourceBuilders.Resources.Builder()
         .setVersion(tileResourcesVersion(item))
-
-    if (item != null && item.type.usesQr && item.content.isNotBlank()) {
-        val bitmap = runCatching {
-            QrCodeGenerator.generate(item.content, QR_TILE_SIZE_PX)
-        }.getOrNull()
-        if (bitmap != null) {
-            builder.addIdToImageMapping(QR_IMAGE_RESOURCE_ID, bitmap.toInlineImageResource())
-        }
-    }
-
-    return builder.build()
-}
+        .build()
 
 internal fun buildTileLayout(
     context: Context,
     deviceConfiguration: DeviceParametersBuilders.DeviceParameters,
+    protoLayoutScope: ProtoLayoutScope,
     slot: SurfaceSlot,
     item: DisplayItem?,
     configureText: String,
-) = materialScope(
+) = materialScopeWithResources(
     context = context,
+    protoLayoutScope = protoLayoutScope,
     deviceConfiguration = deviceConfiguration,
     allowDynamicTheme = false,
     defaultColorScheme = ShareMyThingColorSchemes.watchDark.toProtolayoutColorScheme(),
@@ -98,7 +88,7 @@ private fun MaterialScope.qrTileLayout(
     .setHeight(DimensionBuilders.expand())
     .setHorizontalAlignment(LayoutElementBuilders.HORIZONTAL_ALIGN_CENTER)
     .setModifiers(openItemModifiers(context, item))
-    .addContent(qrWhiteSection(deviceConfiguration))
+    .addContent(qrWhiteSection(deviceConfiguration, item))
     .addContent(titleSection(item.title))
     .build()
 
@@ -112,7 +102,7 @@ private fun MaterialScope.bothTileLayout(
     .setHeight(DimensionBuilders.expand())
     .setHorizontalAlignment(LayoutElementBuilders.HORIZONTAL_ALIGN_CENTER)
     .setModifiers(openItemModifiers(context, item))
-    .addContent(qrWhiteSection(deviceConfiguration, BOTH_QR_WIDTH_FRACTION))
+    .addContent(qrWhiteSection(deviceConfiguration, item, BOTH_QR_WIDTH_FRACTION))
     .addContent(titleSection(item.title))
     .addContent(
         LayoutElementBuilders.Column.Builder()
@@ -215,13 +205,14 @@ private fun MaterialScope.configureTileLayout(
     .addContent(expandSpacer())
     .build()
 
-private fun qrWhiteSection(
+private fun MaterialScope.qrWhiteSection(
     deviceConfiguration: DeviceParametersBuilders.DeviceParameters,
+    item: DisplayItem,
     widthFraction: Float = QR_IN_APP_WIDTH_FRACTION,
 ): LayoutElementBuilders.Column {
     val qrSizeDp = deviceConfiguration.screenWidthDp * widthFraction
     val imageSizeDp = (qrSizeDp - QR_IMAGE_INNER_PADDING_DP * 2f).coerceAtLeast(48f)
-    return LayoutElementBuilders.Column.Builder()
+    val columnBuilder = LayoutElementBuilders.Column.Builder()
         .setWidth(DimensionBuilders.expand())
         .setHeight(DimensionBuilders.wrap())
         .setHorizontalAlignment(LayoutElementBuilders.HORIZONTAL_ALIGN_CENTER)
@@ -242,15 +233,24 @@ private fun qrWhiteSection(
                 )
                 .build(),
         )
-        .addContent(
-            LayoutElementBuilders.Image.Builder()
-                .setWidth(DimensionBuilders.dp(imageSizeDp))
-                .setHeight(DimensionBuilders.dp(imageSizeDp))
-                .setContentScaleMode(LayoutElementBuilders.CONTENT_SCALE_MODE_FIT)
-                .setResourceId(QR_IMAGE_RESOURCE_ID)
-                .build(),
-        )
-        .build()
+
+    if (item.type.usesQr && item.content.isNotBlank()) {
+        val imageResource = runCatching {
+            QrCodeGenerator.generate(item.content, QR_TILE_SIZE_PX)?.toInlineImageResource()
+        }.getOrNull()
+        if (imageResource != null) {
+            columnBuilder.addContent(
+                LayoutElementBuilders.Image.Builder(protoLayoutScope)
+                    .setWidth(DimensionBuilders.dp(imageSizeDp))
+                    .setHeight(DimensionBuilders.dp(imageSizeDp))
+                    .setContentScaleMode(LayoutElementBuilders.CONTENT_SCALE_MODE_FIT)
+                    .setImageResource(imageResource)
+                    .build(),
+            )
+        }
+    }
+
+    return columnBuilder.build()
 }
 
 private fun MaterialScope.titleSection(title: String) =
