@@ -59,7 +59,6 @@
     <string name="watch_visible_on">Show on watch</string>
     <string name="watch_visible_off">Hide from watch</string>
     <string name="about_title">About</string>
-    <string name="about_version">Version %1$s</string>
     <string name="about_developer_heading">About the developer</string>
     <string name="about_developer_body">Hi, I\'m Kattcrazy and I\'m an artist and developer. I enjoy working on my Home Assistant setup, coding, and am eager to contribute to the open-source community!</string>
     <string name="about_support_heading">Support the development</string>

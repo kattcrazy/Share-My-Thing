@@ -111,9 +111,14 @@ function Find-Artifact {
 
 $mobileVer = Read-GradleVersion (Join-Path $ProjectRoot "mobile\build.gradle.kts")
 $wearVer = Read-GradleVersion (Join-Path $ProjectRoot "wear\build.gradle.kts")
-if ($mobileVer.Code -ne $wearVer.Code -or $mobileVer.Name -ne $wearVer.Name) {
-    throw "mobile and wear versionCode/versionName must match. mobile=$($mobileVer.Name)/$($mobileVer.Code) wear=$($wearVer.Name)/$($wearVer.Code)"
+if ($mobileVer.Name -ne $wearVer.Name) {
+    throw "mobile and wear versionName must match. mobile=$($mobileVer.Name) wear=$($wearVer.Name)"
 }
+if ($mobileVer.Code -eq $wearVer.Code) {
+    throw "mobile and wear versionCode must differ (Play requires unique codes per package). Both are $($mobileVer.Code)"
+}
+Write-Host "  mobile $($mobileVer.Name) / versionCode $($mobileVer.Code)"
+Write-Host "  wear   $($wearVer.Name) / versionCode $($wearVer.Code)"
 $expectedTag = "v$($mobileVer.Name)"
 if ($VersionTag -ne $expectedTag) {
     Write-Warning "VersionTag '$VersionTag' does not match Gradle versionName '$($mobileVer.Name)' (expected tag $expectedTag)."

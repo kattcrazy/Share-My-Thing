@@ -1,8 +1,6 @@
 package kattcrazy.sharemything.ui.about
 
-import android.content.pm.PackageManager
 import android.net.Uri
-import android.os.Build
 import androidx.browser.customtabs.CustomTabsIntent
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -20,7 +18,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -38,21 +35,6 @@ import kattcrazy.sharemything.presentation.theme.appNameTextStyle
 fun AboutScreen(
     onBack: () -> Unit,
 ) {
-    val context = LocalContext.current
-    val versionName = remember {
-        runCatching {
-            val packageInfo = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                context.packageManager.getPackageInfo(
-                    context.packageName,
-                    PackageManager.PackageInfoFlags.of(0),
-                )
-            } else {
-                @Suppress("DEPRECATION")
-                context.packageManager.getPackageInfo(context.packageName, 0)
-            }
-            packageInfo.versionName.orEmpty()
-        }.getOrDefault("")
-    }
     val supportUrl = stringResource(R.string.support_banner_url)
     val githubUrl = stringResource(R.string.about_github_url)
 
@@ -82,11 +64,6 @@ fun AboutScreen(
             Text(
                 text = stringResource(R.string.app_name_short),
                 style = appNameTextStyle(MaterialTheme.typography.headlineSmall),
-            )
-
-            Text(
-                text = stringResource(R.string.about_version, versionName),
-                style = MaterialTheme.typography.bodyLarge,
             )
 
             AboutSection(

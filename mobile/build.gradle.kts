@@ -14,6 +14,7 @@ android {
         applicationId = "kattcrazy.sharemything"
         minSdk = 30
         targetSdk = 35
+        // Play versionCode: phone uses 1, 2, 3…; must not match wear (see wear/build.gradle.kts).
         versionCode = 2
         versionName = "2.0.0"
     }
