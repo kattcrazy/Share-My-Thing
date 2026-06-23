@@ -12,6 +12,8 @@
 
   Play Store is NOT auto-uploaded from this script.
 
+  Version scheme: docs/VERSIONING.md — use scripts/bump-version.ps1 before release.
+
 .EXAMPLE
   .\scripts\release.ps1 -VersionTag v2.0.0
   .\scripts\release.ps1 -VersionTag v2.0.0 -GitHub
