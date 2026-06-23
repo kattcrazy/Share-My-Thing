@@ -4,6 +4,11 @@ A phone, tablet, and wear OS app that allows you to share links, notes, or any t
 
 No sign-up or account required. No ads. Free forever.
 
+<img width="200" alt="1" src="https://github.com/user-attachments/assets/b866d928-0f6e-47a3-bf40-42efb8916487" />
+<img width="200" alt="2" src="https://github.com/user-attachments/assets/386afc4c-bda9-4c05-b725-7861a5297d3f" />
+<img width="200" alt="3" src="https://github.com/user-attachments/assets/882ee3a3-31d8-4476-96b8-107f839efa8c" />
+<img width="200" alt="4" src="https://github.com/user-attachments/assets/e5c78487-d0d6-4571-b336-8184fc93e5e9" />
+
 ## Features
 
 - 3 Item types: Choose between plain text, QR code, or both to influence how the item appears.
