@@ -11,3 +11,6 @@ val ItemType.usesQr: Boolean
 
 val ItemType.usesTextBody: Boolean
     get() = this == ItemType.TEXT || this == ItemType.BOTH
+
+/** QR payloads must be one line; collapse whitespace for encoding and display. */
+fun String.asSingleLineQrContent(): String = replace(Regex("\\s+"), " ").trim()

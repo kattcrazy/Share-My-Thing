@@ -44,6 +44,7 @@ import kattcrazy.sharemything.R
 import kattcrazy.sharemything.data.DisplayItem
 import kattcrazy.sharemything.data.ItemType
 import kattcrazy.sharemything.data.SurfaceDisplayConstants
+import kattcrazy.sharemything.data.usesQr
 import kattcrazy.sharemything.util.QrCodeGenerator
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -165,11 +166,13 @@ fun QrDetailScreen(
                                     onEditClick = onEditClick,
                                     transformation = SurfaceTransformation(transformationSpec),
                                 )
-                                Spacer(modifier = Modifier.width(12.dp))
-                                DetailHelpButton(
-                                    onHelpClick = onTipsClick,
-                                    transformation = SurfaceTransformation(transformationSpec),
-                                )
+                                if (item.type.usesQr) {
+                                    Spacer(modifier = Modifier.width(12.dp))
+                                    DetailHelpButton(
+                                        onHelpClick = onTipsClick,
+                                        transformation = SurfaceTransformation(transformationSpec),
+                                    )
+                                }
                             }
                         }
                     }

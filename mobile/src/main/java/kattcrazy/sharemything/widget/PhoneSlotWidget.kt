@@ -1,6 +1,7 @@
 package kattcrazy.sharemything.widget
 
 import android.content.Context
+import android.os.Build
 import androidx.glance.GlanceId
 import androidx.glance.appwidget.GlanceAppWidget
 import androidx.glance.appwidget.GlanceAppWidgetReceiver
@@ -17,8 +18,15 @@ abstract class PhoneSlotWidget(
     override suspend fun provideGlance(context: Context, id: GlanceId) {
         val state = loadPhoneWidgetState(context, slot)
         provideContent {
-            GlanceTheme(colors = WidgetGlanceTheme.colors) {
-                PhoneWidgetContent(state)
+            // API 31+: match launcher wallpaper / Material You widget palette.
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                GlanceTheme {
+                    PhoneWidgetContent(state)
+                }
+            } else {
+                GlanceTheme(colors = WidgetGlanceTheme.fallbackColors) {
+                    PhoneWidgetContent(state)
+                }
             }
         }
     }

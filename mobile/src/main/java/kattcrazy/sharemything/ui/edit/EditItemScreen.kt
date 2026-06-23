@@ -42,6 +42,7 @@ import androidx.compose.ui.unit.dp
 import kattcrazy.sharemything.R
 import kattcrazy.sharemything.data.DisplayItem
 import kattcrazy.sharemything.data.ItemType
+import kattcrazy.sharemything.data.asSingleLineQrContent
 import kattcrazy.sharemything.data.usesQr
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -64,6 +65,8 @@ fun EditItemScreen(
     var showDeleteConfirm by remember { mutableStateOf(false) }
     var validationError by remember { mutableStateOf<String?>(null) }
     val validationRequiredMessage = stringResource(R.string.validation_required)
+    val multilineQrWarningMessage = stringResource(R.string.validation_qr_multiline)
+    val showMultilineQrWarning = type.usesQr && content.contains('\n')
 
     Scaffold(
         topBar = {
@@ -129,12 +132,38 @@ fun EditItemScreen(
                     },
                     label = { Text(stringResource(R.string.field_content)) },
                     modifier = Modifier.fillMaxWidth(),
-                    minLines = 4,
+                    minLines = if (type.usesQr) 1 else 4,
                     maxLines = 12,
                     keyboardOptions = KeyboardOptions(
                         capitalization = KeyboardCapitalization.Sentences,
                         keyboardType = if (type.usesQr) KeyboardType.Uri else KeyboardType.Text,
                     ),
+                )
+            }
+
+            if (showMultilineQrWarning) {
+                Text(
+                    text = multilineQrWarningMessage,
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodyMedium,
+                )
+            }
+
+            if (type.usesQr) {
+                Text(
+                    text = stringResource(R.string.qr_tips_title),
+                    style = MaterialTheme.typography.titleSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Text(
+                    text = stringResource(R.string.qr_tips_url),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Text(
+                    text = stringResource(R.string.qr_tips_scan),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
 
@@ -197,7 +226,7 @@ fun EditItemScreen(
                     if (title.isBlank() || content.isBlank()) {
                         validationError = validationRequiredMessage
                     } else {
-                        onSave(title.trim(), content.trim(), type)
+                        onSave(title.trim(), content.let { if (type.usesQr) it.asSingleLineQrContent() else it.trim() }, type)
                     }
                 },
                 modifier = Modifier.fillMaxWidth(),

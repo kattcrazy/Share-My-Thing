@@ -39,6 +39,7 @@ import androidx.compose.ui.unit.dp
 import kattcrazy.sharemything.R
 import kattcrazy.sharemything.data.DisplayItem
 import kattcrazy.sharemything.data.ItemType
+import kattcrazy.sharemything.data.usesQr
 import kattcrazy.sharemything.data.SurfaceDisplayConstants
 import kattcrazy.sharemything.util.QrCodeGenerator
 import kotlinx.coroutines.Dispatchers
@@ -73,11 +74,13 @@ fun QrDetailScreen(
                     }
                 },
                 actions = {
-                    IconButton(onClick = onTipsClick) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Outlined.HelpOutline,
-                            contentDescription = stringResource(R.string.qr_tips_title),
-                        )
+                    if (item.type.usesQr) {
+                        IconButton(onClick = onTipsClick) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Outlined.HelpOutline,
+                                contentDescription = stringResource(R.string.qr_tips_title),
+                            )
+                        }
                     }
                     IconButton(onClick = onEditClick) {
                         Icon(

@@ -96,9 +96,14 @@ function Find-Artifact {
     if ($Kind -eq "apk") {
         $dir = Join-Path $BaseDir "$Module\build\outputs\apk\$Variant"
         $file = Get-ChildItem $dir -Filter "*.apk" -ErrorAction SilentlyContinue | Sort-Object LastWriteTime -Descending | Select-Object -First 1
-    } else {
+    } elseif ($Kind -eq "aab") {
         $dir = Join-Path $BaseDir "$Module\build\outputs\bundle\$Variant"
         $file = Get-ChildItem $dir -Filter "*.aab" -ErrorAction SilentlyContinue | Sort-Object LastWriteTime -Descending | Select-Object -First 1
+    } elseif ($Kind -eq "native-debug-symbols") {
+        $dir = Join-Path $BaseDir "$Module\build\outputs\native-debug-symbols\$Variant"
+        $file = Get-ChildItem $dir -Filter "native-debug-symbols.zip" -ErrorAction SilentlyContinue | Select-Object -First 1
+    } else {
+        throw "Unknown artifact kind: $Kind"
     }
     if (-not $file) { throw "Could not find $Kind for $Module under $dir" }
     return $file.FullName
@@ -192,6 +197,21 @@ if (Test-Path $keystoreProps) {
 Copy-Item $mobileAab $outMobileAab -Force
 Copy-Item $wearAab $outWearAab -Force
 
+$outMobileNativeSymbols = Join-Path $ReleaseDir "ShareMyThing-mobile-native-debug-symbols.zip"
+$outWearNativeSymbols = Join-Path $ReleaseDir "ShareMyThing-wear-native-debug-symbols.zip"
+try {
+    Copy-Item (Find-Artifact -BaseDir $BuildDir -Module "mobile" -Kind "native-debug-symbols") $outMobileNativeSymbols -Force
+    Write-Host "  Native debug symbols: ShareMyThing-mobile-native-debug-symbols.zip"
+} catch {
+    Write-Warning "Mobile native debug symbols not found (rebuild after adding ndk.debugSymbolLevel)."
+}
+try {
+    Copy-Item (Find-Artifact -BaseDir $BuildDir -Module "wear" -Kind "native-debug-symbols") $outWearNativeSymbols -Force
+    Write-Host "  Native debug symbols: ShareMyThing-wear-native-debug-symbols.zip"
+} catch {
+    Write-Warning "Wear native debug symbols not found (rebuild after adding ndk.debugSymbolLevel)."
+}
+
 # AABs are signed by Gradle when keystore.properties exists; otherwise unsigned
 if (-not (Test-Path $keystoreProps)) {
     Write-Warning "AAB files may be unsigned - configure keystore.properties before Play upload."
@@ -240,4 +260,6 @@ if ($GitHub) {
 
 Write-Host ""
 Write-Host "Next steps:" -ForegroundColor Cyan
-Write-Host "  Play Store: upload ShareMyThing-mobile-release.aab + ShareMyThing-wear-release.apk"
+Write-Host "  Play Store (general): upload ShareMyThing-mobile-release.aab"
+Write-Host "  Play Store (general): upload ShareMyThing-mobile-native-debug-symbols.zip (App bundle explorer > Downloads)"
+Write-Host "  Play Store (Wear OS): upload ShareMyThing-wear-release.apk"

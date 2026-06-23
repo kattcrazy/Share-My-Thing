@@ -35,7 +35,10 @@ import androidx.wear.compose.material3.lazy.transformedHeight
 import kattcrazy.sharemything.R
 import kattcrazy.sharemything.data.DisplayItem
 import kattcrazy.sharemything.data.ItemType
+import kattcrazy.sharemything.data.asSingleLineQrContent
+import kattcrazy.sharemything.data.usesQr
 import kattcrazy.sharemything.ui.bottomScrollSpacer
+import androidx.compose.ui.text.input.KeyboardType
 
 private enum class EditFieldTarget {
     Title,
@@ -91,6 +94,8 @@ fun EditItemScreen(
                     validationError = null
                 },
                 onDone = { activeField = null },
+                keyboardType = if (type.usesQr) KeyboardType.Uri else KeyboardType.Text,
+                singleLine = type.usesQr,
             )
         }
 
@@ -104,7 +109,9 @@ fun EditItemScreen(
             validationRequiredMessage = validationRequiredMessage,
             onTitleClick = { activeField = EditFieldTarget.Title },
             onContentClick = { activeField = EditFieldTarget.Content },
-            onTypeChange = { type = it },
+            onTypeChange = { newType ->
+                type = newType
+            },
             onSave = onSave,
             onDelete = onDelete,
             onCancel = onCancel,
@@ -213,6 +220,19 @@ private fun EditItemMainScreen(
                     }
                 }
 
+                if (type.usesQr && content.contains('\n')) {
+                    item {
+                        Text(
+                            text = stringResource(R.string.validation_qr_multiline),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .transformedHeight(this, transformationSpec),
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodySmall,
+                        )
+                    }
+                }
+
                 validationError?.let { error ->
                     item {
                         Text(
@@ -231,7 +251,11 @@ private fun EditItemMainScreen(
                             if (title.isBlank() || content.isBlank()) {
                                 onValidationFailed()
                             } else {
-                                onSave(title.trim(), content.trim(), type)
+                                onSave(
+                                    title.trim(),
+                                    content.let { if (type.usesQr) it.asSingleLineQrContent() else it.trim() },
+                                    type,
+                                )
                             }
                         },
                         modifier = Modifier

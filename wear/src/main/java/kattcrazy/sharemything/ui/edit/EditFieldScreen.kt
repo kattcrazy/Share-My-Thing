@@ -36,6 +36,7 @@ import androidx.wear.compose.material3.Text
 import androidx.wear.compose.material3.lazy.rememberTransformationSpec
 import androidx.wear.compose.material3.lazy.transformedHeight
 import kattcrazy.sharemything.R
+import kattcrazy.sharemything.data.asSingleLineQrContent
 import kattcrazy.sharemything.ui.bottomScrollSpacer
 
 @Composable
@@ -45,6 +46,7 @@ fun EditFieldScreen(
     onValueChange: (String) -> Unit,
     onDone: () -> Unit,
     keyboardType: KeyboardType = KeyboardType.Text,
+    singleLine: Boolean = false,
 ) {
     val focusRequester = remember { FocusRequester() }
     val focusManager = LocalFocusManager.current
@@ -58,7 +60,12 @@ fun EditFieldScreen(
 
     fun finishEditing() {
         focusManager.clearFocus()
-        onValueChange(textFieldValue.text)
+        val finalText = if (singleLine) {
+            textFieldValue.text.asSingleLineQrContent()
+        } else {
+            textFieldValue.text
+        }
+        onValueChange(finalText)
         onDone()
     }
 
@@ -102,6 +109,20 @@ fun EditFieldScreen(
                             .transformedHeight(this, transformationSpec)
                             .focusRequester(focusRequester),
                     )
+                }
+
+                if (singleLine && textFieldValue.text.contains('\n')) {
+                    item {
+                        Text(
+                            text = stringResource(R.string.validation_qr_multiline),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 12.dp)
+                                .transformedHeight(this, transformationSpec),
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodySmall,
+                        )
+                    }
                 }
 
                 item {
