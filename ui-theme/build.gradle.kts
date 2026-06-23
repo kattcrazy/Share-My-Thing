@@ -7,7 +7,7 @@ plugins {
 }
 
 android {
-    namespace = "com.sharemyththing.theme"
+    namespace = "kattcrazy.sharemything.theme"
     compileSdk = 35
 
     defaultConfig {

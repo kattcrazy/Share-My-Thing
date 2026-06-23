@@ -1,6 +1,6 @@
--keep class com.sharemyththing.data.** { *; }
--keep class com.sharemyththing.sync.** { *; }
--keep class com.sharemyththing.util.** { *; }
+-keep class kattcrazy.sharemything.data.** { *; }
+-keep class kattcrazy.sharemything.sync.** { *; }
+-keep class kattcrazy.sharemything.util.** { *; }
 -keep @androidx.room.Entity class *
 -keepclassmembers class * extends androidx.room.RoomDatabase {
     abstract ** *;

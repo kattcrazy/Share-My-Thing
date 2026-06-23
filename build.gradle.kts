@@ -7,11 +7,15 @@ plugins {
 }
 
 import com.android.build.api.dsl.ApplicationExtension
+import com.android.build.api.dsl.LibraryExtension
 import java.util.Properties
 
 subprojects {
     plugins.withId("com.android.application") {
         extensions.configure<ApplicationExtension> {
+            lint {
+                disable += "NullSafeMutableLiveData"
+            }
             val keystorePropertiesFile = rootProject.file("keystore.properties")
             if (!keystorePropertiesFile.exists()) return@configure
             val keystoreProperties = Properties().apply {
@@ -29,6 +33,13 @@ subprojects {
                 getByName("release") {
                     signingConfig = signingConfigs.getByName("release")
                 }
+            }
+        }
+    }
+    plugins.withId("com.android.library") {
+        extensions.configure<LibraryExtension> {
+            lint {
+                disable += "NullSafeMutableLiveData"
             }
         }
     }

@@ -7,7 +7,7 @@ plugins {
 }
 
 android {
-    namespace = "com.sharemyththing.core"
+    namespace = "kattcrazy.sharemything.core"
     compileSdk = 35
 
     defaultConfig {

@@ -8,11 +8,11 @@ plugins {
 }
 
 android {
-    namespace = "com.sharemyththing"
+    namespace = "kattcrazy.sharemything"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.sharemyththing"
+        applicationId = "kattcrazy.sharemything"
         minSdk = 30
         targetSdk = 35
         versionCode = 1
@@ -73,8 +73,6 @@ dependencies {
     implementation(libs.wear.watchface.complications.data.source.ktx)
     implementation(libs.guava)
     implementation(libs.play.services.wearable)
-
-    implementation("androidx.compose.material:material-icons-extended")
 
     debugImplementation(libs.compose.ui.tooling.preview)
     debugImplementation(libs.androidx.wear.compose.ui.tooling)

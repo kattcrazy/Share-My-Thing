@@ -7,11 +7,11 @@ plugins {
 }
 
 android {
-    namespace = "com.sharemyththing"
+    namespace = "kattcrazy.sharemything"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.sharemyththing"
+        applicationId = "kattcrazy.sharemything"
         minSdk = 30
         targetSdk = 35
         versionCode = 1

@@ -70,6 +70,11 @@
     <string name="about_bug_link">Share My Thing GitHub repo</string>
     <string name="about_bug_suffix">.</string>
     <string name="about_github_url">https://github.com/kattcrazy/Share-My-Thing</string>
+    <string name="about_privacy_heading">Privacy policy</string>
+    <string name="about_privacy_prefix">Read how your data is handled in the </string>
+    <string name="about_privacy_link">privacy policy</string>
+    <string name="about_privacy_suffix">.</string>
+    <string name="privacy_policy_url">https://github.com/kattcrazy/Share-My-Thing/blob/main/docs/PRIVACY.md</string>
     <string name="sync_with_watch">Sync with watch</string>
     <string name="sync_in_progress">Syncing with watch…</string>
     <string name="sync_success">Synced with watch.</string>

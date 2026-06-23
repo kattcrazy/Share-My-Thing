@@ -4,7 +4,7 @@
 **/build/
 /app/build/
 
-# Local build scripts (machine-specific; keep on your dev PC only)
+# Local build scripts (machine-specific)
 /build-local.ps1
 /build-local.bat
 
@@ -12,6 +12,9 @@
 /.gradle/
 /local.properties
 /keystore.properties
+/keystore-credentials.local.txt
+/upload-keystore.jks
+*.jks
 /scripts/release.config.json
 
 # IDE
@@ -31,4 +34,6 @@ Thumbs.db
 # Internal dev notes (local only, not published)
 /docs/sync-followup.md
 /docs/phone-theme-followup.md
+/docs/PUBLISHING.md
 /mobile_companion_app.md
+/store-assets/

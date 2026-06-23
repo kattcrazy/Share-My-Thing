@@ -1,0 +1,15 @@
+{
+  "githubRepo": "kattcrazy/Share-My-Thing",
+  "privacyPolicyUrl": "https://github.com/kattcrazy/Share-My-Thing/blob/main/docs/PRIVACY.md",
+  "signing": {
+    "keystoreProperties": "keystore.properties",
+    "fallbackDebugKeystore": true
+  },
+  "githubRelease": {
+    "draft": false,
+    "generateReleaseNotes": true
+  },
+  "playConsole": {
+    "note": "Play Console has no simple public upload API without a service account. Upload AAB/APK manually or add Fastlane supply later."
+  }
+}

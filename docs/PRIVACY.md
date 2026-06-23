@@ -1,6 +1,9 @@
 # Privacy Policy for Share My Thing
 
-This policy describes how the Share My Thing apps handle information. It applies to the **Android phone/tablet** app and the **Wear OS watch** app.
+**Developer:** Kattcrazy  
+**Contact:** [GitHub issues](https://github.com/kattcrazy/Share-My-Thing/issues) (no dedicated developer server; your item data is never sent to the developer)
+
+This policy describes how the Share My Thing apps handle information. It applies to the Android phone/tablet app and the Wear OS watch app.
 
 ## Summary
 
@@ -23,7 +26,7 @@ Your data is used only to:
 
 - Display items in the app, on watch tiles/complications, and on phone home-screen widgets  
 - Generate QR codes from your content  
-- Sync items and slot assignments between your paired phone (or tablet) and watch  
+- Sync items and slot assignments between your paired phone and watch  
 
 The developer does not receive, access, or sell your item content.
 
