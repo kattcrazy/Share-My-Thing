@@ -13,9 +13,9 @@
   Play Store is NOT auto-uploaded from this script.
 
 .EXAMPLE
-  .\scripts\release.ps1 -VersionTag v1.0.0
-  .\scripts\release.ps1 -VersionTag v1.0.0 -GitHub
-  .\scripts\release.ps1 -VersionTag v1.0.0 -SkipBuild -GitHub
+  .\scripts\release.ps1 -VersionTag v2.0.0
+  .\scripts\release.ps1 -VersionTag v2.0.0 -GitHub
+  .\scripts\release.ps1 -VersionTag v2.0.0 -SkipBuild -GitHub
 #>
 [CmdletBinding()]
 param(
