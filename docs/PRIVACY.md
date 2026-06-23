@@ -1,7 +1,7 @@
 # Privacy Policy for Share My Thing
 
 **Developer:** Kattcrazy  
-**Contact:** [GitHub issues](https://github.com/kattcrazy/Share-My-Thing/issues) (no dedicated developer server; your item data is never sent to the developer)
+**Contact:** [GitHub issues](https://github.com/kattcrazy/Share-My-Thing/issues)
 
 This policy describes how the Share My Thing apps handle information. It applies to the Android phone/tablet app and the Wear OS watch app.
 

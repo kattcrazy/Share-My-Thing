@@ -35,6 +35,8 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -75,24 +77,35 @@ fun ItemListScreen(
 ) {
     val lazyListState = rememberLazyListState()
     var listItems by remember { mutableStateOf(items) }
+    var pendingOrderCommit by remember { mutableStateOf<List<Long>?>(null) }
     val reorderableState = rememberReorderableLazyListState(lazyListState) { from, to ->
-        if (to.index >= listItems.size) return@rememberReorderableLazyListState
-        listItems = listItems.toMutableList().apply {
-            add(to.index, removeAt(from.index))
-        }
+        val reordered = reorderListItems(listItems, from.key, to.key) ?: return@rememberReorderableLazyListState
+        listItems = reordered
     }
     LaunchedEffect(items) {
-        if (
-            !reorderableState.isAnyItemDragging &&
-            listItems.map { it.id } != items.map { it.id }
-        ) {
-            listItems = items
+        if (reorderableState.isAnyItemDragging) return@LaunchedEffect
+        val pending = pendingOrderCommit
+        when {
+            pending != null -> {
+                if (items.map { it.id } == pending) {
+                    pendingOrderCommit = null
+                    listItems = items
+                }
+            }
+            listItems.map { it.id } != items.map { it.id } -> {
+                listItems = items
+            }
         }
     }
     var wasDragging by remember { mutableStateOf(false) }
     LaunchedEffect(reorderableState.isAnyItemDragging) {
         if (wasDragging && !reorderableState.isAnyItemDragging) {
-            onCommitItemOrder(listItems.map { it.id })
+            val order = listItems.map { it.id }
+            val currentOrder = items.map { it.id }
+            if (order != currentOrder) {
+                pendingOrderCommit = order
+                onCommitItemOrder(order)
+            }
         }
         wasDragging = reorderableState.isAnyItemDragging
     }
@@ -186,10 +199,21 @@ fun ItemListScreen(
             .padding(padding)
 
         if (isPeerAvailable) {
+            val pullRefreshState = rememberPullToRefreshState()
             PullToRefreshBox(
                 isRefreshing = isRefreshing,
                 onRefresh = onSyncClick,
                 modifier = listModifier,
+                state = pullRefreshState,
+                indicator = {
+                    PullToRefreshDefaults.Indicator(
+                        state = pullRefreshState,
+                        isRefreshing = isRefreshing,
+                        modifier = Modifier.align(Alignment.TopCenter),
+                        containerColor = MaterialTheme.colorScheme.surface,
+                        color = MaterialTheme.colorScheme.primary,
+                    )
+                },
             ) {
                 ItemListContent(
                     listItems = listItems,
@@ -389,3 +413,23 @@ private fun SectionCard(
 }
 
 private const val DRAGGING_ITEM_SCALE = 0.92f
+
+/** Map lazy-list keys to item indices; footer keys (strings) clamp to last row. */
+private fun reorderListItems(
+    current: List<DisplayItem>,
+    fromKey: Any?,
+    toKey: Any?,
+): List<DisplayItem>? {
+    if (current.isEmpty() || fromKey !is Long) return null
+    val fromIndex = current.indexOfFirst { it.id == fromKey }
+    if (fromIndex < 0) return null
+    val toIndex = when (toKey) {
+        is Long -> current.indexOfFirst { it.id == toKey }
+        else -> current.lastIndex
+    }
+    if (toIndex < 0) return null
+    if (fromIndex == toIndex) return current
+    return current.toMutableList().apply {
+        add(toIndex, removeAt(fromIndex))
+    }
+}
