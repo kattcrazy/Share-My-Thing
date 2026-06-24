@@ -4,6 +4,11 @@ Share any text (including links) by quickly converting it into a QR code, plain 
 
 Helpful for quickly sharing your website with a client, your phone number with a friend, a map pin with a family member, your bank account number with a customer, and many, many other use-cases. Any text works, including URLs. 
 
+<img width="200" alt="1" src="https://github.com/user-attachments/assets/b866d928-0f6e-47a3-bf40-42efb8916487" />
+<img width="200" alt="2" src="https://github.com/user-attachments/assets/386afc4c-bda9-4c05-b725-7861a5297d3f" />
+<img width="200" alt="3" src="https://github.com/user-attachments/assets/882ee3a3-31d8-4476-96b8-107f839efa8c" />
+<img width="200" alt="4" src="https://github.com/user-attachments/assets/e5c78487-d0d6-4571-b336-8184fc93e5e9" />
+
 ## Features
 
 - No sign-up or account required

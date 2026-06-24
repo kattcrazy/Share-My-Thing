@@ -15,7 +15,7 @@ object SyncBootstrap {
         onInitialSyncComplete: (suspend (SyncResult) -> Unit)? = null,
     ) {
         scope.launch {
-            if (!WearSyncSupport.isSupportedAsync(context)) return@launch
+            if (!WearSyncSupport.isWearDataLayerAvailable(context)) return@launch
             syncRepository.ensureReady()
             runCatching {
                 Wearable.getCapabilityClient(context.applicationContext)
@@ -23,8 +23,11 @@ object SyncBootstrap {
                     .await()
             }
             delay(1_000)
+            if (!PeerAvailability.hasSyncPeer(context)) return@launch
             val result = syncRepository.syncWithWatch(force = true)
-            onInitialSyncComplete?.invoke(result)
+            if (result != SyncResult.NoWatchConnected) {
+                onInitialSyncComplete?.invoke(result)
+            }
         }
     }
 }

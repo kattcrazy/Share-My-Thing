@@ -5,10 +5,10 @@ import android.content.ComponentCallbacks2
 import android.content.res.Configuration
 import kattcrazy.sharemything.data.CompositeSurfaceUpdateListener
 import kattcrazy.sharemything.data.ItemsRepository
+import kattcrazy.sharemything.sync.PeerAvailability
 import kattcrazy.sharemything.sync.SyncBootstrap
 import kattcrazy.sharemything.sync.SyncFeedbackBridge
 import kattcrazy.sharemything.sync.SyncRepository
-import kattcrazy.sharemything.sync.WearSyncSupport
 import kattcrazy.sharemything.shortcut.AppShortcutUpdater
 import kattcrazy.sharemything.widget.PhoneWidgetUpdater
 import kotlinx.coroutines.CoroutineScope
@@ -39,7 +39,7 @@ class ShareMyThingApplication : Application() {
         syncRepository = SyncRepository(this, repository, surfaceUpdater)
         repository.onLocalDataChanged = {
             applicationScope.launch {
-                if (WearSyncSupport.isSupportedAsync(this@ShareMyThingApplication)) {
+                if (PeerAvailability.hasSyncPeer(this@ShareMyThingApplication)) {
                     SyncFeedbackBridge.emitFailure(syncRepository.syncWithWatch(force = false))
                 }
             }

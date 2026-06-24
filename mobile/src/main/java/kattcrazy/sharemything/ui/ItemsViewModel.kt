@@ -75,7 +75,8 @@ class ItemsViewModel(
     init {
         viewModelScope.launch {
             SyncFeedbackBridge.failures.collect { result ->
-                if (result == SyncResult.Success || !WearSyncSupport.isSupported(appContext)) return@collect
+                if (result == SyncResult.Success || result == SyncResult.NoWatchConnected) return@collect
+                if (!WearSyncSupport.isWearDataLayerAvailable(appContext)) return@collect
                 _syncFeedback.value = SyncFeedback.AutoFailed
             }
         }
@@ -85,7 +86,13 @@ class ItemsViewModel(
 
     fun syncWithWatch(manual: Boolean = false) {
         viewModelScope.launch {
-            if (!WearSyncSupport.isSupportedAsync(appContext)) {
+            if (!WearSyncSupport.isWearDataLayerAvailable(appContext)) {
+                if (manual) {
+                    _syncFeedback.value = SyncFeedback.NoWatchConnected
+                }
+                return@launch
+            }
+            if (!PeerAvailability.hasSyncPeer(appContext)) {
                 if (manual) {
                     _syncFeedback.value = SyncFeedback.NoWatchConnected
                 }

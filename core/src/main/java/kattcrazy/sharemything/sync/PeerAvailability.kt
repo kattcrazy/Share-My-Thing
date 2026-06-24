@@ -91,14 +91,11 @@ object PeerAvailability {
             val appContext = context.applicationContext
             val localNodeId = Wearable.getNodeClient(appContext).localNode.await().id
             findPeerInCapability(appContext, localNodeId, CapabilityClient.FILTER_REACHABLE)
-                ?: findPeerInCapability(appContext, localNodeId, CapabilityClient.FILTER_ALL)
-                ?: run {
-                    val connectedNodes = Wearable.getNodeClient(appContext).connectedNodes.await()
-                    connectedNodes.firstOrNull { it.isNearby && it.id != localNodeId }
-                        ?: connectedNodes.firstOrNull { it.id != localNodeId }
-                }
+                ?: findNearbyConnectedPeer(appContext, localNodeId)
         }.getOrNull()
     }
+
+    suspend fun hasSyncPeer(context: Context): Boolean = findPeerNode(context) != null
 
     private suspend fun findPeerInCapability(
         context: Context,
@@ -120,15 +117,26 @@ object PeerAvailability {
             val localNodeId = Wearable.getNodeClient(appContext).localNode.await().id
             val capabilityNodes = capabilityPeerIds(appContext, localNodeId, CapabilityClient.FILTER_REACHABLE)
             if (capabilityNodes.isNotEmpty()) return capabilityNodes
-            val allCapabilityNodes = capabilityPeerIds(appContext, localNodeId, CapabilityClient.FILTER_ALL)
-            if (allCapabilityNodes.isNotEmpty()) return allCapabilityNodes
-            val connectedNodes = Wearable.getNodeClient(appContext).connectedNodes.await()
-            connectedNodes
-                .firstOrNull { it.isNearby && it.id != localNodeId }
-                ?.let { setOf(it.id) }
-                ?: connectedNodes.firstOrNull { it.id != localNodeId }?.let { setOf(it.id) }
-                ?: emptySet()
+            findNearbyConnectedPeerIds(appContext, localNodeId)
         }.getOrDefault(emptySet())
+    }
+
+    private suspend fun findNearbyConnectedPeer(context: Context, localNodeId: String): Node? {
+        val appContext = context.applicationContext
+        val isWatch = appContext.packageManager.hasSystemFeature(PackageManager.FEATURE_WATCH)
+        val connectedNodes = Wearable.getNodeClient(appContext).connectedNodes.await()
+        return connectedNodes.firstOrNull { node ->
+            node.id != localNodeId && (isWatch || node.isNearby)
+        }
+    }
+
+    private suspend fun findNearbyConnectedPeerIds(context: Context, localNodeId: String): Set<String> {
+        val appContext = context.applicationContext
+        val isWatch = appContext.packageManager.hasSystemFeature(PackageManager.FEATURE_WATCH)
+        return Wearable.getNodeClient(appContext).connectedNodes.await()
+            .filter { node -> node.id != localNodeId && (isWatch || node.isNearby) }
+            .map { it.id }
+            .toSet()
     }
 
     private suspend fun capabilityPeerIds(
@@ -152,13 +160,8 @@ object PeerAvailability {
         return if (isWatch) WATCH_PEER_POLL_INTERVAL_MS else PHONE_PEER_POLL_INTERVAL_MS
     }
 
-    private suspend fun hasReachablePeer(context: Context, nodeIds: Set<String>): Boolean {
-        if (nodeIds.isEmpty()) return false
-        return runCatching {
-            val localNodeId = Wearable.getNodeClient(context.applicationContext).localNode.await().id
-            nodeIds.any { it != localNodeId }
-        }.getOrDefault(false)
-    }
+    private suspend fun hasReachablePeer(context: Context, nodeIds: Set<String>): Boolean =
+        nodeIds.isNotEmpty()
 
     private const val WATCH_PEER_POLL_INTERVAL_MS = 60_000L
     private const val PHONE_PEER_POLL_INTERVAL_MS = 30_000L

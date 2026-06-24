@@ -9,7 +9,7 @@ object SyncFeedbackBridge {
     val failures: SharedFlow<SyncResult> = _failures.asSharedFlow()
 
     fun emitFailure(result: SyncResult) {
-        if (result != SyncResult.Success) {
+        if (result != SyncResult.Success && result != SyncResult.NoWatchConnected) {
             _failures.tryEmit(result)
         }
     }
