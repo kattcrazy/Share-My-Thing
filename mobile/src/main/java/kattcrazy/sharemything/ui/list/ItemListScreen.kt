@@ -24,7 +24,8 @@ import androidx.compose.material.icons.outlined.WatchOff
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.ExtendedFloatingActionButton
+import androidx.compose.material3.FabPosition
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -187,13 +188,21 @@ fun ItemListScreen(
                 SupportBanner()
             }
         },
+        floatingActionButtonPosition = FabPosition.Center,
         floatingActionButton = {
-            FloatingActionButton(onClick = onAddClick) {
-                Icon(
-                    imageVector = Icons.Filled.Add,
-                    contentDescription = stringResource(R.string.add_item),
-                )
-            }
+            ExtendedFloatingActionButton(
+                onClick = onAddClick,
+                modifier = Modifier.fillMaxWidth(1f / 3f),
+                icon = {
+                    Icon(
+                        imageVector = Icons.Filled.Add,
+                        contentDescription = null,
+                    )
+                },
+                text = {
+                    Text(text = stringResource(R.string.add_item))
+                },
+            )
         },
     ) { padding ->
         val listModifier = Modifier

@@ -16,8 +16,8 @@ android {
         minSdk = 30
         targetSdk = 35
         // Play versionCode: wear uses 2000, 2001… (offset from phone); versionName stays in sync with mobile.
-        versionCode = 2000
-        versionName = "2.0.0"
+        versionCode = 2015
+        versionName = "2.1.5"
     }
 
     buildTypes {
