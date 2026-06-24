@@ -90,6 +90,7 @@ fun ItemListScreen(
     val syncRotation = if (isSyncing) spinningRotation else 0f
     val context = LocalContext.current
     val privacyPolicyUrl = stringResource(R.string.privacy_policy_url)
+    val privacyPolicyLabel = stringResource(R.string.privacy_policy)
 
     val listState = rememberTransformingLazyColumnState()
     val transformationSpec = rememberTransformationSpec()
@@ -216,7 +217,7 @@ fun ItemListScreen(
 
                 item(key = "privacy") {
                     Text(
-                        text = privacyPolicyUrl,
+                        text = privacyPolicyLabel,
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(top = 12.dp)
