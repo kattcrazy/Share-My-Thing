@@ -67,7 +67,9 @@ fun ItemListScreen(
     onItemClick: (DisplayItem) -> Unit,
     onAddClick: () -> Unit,
     onPhoneWidgetsClick: () -> Unit,
-    onTilesComplicationsClick: () -> Unit,
+    onAppShortcutsClick: () -> Unit,
+    onWatchTilesClick: () -> Unit,
+    onWatchComplicationsClick: () -> Unit,
     onAboutClick: () -> Unit,
     onSetVisibleOnWatch: (DisplayItem, Boolean) -> Unit,
     onCommitItemOrder: (List<Long>) -> Unit,
@@ -223,7 +225,9 @@ fun ItemListScreen(
                     onItemClick = onItemClick,
                     onSetVisibleOnWatch = onSetVisibleOnWatch,
                     onPhoneWidgetsClick = onPhoneWidgetsClick,
-                    onTilesComplicationsClick = onTilesComplicationsClick,
+                    onAppShortcutsClick = onAppShortcutsClick,
+                    onWatchTilesClick = onWatchTilesClick,
+                    onWatchComplicationsClick = onWatchComplicationsClick,
                 )
             }
         } else {
@@ -235,7 +239,9 @@ fun ItemListScreen(
                 onItemClick = onItemClick,
                 onSetVisibleOnWatch = onSetVisibleOnWatch,
                 onPhoneWidgetsClick = onPhoneWidgetsClick,
-                onTilesComplicationsClick = onTilesComplicationsClick,
+                onAppShortcutsClick = onAppShortcutsClick,
+                onWatchTilesClick = onWatchTilesClick,
+                onWatchComplicationsClick = onWatchComplicationsClick,
                 modifier = listModifier,
             )
         }
@@ -251,7 +257,9 @@ private fun ItemListContent(
     onItemClick: (DisplayItem) -> Unit,
     onSetVisibleOnWatch: (DisplayItem, Boolean) -> Unit,
     onPhoneWidgetsClick: () -> Unit,
-    onTilesComplicationsClick: () -> Unit,
+    onAppShortcutsClick: () -> Unit,
+    onWatchTilesClick: () -> Unit,
+    onWatchComplicationsClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     LazyColumn(
@@ -357,6 +365,13 @@ private fun ItemListContent(
             )
         }
 
+        item(key = "app_shortcuts") {
+            SectionCard(
+                title = stringResource(R.string.app_shortcuts),
+                onClick = onAppShortcutsClick,
+            )
+        }
+
         if (isPeerAvailable) {
             item(key = "watch_heading") {
                 Text(
@@ -367,10 +382,17 @@ private fun ItemListContent(
                 )
             }
 
-            item(key = "tiles_complications") {
+            item(key = "watch_tiles") {
                 SectionCard(
-                    title = stringResource(R.string.tiles_and_complications),
-                    onClick = onTilesComplicationsClick,
+                    title = stringResource(R.string.watch_tiles),
+                    onClick = onWatchTilesClick,
+                )
+            }
+
+            item(key = "watch_complications") {
+                SectionCard(
+                    title = stringResource(R.string.watch_complications),
+                    onClick = onWatchComplicationsClick,
                 )
             }
         }

@@ -1,19 +1,20 @@
 # <img src="app_mark.png" alt="Share My Thing icon" width="36" /> Share My Thing <img src="app_mark.png" alt="Share My Thing icon" width="36" />
 
-A phone, tablet, and wear OS app that allows you to share links, notes, or any text by converting it into either QR code, plain text or a combination of both. Widgets, tiles, and complications for your device(s) are also provided for quick access. Syncs items between phone & watch if available. 
+Share any text (including links) by quickly converting it into a QR code, plain text or a combination of both. Widgets, tiles, and complications for your device(s) are also provided for quick access to items. 
 
-No sign-up or account required. No ads. Free forever.
-
-<img width="200" alt="1" src="https://github.com/user-attachments/assets/b866d928-0f6e-47a3-bf40-42efb8916487" />
-<img width="200" alt="2" src="https://github.com/user-attachments/assets/386afc4c-bda9-4c05-b725-7861a5297d3f" />
-<img width="200" alt="3" src="https://github.com/user-attachments/assets/882ee3a3-31d8-4476-96b8-107f839efa8c" />
-<img width="200" alt="4" src="https://github.com/user-attachments/assets/e5c78487-d0d6-4571-b336-8184fc93e5e9" />
+Helpful for quickly sharing your website with a client, your phone number with a friend, a map pin with a family member, your bank account number with a customer, and many, many other use-cases. Any text works, including URLs. 
 
 ## Features
 
-- 3 Item types: Choose between plain text, QR code, or both to influence how the item appears.
-- Watch & phone/tablet surfaces: Add up to five widgets, five tiles, and five complications, each linked to an item.
-- Standalone watch app: Works without the phone app, giving you the ability add or edit items on the watch using the native keyboard. Multi-line editing and the ability to reorder item are limited.
+- No sign-up or account required
+- Infinite reorderable items
+- Choose between plain text, QR code, or both to influence how the item appears
+- Multi-line content (text type only)
+- Up to five widgets, five tiles, and five complications, each linked to an item
+- Add or edit items directly on your watch
+- Automatic dark mode
+
+> The watch app alone cannot reorder items or make text items with multi-line content. Instead, install Share My Thing on your phone and sync it with the app on your watch.
 
 ## Requirements
 

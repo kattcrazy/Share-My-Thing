@@ -18,9 +18,11 @@ import kattcrazy.sharemything.ui.detail.QrTipsScreen
 import kattcrazy.sharemything.ui.detail.TextDetailScreen
 import kattcrazy.sharemything.ui.edit.EditItemScreen
 import kattcrazy.sharemything.ui.list.ItemListScreen
+import kattcrazy.sharemything.ui.settings.AppShortcutsScreen
 import kattcrazy.sharemything.ui.settings.PhoneWidgetsScreen
 import kattcrazy.sharemything.ui.settings.SlotItemPickerScreen
-import kattcrazy.sharemything.ui.settings.TilesComplicationsScreen
+import kattcrazy.sharemything.ui.settings.WatchComplicationsScreen
+import kattcrazy.sharemything.ui.settings.WatchTilesScreen
 
 @Composable
 fun AppNavHost(
@@ -63,15 +65,20 @@ fun AppNavHost(
         }
     }
 
-    fun parentScreenForSlot(slot: SurfaceSlot): AppScreen =
-        if (slot.isPhoneWidget) AppScreen.PhoneWidgets else AppScreen.TilesComplications
+    fun parentScreenForSlot(slot: SurfaceSlot): AppScreen = when {
+        slot.isPhoneWidget -> AppScreen.PhoneWidgets
+        slot.isShortcut -> AppScreen.AppShortcuts
+        slot.isTile -> AppScreen.WatchTiles
+        slot.isComplication -> AppScreen.WatchComplications
+        else -> AppScreen.List
+    }
 
     fun navigateBack() {
         screen = when (val current = screen) {
             AppScreen.QrTips -> detailItem?.let { AppScreen.QrDetail(it.id) } ?: AppScreen.List
             is AppScreen.PickSlotItem -> parentScreenForSlot(current.slot)
             AppScreen.About -> AppScreen.List
-            AppScreen.TilesComplications, AppScreen.PhoneWidgets -> AppScreen.List
+            AppScreen.PhoneWidgets, AppScreen.AppShortcuts, AppScreen.WatchTiles, AppScreen.WatchComplications -> AppScreen.List
             is AppScreen.Edit -> screenAfterEditCancel()
             is AppScreen.QrDetail, is AppScreen.TextDetail -> AppScreen.List
             AppScreen.List -> AppScreen.List
@@ -123,7 +130,9 @@ fun AppNavHost(
                     screen = AppScreen.Edit()
                 },
                 onPhoneWidgetsClick = { screen = AppScreen.PhoneWidgets },
-                onTilesComplicationsClick = { screen = AppScreen.TilesComplications },
+                onAppShortcutsClick = { screen = AppScreen.AppShortcuts },
+                onWatchTilesClick = { screen = AppScreen.WatchTiles },
+                onWatchComplicationsClick = { screen = AppScreen.WatchComplications },
                 onAboutClick = { screen = AppScreen.About },
                 onSetVisibleOnWatch = viewModel::setVisibleOnWatch,
                 onCommitItemOrder = viewModel::commitItemOrder,
@@ -190,15 +199,6 @@ fun AppNavHost(
             )
         }
 
-        AppScreen.TilesComplications -> {
-            TilesComplicationsScreen(
-                items = watchVisibleItems,
-                slotAssignments = slotAssignments,
-                onSlotClick = { slot -> screen = AppScreen.PickSlotItem(slot) },
-                onBack = ::navigateBack,
-            )
-        }
-
         AppScreen.PhoneWidgets -> {
             PhoneWidgetsScreen(
                 items = items,
@@ -208,9 +208,39 @@ fun AppNavHost(
             )
         }
 
+        AppScreen.AppShortcuts -> {
+            AppShortcutsScreen(
+                items = items,
+                slotAssignments = slotAssignments,
+                onSlotClick = { slot -> screen = AppScreen.PickSlotItem(slot) },
+                onBack = ::navigateBack,
+            )
+        }
+
+        AppScreen.WatchTiles -> {
+            WatchTilesScreen(
+                items = watchVisibleItems,
+                slotAssignments = slotAssignments,
+                onSlotClick = { slot -> screen = AppScreen.PickSlotItem(slot) },
+                onBack = ::navigateBack,
+            )
+        }
+
+        AppScreen.WatchComplications -> {
+            WatchComplicationsScreen(
+                items = watchVisibleItems,
+                slotAssignments = slotAssignments,
+                onSlotClick = { slot -> screen = AppScreen.PickSlotItem(slot) },
+                onBack = ::navigateBack,
+            )
+        }
+
         is AppScreen.PickSlotItem -> {
             val pickSlotScreen = screen as AppScreen.PickSlotItem
-            val pickerItems = if (pickSlotScreen.slot.isPhoneWidget) items else watchVisibleItems
+            val pickerItems = when {
+                pickSlotScreen.slot.isPhoneWidget || pickSlotScreen.slot.isShortcut -> items
+                else -> watchVisibleItems
+            }
             SlotItemPickerScreen(
                 slot = pickSlotScreen.slot,
                 items = pickerItems,

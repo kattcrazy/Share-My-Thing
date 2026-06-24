@@ -117,7 +117,7 @@ class ItemsRepository(
                 visibleOnWatch = item.visibleOnWatch,
             )
         }
-        val slotAssignments = SurfaceSlot.all.mapNotNull { slot ->
+        val slotAssignments = SurfaceSlot.syncableSlots.mapNotNull { slot ->
             val state = surfacePreferences.getAssignmentState(slot)
             val itemUuid = state.itemId?.let { dao.getById(it)?.uuid }
             SyncSlotAssignment(

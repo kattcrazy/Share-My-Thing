@@ -20,5 +20,10 @@ val SurfaceSlot.labelRes: Int
         SurfaceSlot.PHONE_WIDGET_3,
         SurfaceSlot.PHONE_WIDGET_4,
         SurfaceSlot.PHONE_WIDGET_5,
+        SurfaceSlot.SHORTCUT_1,
+        SurfaceSlot.SHORTCUT_2,
+        SurfaceSlot.SHORTCUT_3,
+        SurfaceSlot.SHORTCUT_4,
+        SurfaceSlot.SHORTCUT_5,
         -> R.string.surface_not_set
     }

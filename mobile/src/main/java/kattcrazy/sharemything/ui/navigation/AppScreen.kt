@@ -15,9 +15,13 @@ sealed interface AppScreen {
 
     data class Edit(val itemId: Long? = null) : AppScreen
 
-    data object TilesComplications : AppScreen
-
     data object PhoneWidgets : AppScreen
+
+    data object AppShortcuts : AppScreen
+
+    data object WatchTiles : AppScreen
+
+    data object WatchComplications : AppScreen
 
     data class PickSlotItem(val slot: SurfaceSlot) : AppScreen
 }

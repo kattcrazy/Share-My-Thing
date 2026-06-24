@@ -20,4 +20,9 @@ val SurfaceSlot.labelRes: Int
         SurfaceSlot.PHONE_WIDGET_3 -> R.string.phone_widget_3
         SurfaceSlot.PHONE_WIDGET_4 -> R.string.phone_widget_4
         SurfaceSlot.PHONE_WIDGET_5 -> R.string.phone_widget_5
+        SurfaceSlot.SHORTCUT_1 -> R.string.shortcut_1
+        SurfaceSlot.SHORTCUT_2 -> R.string.shortcut_2
+        SurfaceSlot.SHORTCUT_3 -> R.string.shortcut_3
+        SurfaceSlot.SHORTCUT_4 -> R.string.shortcut_4
+        SurfaceSlot.SHORTCUT_5 -> R.string.shortcut_5
     }

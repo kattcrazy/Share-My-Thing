@@ -3,11 +3,13 @@ package kattcrazy.sharemything
 import android.app.Application
 import android.content.ComponentCallbacks2
 import android.content.res.Configuration
+import kattcrazy.sharemything.data.CompositeSurfaceUpdateListener
 import kattcrazy.sharemything.data.ItemsRepository
 import kattcrazy.sharemything.sync.SyncBootstrap
 import kattcrazy.sharemything.sync.SyncFeedbackBridge
 import kattcrazy.sharemything.sync.SyncRepository
 import kattcrazy.sharemything.sync.WearSyncSupport
+import kattcrazy.sharemything.shortcut.AppShortcutUpdater
 import kattcrazy.sharemything.widget.PhoneWidgetUpdater
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -21,17 +23,25 @@ class ShareMyThingApplication : Application() {
         private set
     lateinit var surfaceUpdater: PhoneWidgetUpdater
         private set
+    lateinit var shortcutUpdater: AppShortcutUpdater
+        private set
     lateinit var syncRepository: SyncRepository
         private set
 
     override fun onCreate() {
         super.onCreate()
         surfaceUpdater = PhoneWidgetUpdater(this, applicationScope)
-        repository = ItemsRepository(this, surfaceUpdater)
+        shortcutUpdater = AppShortcutUpdater(this, applicationScope) { repository }
+        repository = ItemsRepository(
+            this,
+            CompositeSurfaceUpdateListener(surfaceUpdater, shortcutUpdater),
+        )
         syncRepository = SyncRepository(this, repository, surfaceUpdater)
         repository.onLocalDataChanged = {
-            if (WearSyncSupport.isSupportedAsync(this@ShareMyThingApplication)) {
-                SyncFeedbackBridge.emitFailure(syncRepository.syncWithWatch(force = true))
+            applicationScope.launch {
+                if (WearSyncSupport.isSupportedAsync(this@ShareMyThingApplication)) {
+                    SyncFeedbackBridge.emitFailure(syncRepository.syncWithWatch(force = false))
+                }
             }
         }
         SyncBootstrap.start(
@@ -44,6 +54,7 @@ class ShareMyThingApplication : Application() {
         )
         applicationScope.launch {
             surfaceUpdater.requestUpdateAll()
+            shortcutUpdater.requestUpdateAll()
         }
         registerComponentCallbacks(object : ComponentCallbacks2 {
             override fun onConfigurationChanged(newConfig: Configuration) {
