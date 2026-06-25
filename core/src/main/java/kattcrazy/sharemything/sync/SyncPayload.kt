@@ -1,5 +1,6 @@
 package kattcrazy.sharemything.sync
 
+import kattcrazy.sharemything.data.ItemIcon
 import kattcrazy.sharemything.data.ItemType
 import org.json.JSONArray
 import org.json.JSONObject
@@ -9,6 +10,7 @@ data class SyncItemRecord(
     val title: String,
     val content: String,
     val type: ItemType,
+    val icon: ItemIcon = ItemIcon.TEXT,
     val sortOrder: Int,
     val updatedAtMillis: Long,
     val deleted: Boolean,
@@ -37,6 +39,7 @@ data class SyncPayload(
                     put("title", item.title)
                     put("content", item.content)
                     put("type", item.type.name)
+                    put("icon", item.icon.name)
                     put("sortOrder", item.sortOrder)
                     put("updatedAtMillis", item.updatedAtMillis)
                     put("deleted", item.deleted)
@@ -73,6 +76,10 @@ data class SyncPayload(
                             title = itemJson.getString("title"),
                             content = itemJson.getString("content"),
                             type = ItemType.valueOf(itemJson.getString("type")),
+                            icon = ItemIcon.fromStoredName(
+                                itemJson.optString("icon").takeIf { it.isNotBlank() },
+                                ItemType.valueOf(itemJson.getString("type")),
+                            ),
                             sortOrder = itemJson.getInt("sortOrder"),
                             updatedAtMillis = itemJson.getLong("updatedAtMillis"),
                             deleted = itemJson.getBoolean("deleted"),

@@ -7,9 +7,12 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.LazyListState
@@ -54,6 +57,7 @@ import androidx.compose.ui.unit.dp
 import kattcrazy.sharemything.R
 import kattcrazy.sharemything.presentation.theme.appNameTextStyle
 import kattcrazy.sharemything.data.DisplayItem
+import kattcrazy.sharemything.ui.ItemIconDisplay
 import kattcrazy.sharemything.ui.SyncFeedback
 import kattcrazy.sharemything.ui.components.SupportBanner
 import kotlinx.coroutines.flow.StateFlow
@@ -326,10 +330,15 @@ private fun ItemListContent(
                                     .clickable { onItemClick(item) }
                                     .padding(start = 12.dp, end = 8.dp, top = 16.dp, bottom = 16.dp),
                                 verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(10.dp),
                             ) {
+                                ItemIconDisplay(
+                                    icon = item.icon,
+                                    size = 22.dp,
+                                )
                                 Text(
                                     text = item.title,
-                                    modifier = Modifier.fillMaxWidth(),
+                                    modifier = Modifier.weight(1f),
                                     style = MaterialTheme.typography.titleMedium,
                                 )
                             }
@@ -358,51 +367,53 @@ private fun ItemListContent(
             }
         }
 
-        item(key = "widgets_heading") {
-            Text(
-                text = stringResource(R.string.list_widgets_section),
-                modifier = Modifier.padding(top = 8.dp, bottom = 4.dp),
-                style = MaterialTheme.typography.titleSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        }
-
-        item(key = "phone_widgets") {
-            SectionCard(
-                title = stringResource(R.string.phone_widgets),
-                onClick = onPhoneWidgetsClick,
-            )
-        }
-
-        item(key = "app_shortcuts") {
-            SectionCard(
-                title = stringResource(R.string.app_shortcuts),
-                onClick = onAppShortcutsClick,
-            )
-        }
-
-        if (isPeerAvailable) {
-            item(key = "watch_heading") {
+        if (listItems.isNotEmpty()) {
+            item(key = "widgets_heading") {
                 Text(
-                    text = stringResource(R.string.list_watch_section),
+                    text = stringResource(R.string.list_widgets_section),
                     modifier = Modifier.padding(top = 8.dp, bottom = 4.dp),
                     style = MaterialTheme.typography.titleSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
 
-            item(key = "watch_tiles") {
+            item(key = "phone_widgets") {
                 SectionCard(
-                    title = stringResource(R.string.watch_tiles),
-                    onClick = onWatchTilesClick,
+                    title = stringResource(R.string.phone_widgets),
+                    onClick = onPhoneWidgetsClick,
                 )
             }
 
-            item(key = "watch_complications") {
+            item(key = "app_shortcuts") {
                 SectionCard(
-                    title = stringResource(R.string.watch_complications),
-                    onClick = onWatchComplicationsClick,
+                    title = stringResource(R.string.app_shortcuts),
+                    onClick = onAppShortcutsClick,
                 )
+            }
+
+            if (isPeerAvailable) {
+                item(key = "watch_heading") {
+                    Text(
+                        text = stringResource(R.string.list_watch_section),
+                        modifier = Modifier.padding(top = 8.dp, bottom = 4.dp),
+                        style = MaterialTheme.typography.titleSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+
+                item(key = "watch_tiles") {
+                    SectionCard(
+                        title = stringResource(R.string.watch_tiles),
+                        onClick = onWatchTilesClick,
+                    )
+                }
+
+                item(key = "watch_complications") {
+                    SectionCard(
+                        title = stringResource(R.string.watch_complications),
+                        onClick = onWatchComplicationsClick,
+                    )
+                }
             }
         }
     }

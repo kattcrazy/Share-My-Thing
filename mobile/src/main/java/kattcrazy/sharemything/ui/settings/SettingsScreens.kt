@@ -4,9 +4,12 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
@@ -25,6 +28,7 @@ import androidx.compose.material3.TooltipDefaults
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberTooltipState
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
@@ -33,6 +37,7 @@ import kattcrazy.sharemything.R
 import kattcrazy.sharemything.data.DisplayItem
 import kattcrazy.sharemything.data.SurfaceSlot
 import kattcrazy.sharemything.data.labelRes
+import kattcrazy.sharemything.ui.ItemIconDisplay
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -149,13 +154,23 @@ internal fun SlotRow(
             },
         ),
     ) {
-        Text(
-            text = buttonLabel,
+        Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp),
-            textAlign = TextAlign.Center,
-        )
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            if (assignedItem != null) {
+                ItemIconDisplay(icon = assignedItem.icon, size = 20.dp)
+                Spacer(modifier = Modifier.width(8.dp))
+            }
+            Text(
+                text = buttonLabel,
+                textAlign = TextAlign.Center,
+                style = MaterialTheme.typography.titleMedium,
+            )
+        }
     }
 }
 
@@ -222,14 +237,21 @@ fun SlotItemPickerScreen(
                             },
                         ),
                     ) {
-                        Text(
-                            text = item.title,
+                        Row(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(16.dp),
-                            textAlign = TextAlign.Center,
-                            style = MaterialTheme.typography.titleMedium,
-                        )
+                            horizontalArrangement = Arrangement.Center,
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            ItemIconDisplay(icon = item.icon, size = 20.dp)
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = item.title,
+                                textAlign = TextAlign.Center,
+                                style = MaterialTheme.typography.titleMedium,
+                            )
+                        }
                     }
                 }
             }

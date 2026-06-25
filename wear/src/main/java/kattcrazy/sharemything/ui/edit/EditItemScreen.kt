@@ -33,8 +33,12 @@ import androidx.wear.compose.material3.Text
 import androidx.wear.compose.material3.lazy.rememberTransformationSpec
 import androidx.wear.compose.material3.lazy.transformedHeight
 import kattcrazy.sharemything.R
+import androidx.compose.runtime.LaunchedEffect
+import kattcrazy.sharemything.core.R as CoreR
 import kattcrazy.sharemything.data.DisplayItem
+import kattcrazy.sharemything.data.ItemIcon
 import kattcrazy.sharemything.data.ItemType
+import kattcrazy.sharemything.ui.ItemIconPicker
 import kattcrazy.sharemything.data.asSingleLineQrContent
 import kattcrazy.sharemything.data.usesQr
 import kattcrazy.sharemything.ui.bottomScrollSpacer
@@ -48,7 +52,7 @@ private enum class EditFieldTarget {
 @Composable
 fun EditItemScreen(
     existingItem: DisplayItem?,
-    onSave: (title: String, content: String, type: ItemType) -> Unit,
+    onSave: (title: String, content: String, type: ItemType, icon: ItemIcon) -> Unit,
     onDelete: (() -> Unit)?,
     onCancel: () -> Unit,
 ) {
@@ -60,6 +64,17 @@ fun EditItemScreen(
     }
     var type by remember(existingItem?.id) {
         mutableStateOf(existingItem?.type ?: ItemType.TEXT)
+    }
+    var icon by remember(existingItem?.id) {
+        mutableStateOf(existingItem?.icon ?: ItemIcon.defaultFor(existingItem?.type ?: ItemType.TEXT))
+    }
+    var iconManuallySet by remember(existingItem?.id) {
+        mutableStateOf(existingItem != null)
+    }
+    LaunchedEffect(type) {
+        if (!iconManuallySet) {
+            icon = ItemIcon.defaultFor(type)
+        }
     }
     var showDeleteConfirm by remember { mutableStateOf(false) }
     var validationError by remember { mutableStateOf<String?>(null) }
@@ -104,6 +119,7 @@ fun EditItemScreen(
             title = title,
             content = content,
             type = type,
+            icon = icon,
             validationError = validationError,
             showDeleteConfirm = showDeleteConfirm,
             validationRequiredMessage = validationRequiredMessage,
@@ -111,6 +127,11 @@ fun EditItemScreen(
             onContentClick = { activeField = EditFieldTarget.Content },
             onTypeChange = { newType ->
                 type = newType
+                iconManuallySet = false
+            },
+            onIconSelected = { selected ->
+                icon = selected
+                iconManuallySet = true
             },
             onSave = onSave,
             onDelete = onDelete,
@@ -127,13 +148,15 @@ private fun EditItemMainScreen(
     title: String,
     content: String,
     type: ItemType,
+    icon: ItemIcon,
     validationError: String?,
     showDeleteConfirm: Boolean,
     validationRequiredMessage: String,
     onTitleClick: () -> Unit,
     onContentClick: () -> Unit,
     onTypeChange: (ItemType) -> Unit,
-    onSave: (title: String, content: String, type: ItemType) -> Unit,
+    onIconSelected: (ItemIcon) -> Unit,
+    onSave: (title: String, content: String, type: ItemType, icon: ItemIcon) -> Unit,
     onDelete: (() -> Unit)?,
     onCancel: () -> Unit,
     onShowDeleteConfirm: () -> Unit,
@@ -220,6 +243,30 @@ private fun EditItemMainScreen(
                     }
                 }
 
+                item {
+                    Text(
+                        text = stringResource(CoreR.string.field_icon),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(start = 12.dp, top = 8.dp, bottom = 4.dp)
+                            .transformedHeight(this, transformationSpec),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+
+                item {
+                    ItemIconPicker(
+                        selectedIcon = icon,
+                        onIconSelected = onIconSelected,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 8.dp, vertical = 4.dp)
+                            .transformedHeight(this, transformationSpec),
+                        cellSize = 36.dp,
+                    )
+                }
+
                 if (type.usesQr && content.contains('\n')) {
                     item {
                         Text(
@@ -255,6 +302,7 @@ private fun EditItemMainScreen(
                                     title.trim(),
                                     content.let { if (type.usesQr) it.asSingleLineQrContent() else it.trim() },
                                     type,
+                                    icon,
                                 )
                             }
                         },

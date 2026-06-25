@@ -15,6 +15,7 @@ data class DisplayItem(
     val title: String,
     val content: String,
     val type: ItemType,
+    val icon: ItemIcon,
     val sortOrder: Int = 0,
     val updatedAtMillis: Long = 0L,
     val deleted: Boolean = false,
@@ -25,6 +26,7 @@ data class DisplayItem(
             title: String,
             content: String,
             type: ItemType,
+            icon: ItemIcon = ItemIcon.defaultFor(type),
             sortOrder: Int = 0,
             nowMillis: Long = System.currentTimeMillis(),
         ): DisplayItem = DisplayItem(
@@ -32,6 +34,7 @@ data class DisplayItem(
             title = title,
             content = content,
             type = type,
+            icon = icon,
             sortOrder = sortOrder,
             updatedAtMillis = nowMillis,
         )

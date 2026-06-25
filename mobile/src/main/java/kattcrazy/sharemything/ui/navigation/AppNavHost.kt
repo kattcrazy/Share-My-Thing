@@ -175,12 +175,13 @@ fun AppNavHost(
             val editingItemId = (screen as AppScreen.Edit).itemId
             EditItemScreen(
                 existingItem = editItem,
-                onSave = { title, content, type ->
+                onSave = { title, content, type, icon ->
                     viewModel.saveItem(
                         id = editingItemId ?: editItem?.id,
                         title = title,
                         content = content,
                         type = type,
+                        icon = icon,
                     ) { savedId ->
                         screen = when (type) {
                             ItemType.TEXT -> AppScreen.TextDetail(savedId)

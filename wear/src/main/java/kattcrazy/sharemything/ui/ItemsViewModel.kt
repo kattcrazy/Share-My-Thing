@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import kattcrazy.sharemything.data.DisplayItem
+import kattcrazy.sharemything.data.ItemIcon
 import kattcrazy.sharemything.data.ItemType
 import kattcrazy.sharemything.data.ItemsRepository
 import kattcrazy.sharemything.data.SurfaceSlot
@@ -109,6 +110,7 @@ class ItemsViewModel(
         title: String,
         content: String,
         type: ItemType,
+        icon: ItemIcon,
         onSaved: (Long) -> Unit,
     ) {
         viewModelScope.launch {
@@ -120,6 +122,7 @@ class ItemsViewModel(
                     title = title.trim(),
                     content = content.trim(),
                     type = type,
+                    icon = icon,
                     sortOrder = existing?.sortOrder ?: watchVisibleItems.value.size,
                     updatedAtMillis = existing?.updatedAtMillis ?: 0L,
                     visibleOnWatch = existing?.visibleOnWatch ?: true,

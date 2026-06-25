@@ -5,9 +5,7 @@ import android.content.Intent
 import android.content.pm.ShortcutInfo
 import android.content.pm.ShortcutManager
 import android.graphics.drawable.Icon
-import kattcrazy.sharemything.R
 import kattcrazy.sharemything.data.DisplayItem
-import kattcrazy.sharemything.data.ItemType
 import kattcrazy.sharemything.data.ItemsRepository
 import kattcrazy.sharemything.data.SurfaceSlot
 import kattcrazy.sharemything.data.SurfaceUpdateListener
@@ -46,13 +44,8 @@ class AppShortcutUpdater(
         return ShortcutInfo.Builder(context, slot.name)
             .setShortLabel(item.title)
             .setLongLabel(item.title)
-            .setIcon(Icon.createWithResource(context, item.type.shortcutIconRes()))
+            .setIcon(Icon.createWithResource(context, item.icon.drawableRes()))
             .setIntent(intent)
             .build()
-    }
-
-    private fun ItemType.shortcutIconRes(): Int = when (this) {
-        ItemType.TEXT -> R.drawable.ic_item_text
-        ItemType.QR_CODE, ItemType.BOTH -> R.drawable.ic_item_qr
     }
 }

@@ -51,7 +51,7 @@
     <string name="phone_widgets">Home-screen widgets</string>
     <string name="phone_widgets_help">Assign items to phone home-screen widgets. Add a Share My Thing widget on your launcher, then pick an item for each slot.</string>
     <string name="app_shortcuts">App shortcuts</string>
-    <string name="app_shortcuts_help">Assign items to launcher shortcuts. Long-press the app icon to use them (up to 5).</string>
+    <string name="app_shortcuts_help">Assign items to launcher shortcuts (up to 5).</string>
     <string name="watch_tiles">Watch tiles</string>
     <string name="watch_tiles_help">Assign items to watch tile slots. Add tiles on your watch, then pick an item for each slot here.</string>
     <string name="watch_complications">Watch complications</string>

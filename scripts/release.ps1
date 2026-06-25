@@ -192,13 +192,19 @@ if (Test-Path $keystoreProps) {
         -StorePass $props.storePassword -KeyPass $props.keyPassword -KeyAlias $props.keyAlias
     Sign-Apk -Apksigner $apksigner -InputApk $unsignedWearApk -OutputApk $outWearApk -Keystore $ks `
         -StorePass $props.storePassword -KeyPass $props.keyPassword -KeyAlias $props.keyAlias
+
+    $expectedSha256 = "FF05C11D4FEEB2A7529F48481D41D16C2571EBDC1798F3DBBD9BF8E43C1F86C7"
+    foreach ($pair in @(@{ Path = $outMobileApk; Label = "mobile" }, @{ Path = $outWearApk; Label = "wear" })) {
+        $certLine = & $apksigner verify --print-certs $pair.Path 2>&1 | Select-String "SHA-256 digest:" | Select-Object -First 1
+        if (-not $certLine) { throw "Could not verify $($pair.Label) APK certificate." }
+        $actual = ($certLine -replace ".*SHA-256 digest:\s*", "").Trim().Replace(":", "").ToUpper()
+        if ($actual -ne $expectedSha256) {
+            throw "$($pair.Label) APK SHA-256 ($actual) does not match Play Console upload key ($expectedSha256)."
+        }
+        Write-Host "  Verified $($pair.Label) upload key: $actual" -ForegroundColor Green
+    }
 } else {
-    Write-Warning "keystore.properties not found - signing with debug keystore (Play Store will reject; OK for GitHub/sideload testing)."
-    $debugKs = Join-Path $env:USERPROFILE ".android\debug.keystore"
-    Sign-Apk -Apksigner $apksigner -InputApk $unsignedMobileApk -OutputApk $outMobileApk -Keystore $debugKs `
-        -StorePass "android" -KeyPass "android" -KeyAlias "androiddebugkey"
-    Sign-Apk -Apksigner $apksigner -InputApk $unsignedWearApk -OutputApk $outWearApk -Keystore $debugKs `
-        -StorePass "android" -KeyPass "android" -KeyAlias "androiddebugkey"
+    throw "keystore.properties not found. Copy keystore.properties.example and configure upload-keystore.jks before release."
 }
 
 Copy-Item $mobileAab $outMobileAab -Force
@@ -219,9 +225,9 @@ try {
     Write-Warning "Wear native debug symbols not found (rebuild after adding ndk.debugSymbolLevel)."
 }
 
-# AABs are signed by Gradle when keystore.properties exists; otherwise unsigned
+# AABs are signed by Gradle when keystore.properties exists
 if (-not (Test-Path $keystoreProps)) {
-    Write-Warning "AAB files may be unsigned - configure keystore.properties before Play upload."
+    throw "keystore.properties required for signed AAB release builds."
 }
 
 $checksumFile = Join-Path $ReleaseDir "SHA256SUMS.txt"

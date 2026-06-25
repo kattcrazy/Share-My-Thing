@@ -11,7 +11,7 @@ import java.util.UUID
 
 @Database(
     entities = [DisplayItem::class],
-    version = 4,
+    version = 5,
     exportSchema = false,
 )
 @TypeConverters(ItemTypeConverters::class)
@@ -83,6 +83,20 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
+        private val MIGRATION_4_5 = object : Migration(4, 5) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    "ALTER TABLE display_items ADD COLUMN icon TEXT NOT NULL DEFAULT 'TEXT'",
+                )
+                db.execSQL(
+                    "UPDATE display_items SET icon = 'QR' WHERE type = 'QR_CODE'",
+                )
+                db.execSQL(
+                    "UPDATE display_items SET icon = 'BOTH' WHERE type = 'BOTH'",
+                )
+            }
+        }
+
         fun getInstance(context: Context): AppDatabase {
             return instance ?: synchronized(this) {
                 instance ?: Room.databaseBuilder(
@@ -90,7 +104,7 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "share_my_thing.db",
                 )
-                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)
+                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
                     .build()
                     .also { instance = it }
             }

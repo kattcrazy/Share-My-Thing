@@ -29,6 +29,7 @@ import androidx.compose.material3.TooltipDefaults
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberTooltipState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -40,16 +41,19 @@ import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import kattcrazy.sharemything.R
+import kattcrazy.sharemything.core.R as CoreR
 import kattcrazy.sharemything.data.DisplayItem
+import kattcrazy.sharemything.data.ItemIcon
 import kattcrazy.sharemything.data.ItemType
 import kattcrazy.sharemything.data.asSingleLineQrContent
 import kattcrazy.sharemything.data.usesQr
+import kattcrazy.sharemything.ui.ItemIconPicker
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EditItemScreen(
     existingItem: DisplayItem?,
-    onSave: (title: String, content: String, type: ItemType) -> Unit,
+    onSave: (title: String, content: String, type: ItemType, icon: ItemIcon) -> Unit,
     onDelete: (() -> Unit)?,
     onCancel: () -> Unit,
 ) {
@@ -61,6 +65,17 @@ fun EditItemScreen(
     }
     var type by remember(existingItem?.id) {
         mutableStateOf(existingItem?.type ?: ItemType.TEXT)
+    }
+    var icon by remember(existingItem?.id) {
+        mutableStateOf(existingItem?.icon ?: ItemIcon.defaultFor(existingItem?.type ?: ItemType.TEXT))
+    }
+    var iconManuallySet by remember(existingItem?.id) {
+        mutableStateOf(existingItem != null)
+    }
+    LaunchedEffect(type) {
+        if (!iconManuallySet) {
+            icon = ItemIcon.defaultFor(type)
+        }
     }
     var showDeleteConfirm by remember { mutableStateOf(false) }
     var validationError by remember { mutableStateOf<String?>(null) }
@@ -149,31 +164,16 @@ fun EditItemScreen(
                 )
             }
 
-            if (type.usesQr) {
-                Text(
-                    text = stringResource(R.string.qr_tips_title),
-                    style = MaterialTheme.typography.titleSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-                Text(
-                    text = stringResource(R.string.qr_tips_url),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-                Text(
-                    text = stringResource(R.string.qr_tips_scan),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
-
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 FilterChip(
                     selected = type == ItemType.TEXT,
-                    onClick = { type = ItemType.TEXT },
+                    onClick = {
+                        type = ItemType.TEXT
+                        iconManuallySet = false
+                    },
                     label = { Text(stringResource(R.string.type_text)) },
                     leadingIcon = {
                         Icon(
@@ -184,7 +184,10 @@ fun EditItemScreen(
                 )
                 FilterChip(
                     selected = type == ItemType.BOTH,
-                    onClick = { type = ItemType.BOTH },
+                    onClick = {
+                        type = ItemType.BOTH
+                        iconManuallySet = false
+                    },
                     label = { Text(stringResource(R.string.type_both)) },
                     leadingIcon = {
                         Row(horizontalArrangement = Arrangement.spacedBy(2.dp)) {
@@ -203,7 +206,10 @@ fun EditItemScreen(
                 )
                 FilterChip(
                     selected = type == ItemType.QR_CODE,
-                    onClick = { type = ItemType.QR_CODE },
+                    onClick = {
+                        type = ItemType.QR_CODE
+                        iconManuallySet = false
+                    },
                     label = { Text(stringResource(R.string.type_qr)) },
                     leadingIcon = {
                         Icon(
@@ -213,6 +219,20 @@ fun EditItemScreen(
                     },
                 )
             }
+
+            Text(
+                text = stringResource(CoreR.string.field_icon),
+                style = MaterialTheme.typography.titleSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            ItemIconPicker(
+                selectedIcon = icon,
+                onIconSelected = { selected ->
+                    icon = selected
+                    iconManuallySet = true
+                },
+                modifier = Modifier.fillMaxWidth(),
+            )
 
             validationError?.let { error ->
                 Text(
@@ -226,7 +246,12 @@ fun EditItemScreen(
                     if (title.isBlank() || content.isBlank()) {
                         validationError = validationRequiredMessage
                     } else {
-                        onSave(title.trim(), content.let { if (type.usesQr) it.asSingleLineQrContent() else it.trim() }, type)
+                        onSave(
+                            title.trim(),
+                            content.let { if (type.usesQr) it.asSingleLineQrContent() else it.trim() },
+                            type,
+                            icon,
+                        )
                     }
                 },
                 modifier = Modifier.fillMaxWidth(),

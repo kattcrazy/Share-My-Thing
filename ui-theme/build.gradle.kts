@@ -31,9 +31,12 @@ android {
 }
 
 dependencies {
+    implementation(project(":core"))
+
     val composeBom = platform(libs.androidx.compose.bom)
 
     implementation(composeBom)
+    implementation("androidx.compose.foundation:foundation")
     implementation("androidx.compose.material3:material3")
     implementation(libs.wear.compose.material3)
     implementation(libs.wear.protolayout.material3)

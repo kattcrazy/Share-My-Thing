@@ -1,10 +1,17 @@
 package kattcrazy.sharemything.ui.settings
 
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
 import androidx.wear.compose.foundation.lazy.TransformingLazyColumn
 import androidx.wear.compose.foundation.lazy.rememberTransformingLazyColumnState
 import androidx.wear.compose.material3.AppScaffold
@@ -21,6 +28,7 @@ import kattcrazy.sharemything.R
 import kattcrazy.sharemything.data.DisplayItem
 import kattcrazy.sharemything.data.labelRes
 import kattcrazy.sharemything.data.SurfaceSlot
+import kattcrazy.sharemything.ui.ItemIconDisplay
 import kattcrazy.sharemything.ui.bottomScrollSpacer
 
 @Composable
@@ -85,11 +93,18 @@ fun SlotItemPickerScreen(
                                     )
                                 },
                             ) {
-                                Text(
-                                    text = item.title,
+                                Row(
                                     modifier = Modifier.fillMaxWidth(),
-                                    textAlign = TextAlign.Center,
-                                )
+                                    horizontalArrangement = Arrangement.Center,
+                                    verticalAlignment = Alignment.CenterVertically,
+                                ) {
+                                    ItemIconDisplay(icon = item.icon, size = 16.dp)
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Text(
+                                        text = item.title,
+                                        textAlign = TextAlign.Center,
+                                    )
+                                }
                             }
                         }
                     }

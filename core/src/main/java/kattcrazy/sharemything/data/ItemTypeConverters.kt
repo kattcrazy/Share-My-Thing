@@ -8,4 +8,10 @@ class ItemTypeConverters {
 
     @TypeConverter
     fun toItemType(value: String): ItemType = ItemType.valueOf(value)
+
+    @TypeConverter
+    fun fromItemIcon(value: ItemIcon): String = value.name
+
+    @TypeConverter
+    fun toItemIcon(value: String): ItemIcon = ItemIcon.valueOf(value)
 }

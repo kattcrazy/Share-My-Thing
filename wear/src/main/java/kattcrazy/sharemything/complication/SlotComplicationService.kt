@@ -1,17 +1,16 @@
 package kattcrazy.sharemything.complication
 
 import android.app.PendingIntent
-import android.graphics.drawable.Icon
 import androidx.wear.watchface.complications.data.ComplicationData
 import androidx.wear.watchface.complications.data.ComplicationType
-import androidx.wear.watchface.complications.data.MonochromaticImage
+import androidx.wear.watchface.complications.data.MonochromaticImageComplicationData
 import androidx.wear.watchface.complications.data.PlainComplicationText
 import androidx.wear.watchface.complications.data.ShortTextComplicationData
 import androidx.wear.watchface.complications.datasource.ComplicationRequest
 import androidx.wear.watchface.complications.datasource.SuspendingComplicationDataSourceService
 import kattcrazy.sharemything.ShareMyThingApplication
 import kattcrazy.sharemything.R
-import kattcrazy.sharemything.data.ItemType
+import kattcrazy.sharemything.data.ItemIcon
 import kattcrazy.sharemything.data.ItemsRepository
 import kattcrazy.sharemything.data.SurfaceSlot
 import kattcrazy.sharemything.presentation.MainActivity
@@ -21,8 +20,17 @@ abstract class SlotComplicationService(
 ) : SuspendingComplicationDataSourceService() {
 
     override fun getPreviewData(type: ComplicationType): ComplicationData? {
-        if (type != ComplicationType.SHORT_TEXT) return null
-        return ComplicationDataFactory.create(this, title = "SMT", itemId = 1L, itemType = ItemType.TEXT)
+        return when (type) {
+            ComplicationType.SHORT_TEXT, ComplicationType.MONOCHROMATIC_IMAGE ->
+                ComplicationDataFactory.create(
+                    context = this,
+                    title = "SMT",
+                    itemId = 1L,
+                    icon = ItemIcon.TEXT,
+                    type = type,
+                )
+            else -> null
+        }
     }
 
     override suspend fun onComplicationRequest(request: ComplicationRequest): ComplicationData {
@@ -31,13 +39,14 @@ abstract class SlotComplicationService(
         val itemId = repository.surfacePreferences.getItemId(slot)
         val item = itemId?.let { repository.getItem(it) }
         return if (item == null) {
-            ComplicationDataFactory.createPlaceholder(this)
+            ComplicationDataFactory.createPlaceholder(this, request.complicationType)
         } else {
             ComplicationDataFactory.create(
                 context = this,
                 title = item.title,
                 itemId = item.id,
-                itemType = item.type,
+                icon = item.icon,
+                type = request.complicationType,
             )
         }
     }
@@ -57,19 +66,31 @@ class Complication4Service : SlotComplicationService(SurfaceSlot.COMPLICATION_4)
 class Complication5Service : SlotComplicationService(SurfaceSlot.COMPLICATION_5)
 
 internal object ComplicationDataFactory {
-    fun createPlaceholder(context: android.content.Context): ComplicationData =
-        ShortTextComplicationData.Builder(
-            text = PlainComplicationText.Builder("SMT").build(),
-            contentDescription = PlainComplicationText.Builder(
-                context.getString(R.string.surface_not_set),
-            ).build(),
-        ).build()
+    fun createPlaceholder(context: android.content.Context, type: ComplicationType): ComplicationData =
+        when (type) {
+            ComplicationType.MONOCHROMATIC_IMAGE -> MonochromaticImageComplicationData.Builder(
+                monochromaticImage = ComplicationIconFactory.monochromaticImage(
+                    context,
+                    ItemIcon.TEXT,
+                ),
+                contentDescription = PlainComplicationText.Builder(
+                    context.getString(R.string.surface_not_set),
+                ).build(),
+            ).build()
+            else -> ShortTextComplicationData.Builder(
+                text = PlainComplicationText.Builder("SMT").build(),
+                contentDescription = PlainComplicationText.Builder(
+                    context.getString(R.string.surface_not_set),
+                ).build(),
+            ).build()
+        }
 
     fun create(
         context: android.content.Context,
         title: String,
         itemId: Long,
-        itemType: ItemType,
+        icon: ItemIcon,
+        type: ComplicationType,
     ): ComplicationData {
         val pendingIntent = PendingIntent.getActivity(
             context,
@@ -77,15 +98,20 @@ internal object ComplicationDataFactory {
             MainActivity.launchIntent(context, itemId),
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
         )
-        val icon = MonochromaticImage.Builder(
-            Icon.createWithResource(context, itemType.complicationIconRes()),
-        ).build()
-        return ShortTextComplicationData.Builder(
-            text = PlainComplicationText.Builder(title).build(),
-            contentDescription = PlainComplicationText.Builder(title).build(),
-        )
-            .setMonochromaticImage(icon)
-            .setTapAction(pendingIntent)
-            .build()
+        val monochromaticImage = ComplicationIconFactory.monochromaticImage(context, icon)
+        return when (type) {
+            ComplicationType.MONOCHROMATIC_IMAGE -> MonochromaticImageComplicationData.Builder(
+                monochromaticImage = monochromaticImage,
+                contentDescription = PlainComplicationText.Builder(title).build(),
+            )
+                .setTapAction(pendingIntent)
+                .build()
+            else -> ShortTextComplicationData.Builder(
+                text = PlainComplicationText.Builder(title).build(),
+                contentDescription = PlainComplicationText.Builder(title).build(),
+            )
+                .setTapAction(pendingIntent)
+                .build()
+        }
     }
 }
