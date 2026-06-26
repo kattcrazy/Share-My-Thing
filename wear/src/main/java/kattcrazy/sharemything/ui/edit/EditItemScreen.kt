@@ -39,6 +39,8 @@ import kattcrazy.sharemything.data.DisplayItem
 import kattcrazy.sharemything.data.ItemIcon
 import kattcrazy.sharemything.data.ItemType
 import kattcrazy.sharemything.ui.ItemIconPicker
+import kattcrazy.sharemything.ui.IconPickerVariant
+import kattcrazy.sharemything.ui.EditControlShape
 import kattcrazy.sharemything.data.asSingleLineQrContent
 import kattcrazy.sharemything.data.usesQr
 import kattcrazy.sharemything.ui.bottomScrollSpacer
@@ -82,6 +84,7 @@ fun EditItemScreen(
     val validationRequiredMessage = stringResource(R.string.validation_required)
     val titleLabel = stringResource(R.string.field_title)
     val contentLabel = stringResource(R.string.field_content)
+    val examplePlaceholder = stringResource(R.string.field_placeholder_example)
 
     BackHandler(enabled = activeField != null) {
         activeField = null
@@ -123,6 +126,7 @@ fun EditItemScreen(
             validationError = validationError,
             showDeleteConfirm = showDeleteConfirm,
             validationRequiredMessage = validationRequiredMessage,
+            examplePlaceholder = examplePlaceholder,
             onTitleClick = { activeField = EditFieldTarget.Title },
             onContentClick = { activeField = EditFieldTarget.Content },
             onTypeChange = { newType ->
@@ -152,6 +156,7 @@ private fun EditItemMainScreen(
     validationError: String?,
     showDeleteConfirm: Boolean,
     validationRequiredMessage: String,
+    examplePlaceholder: String,
     onTitleClick: () -> Unit,
     onContentClick: () -> Unit,
     onTypeChange: (ItemType) -> Unit,
@@ -188,6 +193,7 @@ private fun EditItemMainScreen(
                     WearFieldButton(
                         fieldLabel = stringResource(R.string.field_title),
                         value = title,
+                        placeholder = examplePlaceholder,
                         onClick = onTitleClick,
                         modifier = Modifier
                             .fillMaxWidth()
@@ -201,6 +207,7 @@ private fun EditItemMainScreen(
                     WearFieldButton(
                         fieldLabel = stringResource(R.string.field_content),
                         value = content,
+                        placeholder = examplePlaceholder,
                         onClick = onContentClick,
                         modifier = Modifier
                             .fillMaxWidth()
@@ -259,6 +266,7 @@ private fun EditItemMainScreen(
                     ItemIconPicker(
                         selectedIcon = icon,
                         onIconSelected = onIconSelected,
+                        variant = IconPickerVariant.Wear,
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(horizontal = 8.dp, vertical = 4.dp)
@@ -372,6 +380,7 @@ private fun EditItemMainScreen(
 private fun WearFieldButton(
     fieldLabel: String,
     value: String,
+    placeholder: String,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     transformation: SurfaceTransformation,
@@ -392,7 +401,7 @@ private fun WearFieldButton(
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             Text(
-                text = value.ifBlank { fieldLabel },
+                text = value.ifBlank { placeholder },
                 style = MaterialTheme.typography.bodyMedium,
                 color = if (value.isBlank()) {
                     MaterialTheme.colorScheme.onSurfaceVariant
@@ -416,6 +425,7 @@ private fun TypeBothToggle(
         onClick = onClick,
         modifier = modifier,
         transformation = transformation,
+        shape = EditControlShape,
         colors = if (selected) {
             ButtonDefaults.buttonColors()
         } else {
@@ -460,6 +470,7 @@ private fun TypeIconToggle(
         onClick = onClick,
         modifier = modifier,
         transformation = transformation,
+        shape = EditControlShape,
         colors = if (selected) {
             ButtonDefaults.buttonColors()
         } else {

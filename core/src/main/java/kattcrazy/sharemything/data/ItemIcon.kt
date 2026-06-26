@@ -67,7 +67,6 @@ enum class ItemIcon {
         val pickerOrder: List<ItemIcon> = listOf(
             TEXT,
             QR,
-            BOTH,
             ARTICLE,
             CALL,
             CREDIT_CARD,
@@ -86,7 +85,7 @@ enum class ItemIcon {
         fun defaultFor(type: ItemType): ItemIcon = when (type) {
             ItemType.TEXT -> TEXT
             ItemType.QR_CODE -> QR
-            ItemType.BOTH -> BOTH
+            ItemType.BOTH -> QR
         }
 
         fun fromStoredName(name: String?, fallbackType: ItemType): ItemIcon {

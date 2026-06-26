@@ -16,6 +16,7 @@
     <string name="reorder_drag_handle">Reorder item</string>
     <string name="field_title">Name</string>
     <string name="field_content">Content</string>
+    <string name="field_placeholder_example">Example</string>
     <string name="validation_required">Name and content are required.</string>
     <string name="validation_qr_multiline">Multi-line is only supported for Text type. Your content will be merged into one line when you tap Save.</string>
     <string name="content_label">Content</string>

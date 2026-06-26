@@ -48,6 +48,7 @@ import kattcrazy.sharemything.data.ItemType
 import kattcrazy.sharemything.data.asSingleLineQrContent
 import kattcrazy.sharemything.data.usesQr
 import kattcrazy.sharemything.ui.ItemIconPicker
+import kattcrazy.sharemything.ui.EditControlShape
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -82,6 +83,7 @@ fun EditItemScreen(
     val validationRequiredMessage = stringResource(R.string.validation_required)
     val multilineQrWarningMessage = stringResource(R.string.validation_qr_multiline)
     val showMultilineQrWarning = type.usesQr && content.contains('\n')
+    val examplePlaceholder = stringResource(R.string.field_placeholder_example)
 
     Scaffold(
         topBar = {
@@ -119,19 +121,26 @@ fun EditItemScreen(
                 tooltip = { PlainTooltip { Text(stringResource(R.string.tooltip_title)) } },
                 state = rememberTooltipState(),
             ) {
-                OutlinedTextField(
-                    value = title,
-                    onValueChange = {
-                        title = it
-                        validationError = null
-                    },
-                    label = { Text(stringResource(R.string.field_title)) },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth(),
-                    keyboardOptions = KeyboardOptions(
-                        capitalization = KeyboardCapitalization.Sentences,
-                    ),
-                )
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Text(
+                        text = stringResource(R.string.field_title),
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    OutlinedTextField(
+                        value = title,
+                        onValueChange = {
+                            title = it
+                            validationError = null
+                        },
+                        placeholder = { Text(examplePlaceholder) },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth(),
+                        keyboardOptions = KeyboardOptions(
+                            capitalization = KeyboardCapitalization.Sentences,
+                        ),
+                    )
+                }
             }
 
             TooltipBox(
@@ -139,21 +148,28 @@ fun EditItemScreen(
                 tooltip = { PlainTooltip { Text(stringResource(R.string.tooltip_content)) } },
                 state = rememberTooltipState(),
             ) {
-                OutlinedTextField(
-                    value = content,
-                    onValueChange = {
-                        content = it
-                        validationError = null
-                    },
-                    label = { Text(stringResource(R.string.field_content)) },
-                    modifier = Modifier.fillMaxWidth(),
-                    minLines = if (type.usesQr) 1 else 4,
-                    maxLines = 12,
-                    keyboardOptions = KeyboardOptions(
-                        capitalization = KeyboardCapitalization.Sentences,
-                        keyboardType = if (type.usesQr) KeyboardType.Uri else KeyboardType.Text,
-                    ),
-                )
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Text(
+                        text = stringResource(R.string.field_content),
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    OutlinedTextField(
+                        value = content,
+                        onValueChange = {
+                            content = it
+                            validationError = null
+                        },
+                        placeholder = { Text(examplePlaceholder) },
+                        modifier = Modifier.fillMaxWidth(),
+                        minLines = if (type.usesQr) 1 else 4,
+                        maxLines = 12,
+                        keyboardOptions = KeyboardOptions(
+                            capitalization = KeyboardCapitalization.Sentences,
+                            keyboardType = if (type.usesQr) KeyboardType.Uri else KeyboardType.Text,
+                        ),
+                    )
+                }
             }
 
             if (showMultilineQrWarning) {
@@ -175,6 +191,7 @@ fun EditItemScreen(
                         iconManuallySet = false
                     },
                     label = { Text(stringResource(R.string.type_text)) },
+                    shape = EditControlShape,
                     leadingIcon = {
                         Icon(
                             painter = painterResource(R.drawable.ic_item_text),
@@ -189,6 +206,7 @@ fun EditItemScreen(
                         iconManuallySet = false
                     },
                     label = { Text(stringResource(R.string.type_both)) },
+                    shape = EditControlShape,
                     leadingIcon = {
                         Row(horizontalArrangement = Arrangement.spacedBy(2.dp)) {
                             Icon(
@@ -211,6 +229,7 @@ fun EditItemScreen(
                         iconManuallySet = false
                     },
                     label = { Text(stringResource(R.string.type_qr)) },
+                    shape = EditControlShape,
                     leadingIcon = {
                         Icon(
                             painter = painterResource(R.drawable.ic_item_qr),
