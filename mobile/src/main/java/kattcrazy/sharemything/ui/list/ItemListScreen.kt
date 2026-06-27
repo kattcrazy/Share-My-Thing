@@ -278,7 +278,12 @@ private fun ItemListContent(
     LazyColumn(
         modifier = modifier.fillMaxSize(),
         state = lazyListState,
-        contentPadding = PaddingValues(16.dp),
+        contentPadding = PaddingValues(
+            start = 16.dp,
+            end = 16.dp,
+            top = 16.dp,
+            bottom = 16.dp + ExtendedFloatingActionButtonHeight,
+        ),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         if (listItems.isEmpty()) {
@@ -455,6 +460,9 @@ private fun SectionCard(
 }
 
 private const val DRAGGING_ITEM_SCALE = 0.92f
+
+/** Center FAB overlays list content; keep the last section scrollable above it. */
+private val ExtendedFloatingActionButtonHeight = 56.dp
 
 /** Map lazy-list keys to item indices; footer keys (strings) clamp to last row. */
 private fun reorderListItems(
