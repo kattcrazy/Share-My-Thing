@@ -8,7 +8,7 @@
   2. Runs bundleRelease for Play-style AABs
   3. Signs APKs if keystore.properties exists (else debug keystore for local testing)
   4. Writes dist/release/v{version}/ with checksums
-  5. With -GitHub: creates/updates GitHub Release via gh CLI
+  5. With -GitHub: creates/updates GitHub Release via gh CLI (APKs only; AABs stay local for Play).
 
   Play Store is NOT auto-uploaded from this script.
 
@@ -253,7 +253,8 @@ if ($GitHub) {
             throw "Git tag $VersionTag not found locally. Create and push it first: git tag $VersionTag && git push origin $VersionTag"
         }
 
-        $assets = Get-ChildItem $ReleaseDir -File | ForEach-Object { $_.FullName }
+        $assets = Get-ChildItem $ReleaseDir -File -Filter "*.apk" | ForEach-Object { $_.FullName }
+        if ($assets.Count -eq 0) { throw "No release APKs found in $ReleaseDir" }
         $notesArg = @("--generate-notes")
 
         $existing = gh release view $VersionTag 2>$null
