@@ -3,18 +3,13 @@
     <string name="field_icon">Icon</string>
     <string name="icon_text">Text</string>
     <string name="icon_qr">QR code</string>
-    <string name="icon_both">Text and QR</string>
-    <string name="icon_article">Article</string>
-    <string name="icon_call">Call</string>
+    <string name="icon_phone">Phone</string>
     <string name="icon_credit_card">Credit card</string>
-    <string name="icon_account_box">Account</string>
-    <string name="icon_business_center">Business</string>
-    <string name="icon_edit">Edit</string>
-    <string name="icon_play_circle">Play</string>
-    <string name="icon_share">Share</string>
-    <string name="icon_pin_drop">Location</string>
-    <string name="icon_link">Link</string>
-    <string name="icon_notes">Notes</string>
+    <string name="icon_card_account_details">Account</string>
+    <string name="icon_playlist_edit">Edit</string>
+    <string name="icon_share_variant">Share</string>
+    <string name="icon_pin">Pin</string>
+    <string name="icon_link_variant">Link</string>
     <string name="icon_email">Email</string>
-    <string name="icon_home">Home</string>
+    <string name="icon_movie_open">Movie</string>
 </resources>

@@ -182,10 +182,12 @@ fun AppNavHost(
                         content = content,
                         type = type,
                         icon = icon,
-                    ) { savedId ->
-                        screen = when (type) {
-                            ItemType.TEXT -> AppScreen.TextDetail(savedId)
-                            ItemType.QR_CODE, ItemType.BOTH -> AppScreen.QrDetail(savedId)
+                    ) { savedItem ->
+                        detailItem = savedItem
+                        editItem = null
+                        screen = when (savedItem.type) {
+                            ItemType.TEXT -> AppScreen.TextDetail(savedItem.id)
+                            ItemType.QR_CODE, ItemType.BOTH -> AppScreen.QrDetail(savedItem.id)
                         }
                     }
                 },

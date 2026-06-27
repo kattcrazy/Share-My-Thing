@@ -131,7 +131,7 @@ class ItemsViewModel(
         content: String,
         type: ItemType,
         icon: ItemIcon,
-        onSaved: (Long) -> Unit,
+        onSaved: (DisplayItem) -> Unit,
     ) {
         viewModelScope.launch {
             val existing = id?.let { repository.getItem(it) }
@@ -148,7 +148,8 @@ class ItemsViewModel(
                     visibleOnWatch = existing?.visibleOnWatch ?: true,
                 ),
             )
-            onSaved(savedId)
+            val savedItem = repository.getItem(savedId) ?: return@launch
+            onSaved(savedItem)
         }
     }
 

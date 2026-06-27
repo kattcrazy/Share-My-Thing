@@ -57,7 +57,6 @@ import androidx.compose.ui.unit.dp
 import kattcrazy.sharemything.R
 import kattcrazy.sharemything.presentation.theme.appNameTextStyle
 import kattcrazy.sharemything.data.DisplayItem
-import kattcrazy.sharemything.ui.ItemIconDisplay
 import kattcrazy.sharemything.ui.SyncFeedback
 import kattcrazy.sharemything.ui.components.SupportBanner
 import kotlinx.coroutines.flow.StateFlow
@@ -335,15 +334,10 @@ private fun ItemListContent(
                                     .clickable { onItemClick(item) }
                                     .padding(start = 12.dp, end = 8.dp, top = 16.dp, bottom = 16.dp),
                                 verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(10.dp),
                             ) {
-                                ItemIconDisplay(
-                                    icon = item.icon,
-                                    size = 22.dp,
-                                )
                                 Text(
                                     text = item.title,
-                                    modifier = Modifier.weight(1f),
+                                    modifier = Modifier.fillMaxWidth(),
                                     style = MaterialTheme.typography.titleMedium,
                                 )
                             }

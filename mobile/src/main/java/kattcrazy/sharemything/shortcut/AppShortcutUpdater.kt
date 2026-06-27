@@ -4,12 +4,12 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.ShortcutInfo
 import android.content.pm.ShortcutManager
-import android.graphics.drawable.Icon
 import kattcrazy.sharemything.data.DisplayItem
 import kattcrazy.sharemything.data.ItemsRepository
 import kattcrazy.sharemything.data.SurfaceSlot
 import kattcrazy.sharemything.data.SurfaceUpdateListener
 import kattcrazy.sharemything.presentation.MainActivity
+import kattcrazy.sharemything.ui.ItemIconBitmap
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
@@ -44,7 +44,7 @@ class AppShortcutUpdater(
         return ShortcutInfo.Builder(context, slot.name)
             .setShortLabel(item.title)
             .setLongLabel(item.title)
-            .setIcon(Icon.createWithResource(context, item.icon.drawableRes()))
+            .setIcon(ItemIconBitmap.shortcutIcon(context, item.icon))
             .setIntent(intent)
             .build()
     }

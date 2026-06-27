@@ -98,10 +98,9 @@ internal object ComplicationDataFactory {
             MainActivity.launchIntent(context, itemId),
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
         )
-        val monochromaticImage = ComplicationIconFactory.monochromaticImage(context, icon)
         return when (type) {
             ComplicationType.MONOCHROMATIC_IMAGE -> MonochromaticImageComplicationData.Builder(
-                monochromaticImage = monochromaticImage,
+                monochromaticImage = ComplicationIconFactory.monochromaticImage(context, icon),
                 contentDescription = PlainComplicationText.Builder(title).build(),
             )
                 .setTapAction(pendingIntent)

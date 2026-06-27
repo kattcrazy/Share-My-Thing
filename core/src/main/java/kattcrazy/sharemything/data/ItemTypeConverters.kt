@@ -13,5 +13,5 @@ class ItemTypeConverters {
     fun fromItemIcon(value: ItemIcon): String = value.name
 
     @TypeConverter
-    fun toItemIcon(value: String): ItemIcon = ItemIcon.valueOf(value)
+    fun toItemIcon(value: String): ItemIcon = ItemIcon.fromStoredName(value, ItemType.TEXT)
 }

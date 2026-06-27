@@ -30,7 +30,6 @@ import kattcrazy.sharemything.R
 import kattcrazy.sharemything.data.DisplayItem
 import kattcrazy.sharemything.data.labelRes
 import kattcrazy.sharemything.data.SurfaceSlot
-import kattcrazy.sharemything.ui.ItemIconDisplay
 import kattcrazy.sharemything.ui.bottomScrollSpacer
 
 @Composable
@@ -146,20 +145,10 @@ private fun TransformingLazyColumnScope.slotItem(
                 )
             },
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.Center,
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                if (assignedItem != null) {
-                    ItemIconDisplay(icon = assignedItem.icon, size = 16.dp)
-                    Spacer(modifier = Modifier.width(6.dp))
-                }
-                Text(
-                    text = buttonLabel,
-                    textAlign = TextAlign.Center,
-                )
-            }
+            Text(
+                text = buttonLabel,
+                textAlign = TextAlign.Center,
+            )
         }
     }
 }

@@ -7,79 +7,60 @@ import kattcrazy.sharemything.core.R
 enum class ItemIcon {
     TEXT,
     QR,
-    BOTH,
-    ARTICLE,
-    CALL,
+    PHONE,
     CREDIT_CARD,
-    ACCOUNT_BOX,
-    BUSINESS_CENTER,
-    EDIT,
-    PLAY_CIRCLE,
-    SHARE,
-    PIN_DROP,
-    LINK,
-    NOTES,
+    CARD_ACCOUNT_DETAILS,
+    PLAYLIST_EDIT,
+    SHARE_VARIANT,
+    PIN,
+    LINK_VARIANT,
     EMAIL,
-    HOME,
+    MOVIE_OPEN,
     ;
 
     @DrawableRes
     fun drawableRes(): Int = when (this) {
         TEXT -> R.drawable.ic_icon_text
         QR -> R.drawable.ic_icon_qr
-        BOTH -> R.drawable.ic_icon_both
-        ARTICLE -> R.drawable.ic_icon_article
-        CALL -> R.drawable.ic_icon_call
+        PHONE -> R.drawable.ic_icon_phone
         CREDIT_CARD -> R.drawable.ic_icon_credit_card
-        ACCOUNT_BOX -> R.drawable.ic_icon_account_box
-        BUSINESS_CENTER -> R.drawable.ic_icon_business_center
-        EDIT -> R.drawable.ic_icon_edit
-        PLAY_CIRCLE -> R.drawable.ic_icon_play_circle
-        SHARE -> R.drawable.ic_icon_share
-        PIN_DROP -> R.drawable.ic_icon_pin_drop
-        LINK -> R.drawable.ic_icon_link
-        NOTES -> R.drawable.ic_icon_notes
+        CARD_ACCOUNT_DETAILS -> R.drawable.ic_icon_card_account_details
+        PLAYLIST_EDIT -> R.drawable.ic_icon_playlist_edit
+        SHARE_VARIANT -> R.drawable.ic_icon_share_variant
+        PIN -> R.drawable.ic_icon_pin
+        LINK_VARIANT -> R.drawable.ic_icon_link_variant
         EMAIL -> R.drawable.ic_icon_email
-        HOME -> R.drawable.ic_icon_home
+        MOVIE_OPEN -> R.drawable.ic_icon_movie_open
     }
 
     @StringRes
     fun contentDescriptionRes(): Int = when (this) {
         TEXT -> R.string.icon_text
         QR -> R.string.icon_qr
-        BOTH -> R.string.icon_both
-        ARTICLE -> R.string.icon_article
-        CALL -> R.string.icon_call
+        PHONE -> R.string.icon_phone
         CREDIT_CARD -> R.string.icon_credit_card
-        ACCOUNT_BOX -> R.string.icon_account_box
-        BUSINESS_CENTER -> R.string.icon_business_center
-        EDIT -> R.string.icon_edit
-        PLAY_CIRCLE -> R.string.icon_play_circle
-        SHARE -> R.string.icon_share
-        PIN_DROP -> R.string.icon_pin_drop
-        LINK -> R.string.icon_link
-        NOTES -> R.string.icon_notes
+        CARD_ACCOUNT_DETAILS -> R.string.icon_card_account_details
+        PLAYLIST_EDIT -> R.string.icon_playlist_edit
+        SHARE_VARIANT -> R.string.icon_share_variant
+        PIN -> R.string.icon_pin
+        LINK_VARIANT -> R.string.icon_link_variant
         EMAIL -> R.string.icon_email
-        HOME -> R.string.icon_home
+        MOVIE_OPEN -> R.string.icon_movie_open
     }
 
     companion object {
         val pickerOrder: List<ItemIcon> = listOf(
             TEXT,
             QR,
-            ARTICLE,
-            CALL,
+            PHONE,
             CREDIT_CARD,
-            ACCOUNT_BOX,
-            BUSINESS_CENTER,
-            EDIT,
-            PLAY_CIRCLE,
-            SHARE,
-            PIN_DROP,
-            LINK,
-            NOTES,
+            CARD_ACCOUNT_DETAILS,
+            PLAYLIST_EDIT,
+            SHARE_VARIANT,
+            PIN,
+            LINK_VARIANT,
             EMAIL,
-            HOME,
+            MOVIE_OPEN,
         )
 
         fun defaultFor(type: ItemType): ItemIcon = when (type) {
@@ -90,7 +71,24 @@ enum class ItemIcon {
 
         fun fromStoredName(name: String?, fallbackType: ItemType): ItemIcon {
             if (name.isNullOrBlank()) return defaultFor(fallbackType)
+            legacyIconMap[name]?.let { return it }
             return runCatching { valueOf(name) }.getOrDefault(defaultFor(fallbackType))
         }
+
+        /** Maps removed/renamed icons so existing items and sync payloads keep working. */
+        private val legacyIconMap: Map<String, ItemIcon> = mapOf(
+            "CALL" to PHONE,
+            "ACCOUNT_BOX" to CARD_ACCOUNT_DETAILS,
+            "EDIT" to PLAYLIST_EDIT,
+            "PLAY_CIRCLE" to MOVIE_OPEN,
+            "SHARE" to SHARE_VARIANT,
+            "PIN_DROP" to PIN,
+            "LINK" to LINK_VARIANT,
+            "BOTH" to QR,
+            "ARTICLE" to TEXT,
+            "NOTES" to TEXT,
+            "HOME" to TEXT,
+            "BUSINESS_CENTER" to TEXT,
+        )
     }
 }

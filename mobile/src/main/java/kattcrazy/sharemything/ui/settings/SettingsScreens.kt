@@ -37,7 +37,6 @@ import kattcrazy.sharemything.R
 import kattcrazy.sharemything.data.DisplayItem
 import kattcrazy.sharemything.data.SurfaceSlot
 import kattcrazy.sharemything.data.labelRes
-import kattcrazy.sharemything.ui.ItemIconDisplay
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -154,23 +153,14 @@ internal fun SlotRow(
             },
         ),
     ) {
-        Row(
+        Text(
+            text = buttonLabel,
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp),
-            horizontalArrangement = Arrangement.Center,
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            if (assignedItem != null) {
-                ItemIconDisplay(icon = assignedItem.icon, size = 20.dp)
-                Spacer(modifier = Modifier.width(8.dp))
-            }
-            Text(
-                text = buttonLabel,
-                textAlign = TextAlign.Center,
-                style = MaterialTheme.typography.titleMedium,
-            )
-        }
+            textAlign = TextAlign.Center,
+            style = MaterialTheme.typography.titleMedium,
+        )
     }
 }
 
@@ -237,21 +227,14 @@ fun SlotItemPickerScreen(
                             },
                         ),
                     ) {
-                        Row(
+                        Text(
+                            text = item.title,
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(16.dp),
-                            horizontalArrangement = Arrangement.Center,
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            ItemIconDisplay(icon = item.icon, size = 20.dp)
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(
-                                text = item.title,
-                                textAlign = TextAlign.Center,
-                                style = MaterialTheme.typography.titleMedium,
-                            )
-                        }
+                            textAlign = TextAlign.Center,
+                            style = MaterialTheme.typography.titleMedium,
+                        )
                     }
                 }
             }
