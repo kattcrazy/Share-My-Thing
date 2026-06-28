@@ -194,7 +194,7 @@ fun EditItemScreen(
                     shape = EditControlShape,
                     leadingIcon = {
                         Icon(
-                            painter = painterResource(R.drawable.ic_item_text),
+                            painter = painterResource(CoreR.drawable.ic_item_text),
                             contentDescription = null,
                         )
                     },
@@ -210,12 +210,12 @@ fun EditItemScreen(
                     leadingIcon = {
                         Row(horizontalArrangement = Arrangement.spacedBy(2.dp)) {
                             Icon(
-                                painter = painterResource(R.drawable.ic_item_text),
+                                painter = painterResource(CoreR.drawable.ic_item_text),
                                 contentDescription = null,
                                 modifier = Modifier.size(18.dp),
                             )
                             Icon(
-                                painter = painterResource(R.drawable.ic_item_qr),
+                                painter = painterResource(CoreR.drawable.ic_item_qr),
                                 contentDescription = null,
                                 modifier = Modifier.size(18.dp),
                             )
@@ -232,7 +232,7 @@ fun EditItemScreen(
                     shape = EditControlShape,
                     leadingIcon = {
                         Icon(
-                            painter = painterResource(R.drawable.ic_item_qr),
+                            painter = painterResource(CoreR.drawable.ic_item_qr),
                             contentDescription = null,
                         )
                     },

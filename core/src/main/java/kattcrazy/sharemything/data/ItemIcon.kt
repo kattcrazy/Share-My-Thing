@@ -20,8 +20,8 @@ enum class ItemIcon {
 
     @DrawableRes
     fun drawableRes(): Int = when (this) {
-        TEXT -> R.drawable.ic_icon_text
-        QR -> R.drawable.ic_icon_qr
+        TEXT -> R.drawable.ic_item_text
+        QR -> R.drawable.ic_item_qr
         PHONE -> R.drawable.ic_icon_phone
         CREDIT_CARD -> R.drawable.ic_icon_credit_card
         CARD_ACCOUNT_DETAILS -> R.drawable.ic_icon_card_account_details

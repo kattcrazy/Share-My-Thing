@@ -227,7 +227,7 @@ private fun EditItemMainScreen(
                     ) {
                         TypeIconToggle(
                             selected = type == ItemType.TEXT,
-                            iconRes = R.drawable.ic_item_text,
+                            iconRes = CoreR.drawable.ic_item_text,
                             contentDescription = stringResource(R.string.type_text),
                             onClick = { onTypeChange(ItemType.TEXT) },
                             modifier = Modifier.weight(1f),
@@ -241,7 +241,7 @@ private fun EditItemMainScreen(
                         )
                         TypeIconToggle(
                             selected = type == ItemType.QR_CODE,
-                            iconRes = R.drawable.ic_item_qr,
+                            iconRes = CoreR.drawable.ic_item_qr,
                             contentDescription = stringResource(R.string.type_qr),
                             onClick = { onTypeChange(ItemType.QR_CODE) },
                             modifier = Modifier.weight(1f),
@@ -441,13 +441,13 @@ private fun TypeBothToggle(
         ) {
             Row(horizontalArrangement = Arrangement.spacedBy(2.dp)) {
                 Icon(
-                    painter = painterResource(R.drawable.ic_item_text),
+                    painter = painterResource(CoreR.drawable.ic_item_text),
                     contentDescription = null,
                     modifier = Modifier.size(18.dp),
                     tint = LocalContentColor.current,
                 )
                 Icon(
-                    painter = painterResource(R.drawable.ic_item_qr),
+                    painter = painterResource(CoreR.drawable.ic_item_qr),
                     contentDescription = stringResource(R.string.type_both),
                     modifier = Modifier.size(18.dp),
                     tint = LocalContentColor.current,

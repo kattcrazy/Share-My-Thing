@@ -9,6 +9,7 @@
   3. Signs APKs if keystore.properties exists (else debug keystore for local testing)
   4. Writes dist/release/v{version}/ with checksums
   5. With -GitHub: creates/updates GitHub Release via gh CLI (APKs only; AABs stay local for Play).
+     Release notes come from docs/releases/{tag}.md (**Features** and **Fixes** only).
 
   Play Store is NOT auto-uploaded from this script.
 
@@ -27,6 +28,8 @@ param(
     [switch] $SkipBuild,
     [switch] $GitHub,
     [switch] $DryRun,
+
+    [string] $NotesFile = "",
 
     [string] $BuildDir = $(Join-Path $env:LOCALAPPDATA "ShareMyThing-build"),
     [string] $ConfigPath = ""
@@ -255,14 +258,21 @@ if ($GitHub) {
 
         $assets = Get-ChildItem $ReleaseDir -File -Filter "*.apk" | ForEach-Object { $_.FullName }
         if ($assets.Count -eq 0) { throw "No release APKs found in $ReleaseDir" }
-        $notesArg = @("--generate-notes")
+
+        if (-not $NotesFile) {
+            $NotesFile = Join-Path $ProjectRoot "docs/releases/$VersionTag.md"
+        }
+        if (-not (Test-Path $NotesFile)) {
+            throw "Release notes not found: $NotesFile`nCreate it with **Features** and **Fixes** sections only (see docs/releases/v2.2.3.md)."
+        }
+        $notesArg = @("--notes-file", $NotesFile)
 
         $existing = gh release view $VersionTag 2>$null
         if ($LASTEXITCODE -eq 0) {
             Write-Host "  Release exists - uploading assets"
             gh release upload $VersionTag @assets --clobber
         } else {
-            gh release create $VersionTag @assets @notesArg --title "Share My Thing $($mobileVer.Name)"
+            gh release create $VersionTag @assets @notesArg --title $VersionTag
         }
         if ($LASTEXITCODE -ne 0) { throw "gh release failed" }
         $url = gh release view $VersionTag --json url -q .url

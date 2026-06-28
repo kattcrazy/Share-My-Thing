@@ -17,8 +17,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import kattcrazy.sharemything.data.ItemIcon
@@ -98,7 +99,7 @@ fun ItemIconPicker(
                 contentAlignment = Alignment.Center,
             ) {
                 Icon(
-                    painter = painterResource(icon.drawableRes()),
+                    imageVector = ImageVector.vectorResource(icon.drawableRes()),
                     contentDescription = stringResource(icon.contentDescriptionRes()),
                     modifier = Modifier.size(cellSize - 12.dp),
                     tint = iconTint,
