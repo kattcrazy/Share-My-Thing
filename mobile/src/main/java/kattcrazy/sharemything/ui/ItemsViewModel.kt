@@ -1,6 +1,7 @@
 package kattcrazy.sharemything.ui
 
 import android.content.Context
+import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
@@ -9,6 +10,8 @@ import kattcrazy.sharemything.data.ItemIcon
 import kattcrazy.sharemything.data.ItemType
 import kattcrazy.sharemything.data.ItemsRepository
 import kattcrazy.sharemything.data.SurfaceSlot
+import kattcrazy.sharemything.sync.BackupPayload
+import kattcrazy.sharemything.sync.ImportMode
 import kattcrazy.sharemything.sync.PeerAvailability
 import kattcrazy.sharemything.sync.SyncFeedbackBridge
 import kattcrazy.sharemything.sync.SyncRepository
@@ -20,6 +23,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import java.io.IOException
 
 sealed interface SyncFeedback {
     data object Syncing : SyncFeedback
@@ -27,6 +31,13 @@ sealed interface SyncFeedback {
     data object NoWatchConnected : SyncFeedback
     data object AutoFailed : SyncFeedback
     data class Error(val message: String) : SyncFeedback
+}
+
+sealed interface ImportExportFeedback {
+    data object ExportSuccess : ImportExportFeedback
+    data class ImportSuccess(val mode: ImportMode) : ImportExportFeedback
+    data class Error(val message: String) : ImportExportFeedback
+    data object ImportReady : ImportExportFeedback
 }
 
 class ItemsViewModel(
@@ -72,6 +83,11 @@ class ItemsViewModel(
 
     private val _syncFeedback = MutableStateFlow<SyncFeedback?>(null)
     val syncFeedback: StateFlow<SyncFeedback?> = _syncFeedback.asStateFlow()
+
+    private val _importExportFeedback = MutableStateFlow<ImportExportFeedback?>(null)
+    val importExportFeedback: StateFlow<ImportExportFeedback?> = _importExportFeedback.asStateFlow()
+
+    private var pendingImportBackup: BackupPayload? = null
 
     init {
         viewModelScope.launch {
@@ -123,6 +139,71 @@ class ItemsViewModel(
 
     fun clearSyncFeedback() {
         _syncFeedback.value = null
+    }
+
+    fun clearImportExportFeedback() {
+        _importExportFeedback.value = null
+    }
+
+    fun exportBackup(uri: Uri, includeSlotAssignments: Boolean) {
+        viewModelScope.launch {
+            runCatching {
+                val backup = repository.buildBackupPayload(includeSlotAssignments)
+                appContext.contentResolver.openOutputStream(uri)?.use { stream ->
+                    stream.write(backup.toJson().toByteArray(Charsets.UTF_8))
+                } ?: throw IOException("Could not write file")
+            }.onSuccess {
+                _importExportFeedback.value = ImportExportFeedback.ExportSuccess
+            }.onFailure { error ->
+                _importExportFeedback.value = ImportExportFeedback.Error(
+                    error.message ?: "Export failed",
+                )
+            }
+        }
+    }
+
+    fun loadImportBackup(uri: Uri) {
+        viewModelScope.launch {
+            runCatching {
+                val json = appContext.contentResolver.openInputStream(uri)?.use { stream ->
+                    stream.bufferedReader().readText()
+                } ?: throw IOException("Could not read file")
+                BackupPayload.fromJson(json)
+            }.onSuccess { backup ->
+                if (backup.syncPayload.items.none { !it.deleted }) {
+                    _importExportFeedback.value = ImportExportFeedback.Error("No items found in file")
+                    pendingImportBackup = null
+                } else {
+                    pendingImportBackup = backup
+                    _importExportFeedback.value = ImportExportFeedback.ImportReady
+                }
+            }.onFailure { error ->
+                pendingImportBackup = null
+                _importExportFeedback.value = ImportExportFeedback.Error(
+                    error.message ?: "Import failed",
+                )
+            }
+        }
+    }
+
+    fun confirmImport(mode: ImportMode) {
+        val backup = pendingImportBackup ?: return
+        pendingImportBackup = null
+        viewModelScope.launch {
+            runCatching {
+                repository.importBackup(backup, mode)
+            }.onSuccess {
+                _importExportFeedback.value = ImportExportFeedback.ImportSuccess(mode = mode)
+            }.onFailure { error ->
+                _importExportFeedback.value = ImportExportFeedback.Error(
+                    error.message ?: "Import failed",
+                )
+            }
+        }
+    }
+
+    fun cancelPendingImport() {
+        pendingImportBackup = null
     }
 
     fun saveItem(

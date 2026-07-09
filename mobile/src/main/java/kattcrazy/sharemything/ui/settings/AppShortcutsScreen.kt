@@ -25,6 +25,8 @@ import kattcrazy.sharemything.R
 import kattcrazy.sharemything.data.DisplayItem
 import kattcrazy.sharemything.data.SurfaceSlot
 import kattcrazy.sharemything.data.labelRes
+import kattcrazy.sharemything.ui.components.TapTooltipAnchor
+import kattcrazy.sharemything.ui.components.TapTooltipContainer
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -56,6 +58,7 @@ fun WatchTilesScreen(
     WatchSurfaceSlotsScreen(
         title = stringResource(R.string.watch_tiles),
         help = stringResource(R.string.watch_tiles_help),
+        helpTooltip = stringResource(R.string.tooltip_watch_tiles),
         slots = SurfaceSlot.tiles,
         items = items,
         slotAssignments = slotAssignments,
@@ -75,6 +78,7 @@ fun WatchComplicationsScreen(
     WatchSurfaceSlotsScreen(
         title = stringResource(R.string.watch_complications),
         help = stringResource(R.string.watch_complications_help),
+        helpTooltip = stringResource(R.string.tooltip_watch_complications),
         slots = SurfaceSlot.complications,
         items = items,
         slotAssignments = slotAssignments,
@@ -88,6 +92,7 @@ fun WatchComplicationsScreen(
 internal fun WatchSurfaceSlotsScreen(
     title: String,
     help: String,
+    helpTooltip: String? = null,
     slots: List<SurfaceSlot>,
     items: List<DisplayItem>,
     slotAssignments: Map<SurfaceSlot, Long?>,
@@ -109,21 +114,34 @@ internal fun WatchSurfaceSlotsScreen(
             )
         },
     ) { padding ->
-        LazyColumn(
+        TapTooltipContainer(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding),
-            contentPadding = PaddingValues(16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(16.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
             item {
-                Text(
-                    text = help,
-                    modifier = Modifier.fillMaxWidth(),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    textAlign = TextAlign.Center,
-                )
+                if (helpTooltip != null) {
+                    TapTooltipAnchor(
+                        text = help,
+                        tooltip = helpTooltip,
+                        modifier = Modifier.fillMaxWidth(),
+                        style = MaterialTheme.typography.bodyMedium,
+                        textAlign = TextAlign.Center,
+                    )
+                } else {
+                    Text(
+                        text = help,
+                        modifier = Modifier.fillMaxWidth(),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        textAlign = TextAlign.Center,
+                    )
+                }
             }
 
             items(slots, key = { it.name }) { slot ->
@@ -133,6 +151,7 @@ internal fun WatchSurfaceSlotsScreen(
                     slotAssignments = slotAssignments,
                     onSlotClick = onSlotClick,
                 )
+            }
             }
         }
     }

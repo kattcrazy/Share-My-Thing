@@ -1,5 +1,8 @@
 package kattcrazy.sharemything.ui.list
 
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import android.net.Uri
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.clickable
@@ -22,6 +25,8 @@ import androidx.compose.material.icons.automirrored.outlined.HelpOutline
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.DragHandle
 import androidx.compose.material.icons.outlined.ChevronRight
+import androidx.compose.material.icons.outlined.FileDownload
+import androidx.compose.material.icons.outlined.FileUpload
 import androidx.compose.material.icons.outlined.Watch
 import androidx.compose.material.icons.outlined.WatchOff
 import androidx.compose.material3.Card
@@ -57,8 +62,13 @@ import androidx.compose.ui.unit.dp
 import kattcrazy.sharemything.R
 import kattcrazy.sharemything.presentation.theme.appNameTextStyle
 import kattcrazy.sharemything.data.DisplayItem
+import kattcrazy.sharemything.ui.ImportExportFeedback
 import kattcrazy.sharemything.ui.SyncFeedback
+import kattcrazy.sharemything.ui.components.ExportBackupDialog
+import kattcrazy.sharemything.ui.components.ImportBackupDialog
 import kattcrazy.sharemything.ui.components.SupportBanner
+import kattcrazy.sharemything.sync.BackupPayload
+import kattcrazy.sharemything.sync.ImportMode
 import kotlinx.coroutines.flow.StateFlow
 import sh.calvin.reorderable.ReorderableItem
 import sh.calvin.reorderable.rememberReorderableLazyListState
@@ -80,6 +90,12 @@ fun ItemListScreen(
     onSyncClick: () -> Unit,
     syncFeedback: StateFlow<SyncFeedback?>,
     onSyncFeedbackShown: () -> Unit,
+    onExportBackup: (Uri, Boolean) -> Unit,
+    onImportBackupSelected: (Uri) -> Unit,
+    onConfirmImport: (ImportMode) -> Unit,
+    onCancelPendingImport: () -> Unit,
+    importExportFeedback: StateFlow<ImportExportFeedback?>,
+    onImportExportFeedbackShown: () -> Unit,
 ) {
     val lazyListState = rememberLazyListState()
     var listItems by remember { mutableStateOf(items) }
@@ -117,12 +133,38 @@ fun ItemListScreen(
     }
     val snackbarHostState = remember { SnackbarHostState() }
     val feedback by syncFeedback.collectAsState()
+    val importExportFeedbackState by importExportFeedback.collectAsState()
     val syncInProgressMessage = stringResource(R.string.sync_in_progress)
     val syncSuccessMessage = stringResource(R.string.sync_success)
     val syncNoWatchMessage = stringResource(R.string.sync_no_watch)
     val syncAutoFailedMessage = stringResource(R.string.sync_auto_failed)
+    val exportSuccessMessage = stringResource(R.string.export_success)
+    val importSuccessReplaceMessage = stringResource(R.string.import_success_replace)
+    val importSuccessMergeMessage = stringResource(R.string.import_success_merge)
+    val importSuccessAddMessage = stringResource(R.string.import_success_add)
     val isRefreshing = feedback == SyncFeedback.Syncing
     val context = LocalContext.current
+    var showExportDialog by remember { mutableStateOf(false) }
+    var showImportDialog by remember { mutableStateOf(false) }
+    var pendingExportIncludeAll by remember { mutableStateOf<Boolean?>(null) }
+
+    val exportDocumentLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.CreateDocument("application/json"),
+    ) { uri ->
+        val includeAll = pendingExportIncludeAll
+        pendingExportIncludeAll = null
+        if (uri != null && includeAll != null) {
+            onExportBackup(uri, includeAll)
+        }
+    }
+
+    val importDocumentLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenDocument(),
+    ) { uri ->
+        if (uri != null) {
+            onImportBackupSelected(uri)
+        }
+    }
 
     LaunchedEffect(feedback) {
         when (val current = feedback) {
@@ -168,6 +210,65 @@ fun ItemListScreen(
         }
     }
 
+    LaunchedEffect(importExportFeedbackState) {
+        when (val current = importExportFeedbackState) {
+            null -> Unit
+            ImportExportFeedback.ImportReady -> {
+                showImportDialog = true
+                onImportExportFeedbackShown()
+            }
+            ImportExportFeedback.ExportSuccess -> {
+                snackbarHostState.showSnackbar(
+                    message = exportSuccessMessage,
+                    duration = SnackbarDuration.Short,
+                )
+                onImportExportFeedbackShown()
+            }
+            is ImportExportFeedback.ImportSuccess -> {
+                snackbarHostState.showSnackbar(
+                    message = when (current.mode) {
+                        ImportMode.REPLACE -> importSuccessReplaceMessage
+                        ImportMode.MERGE -> importSuccessMergeMessage
+                        ImportMode.ADD -> importSuccessAddMessage
+                    },
+                    duration = SnackbarDuration.Short,
+                )
+                onImportExportFeedbackShown()
+            }
+            is ImportExportFeedback.Error -> {
+                snackbarHostState.showSnackbar(
+                    message = context.getString(R.string.import_export_error, current.message),
+                    duration = SnackbarDuration.Long,
+                )
+                onImportExportFeedbackShown()
+            }
+        }
+    }
+
+    if (showExportDialog) {
+        ExportBackupDialog(
+            onDismiss = { showExportDialog = false },
+            onConfirm = { includeAll ->
+                showExportDialog = false
+                pendingExportIncludeAll = includeAll
+                exportDocumentLauncher.launch(BackupPayload.DEFAULT_FILENAME)
+            },
+        )
+    }
+
+    if (showImportDialog) {
+        ImportBackupDialog(
+            onDismiss = {
+                showImportDialog = false
+                onCancelPendingImport()
+            },
+            onConfirm = { mode ->
+                showImportDialog = false
+                onConfirmImport(mode)
+            },
+        )
+    }
+
     Scaffold(
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         topBar = {
@@ -180,6 +281,18 @@ fun ItemListScreen(
                         )
                     },
                     actions = {
+                        IconButton(onClick = { importDocumentLauncher.launch(arrayOf("application/json", "text/plain", "*/*")) }) {
+                            Icon(
+                                imageVector = Icons.Outlined.FileDownload,
+                                contentDescription = stringResource(R.string.import_backup),
+                            )
+                        }
+                        IconButton(onClick = { showExportDialog = true }) {
+                            Icon(
+                                imageVector = Icons.Outlined.FileUpload,
+                                contentDescription = stringResource(R.string.export_backup),
+                            )
+                        }
                         IconButton(onClick = onAboutClick) {
                             Icon(
                                 imageVector = Icons.AutoMirrored.Outlined.HelpOutline,

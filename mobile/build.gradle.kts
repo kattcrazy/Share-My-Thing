@@ -15,11 +15,17 @@ android {
         minSdk = 30
         targetSdk = 35
         // Play versionCode: phone uses 1, 2, 3…; must not match wear (see wear/build.gradle.kts).
-        versionCode = 6
-        versionName = "2.2.6"
+        versionCode = 7
+        versionName = "2.3.0"
     }
 
     buildTypes {
+        debug {
+            applicationIdSuffix = ".debug"
+            versionNameSuffix = "-debug"
+            resValue("string", "app_name", "Share My Thing Debug")
+            resValue("string", "app_name_short", "Share My Thing Debug")
+        }
         release {
             isMinifyEnabled = true
             isShrinkResources = true

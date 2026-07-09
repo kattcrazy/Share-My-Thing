@@ -20,15 +20,10 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.PlainTooltip
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TooltipBox
-import androidx.compose.material3.TooltipDefaults
 import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.rememberTooltipState
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
@@ -37,6 +32,8 @@ import kattcrazy.sharemything.R
 import kattcrazy.sharemything.data.DisplayItem
 import kattcrazy.sharemything.data.SurfaceSlot
 import kattcrazy.sharemything.data.labelRes
+import kattcrazy.sharemything.ui.components.TapTooltipAnchor
+import kattcrazy.sharemything.ui.components.TapTooltipContainer
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -61,27 +58,24 @@ fun TilesComplicationsScreen(
             )
         },
     ) { padding ->
-        LazyColumn(
+        TapTooltipContainer(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding),
-            contentPadding = PaddingValues(16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(16.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
             item {
-                TooltipBox(
-                    positionProvider = TooltipDefaults.rememberPlainTooltipPositionProvider(),
-                    tooltip = { PlainTooltip { Text(stringResource(R.string.tooltip_tiles)) } },
-                    state = rememberTooltipState(),
-                ) {
-                    Text(
-                        text = stringResource(R.string.tiles_and_complications_help),
-                        modifier = Modifier.fillMaxWidth(),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        textAlign = TextAlign.Center,
-                    )
-                }
+                TapTooltipAnchor(
+                    text = stringResource(R.string.tiles_and_complications_help),
+                    tooltip = stringResource(R.string.tooltip_tiles),
+                    modifier = Modifier.fillMaxWidth(),
+                    style = MaterialTheme.typography.bodyMedium,
+                    textAlign = TextAlign.Center,
+                )
             }
 
             item {
@@ -116,6 +110,7 @@ fun TilesComplicationsScreen(
                     slotAssignments = slotAssignments,
                     onSlotClick = onSlotClick,
                 )
+            }
             }
         }
     }

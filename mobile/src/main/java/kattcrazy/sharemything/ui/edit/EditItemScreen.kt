@@ -20,14 +20,10 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.PlainTooltip
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TooltipBox
-import androidx.compose.material3.TooltipDefaults
 import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.rememberTooltipState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -49,6 +45,8 @@ import kattcrazy.sharemything.data.asSingleLineQrContent
 import kattcrazy.sharemything.data.usesQr
 import kattcrazy.sharemything.ui.ItemIconPicker
 import kattcrazy.sharemything.ui.EditControlShape
+import kattcrazy.sharemything.ui.components.TapTooltipAnchor
+import kattcrazy.sharemything.ui.components.TapTooltipContainer
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -108,68 +106,58 @@ fun EditItemScreen(
             )
         },
     ) { padding ->
-        Column(
+        TapTooltipContainer(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(padding)
-                .verticalScroll(rememberScrollState())
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
+                .padding(padding),
         ) {
-            TooltipBox(
-                positionProvider = TooltipDefaults.rememberPlainTooltipPositionProvider(),
-                tooltip = { PlainTooltip { Text(stringResource(R.string.tooltip_title)) } },
-                state = rememberTooltipState(),
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
-                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    Text(
-                        text = stringResource(R.string.field_title),
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                    OutlinedTextField(
-                        value = title,
-                        onValueChange = {
-                            title = it
-                            validationError = null
-                        },
-                        placeholder = { Text(examplePlaceholder) },
-                        singleLine = true,
-                        modifier = Modifier.fillMaxWidth(),
-                        keyboardOptions = KeyboardOptions(
-                            capitalization = KeyboardCapitalization.Sentences,
-                        ),
-                    )
-                }
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                TapTooltipAnchor(
+                    text = stringResource(R.string.field_title),
+                    tooltip = stringResource(R.string.tooltip_title),
+                )
+                OutlinedTextField(
+                    value = title,
+                    onValueChange = {
+                        title = it
+                        validationError = null
+                    },
+                    placeholder = { Text(examplePlaceholder) },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth(),
+                    keyboardOptions = KeyboardOptions(
+                        capitalization = KeyboardCapitalization.Sentences,
+                    ),
+                )
             }
 
-            TooltipBox(
-                positionProvider = TooltipDefaults.rememberPlainTooltipPositionProvider(),
-                tooltip = { PlainTooltip { Text(stringResource(R.string.tooltip_content)) } },
-                state = rememberTooltipState(),
-            ) {
-                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    Text(
-                        text = stringResource(R.string.field_content),
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                    OutlinedTextField(
-                        value = content,
-                        onValueChange = {
-                            content = it
-                            validationError = null
-                        },
-                        placeholder = { Text(examplePlaceholder) },
-                        modifier = Modifier.fillMaxWidth(),
-                        minLines = if (type.usesQr) 1 else 4,
-                        maxLines = 12,
-                        keyboardOptions = KeyboardOptions(
-                            capitalization = KeyboardCapitalization.Sentences,
-                            keyboardType = if (type.usesQr) KeyboardType.Uri else KeyboardType.Text,
-                        ),
-                    )
-                }
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                TapTooltipAnchor(
+                    text = stringResource(R.string.field_content),
+                    tooltip = stringResource(R.string.tooltip_content),
+                )
+                OutlinedTextField(
+                    value = content,
+                    onValueChange = {
+                        content = it
+                        validationError = null
+                    },
+                    placeholder = { Text(examplePlaceholder) },
+                    modifier = Modifier.fillMaxWidth(),
+                    minLines = if (type.usesQr) 1 else 4,
+                    maxLines = 12,
+                    keyboardOptions = KeyboardOptions(
+                        capitalization = KeyboardCapitalization.Sentences,
+                        keyboardType = if (type.usesQr) KeyboardType.Uri else KeyboardType.Text,
+                    ),
+                )
             }
 
             if (showMultilineQrWarning) {
@@ -239,10 +227,10 @@ fun EditItemScreen(
                 )
             }
 
-            Text(
+            TapTooltipAnchor(
                 text = stringResource(CoreR.string.field_icon),
+                tooltip = stringResource(R.string.tooltip_icon),
                 style = MaterialTheme.typography.titleSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             ItemIconPicker(
                 selectedIcon = icon,
@@ -310,6 +298,7 @@ fun EditItemScreen(
                         },
                     )
                 }
+            }
             }
         }
     }

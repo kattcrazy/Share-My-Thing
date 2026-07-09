@@ -16,11 +16,17 @@ android {
         minSdk = 30
         targetSdk = 35
         // Play versionCode: wear uses 2000, 2001… (offset from phone); versionName stays in sync with mobile.
-        versionCode = 2027
-        versionName = "2.2.6"
+        versionCode = 2030
+        versionName = "2.3.0"
     }
 
     buildTypes {
+        debug {
+            applicationIdSuffix = ".debug"
+            versionNameSuffix = "-debug"
+            resValue("string", "app_name", "Share My Thing Debug")
+            resValue("string", "app_name_short", "Share My Thing Debug")
+        }
         release {
             isMinifyEnabled = true
             isShrinkResources = true

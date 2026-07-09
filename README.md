@@ -18,8 +18,9 @@ Helpful for quickly sharing your website with a client, your phone number with a
 - Up to five widgets, five tiles, and five complications, each linked to an item
 - Add or edit items directly on your watch
 - Automatic dark mode
+- Import and export items or whole-app configuration
 
-> The watch app alone cannot reorder items or make text items with multi-line content. Instead, install Share My Thing on your phone and sync it with the app on your watch.
+> The watch app alone cannot reorder items, make text items with multi-line content, or import and export. Instead, install Share My Thing on your phone and sync it with the app on your watch.
 
 ## Requirements
 

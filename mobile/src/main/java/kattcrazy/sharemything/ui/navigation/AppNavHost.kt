@@ -139,6 +139,12 @@ fun AppNavHost(
                 onSyncClick = { viewModel.syncWithWatch(manual = true) },
                 syncFeedback = viewModel.syncFeedback,
                 onSyncFeedbackShown = viewModel::clearSyncFeedback,
+                onExportBackup = viewModel::exportBackup,
+                onImportBackupSelected = viewModel::loadImportBackup,
+                onConfirmImport = viewModel::confirmImport,
+                onCancelPendingImport = viewModel::cancelPendingImport,
+                importExportFeedback = viewModel.importExportFeedback,
+                onImportExportFeedbackShown = viewModel::clearImportExportFeedback,
             )
         }
 

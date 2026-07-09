@@ -43,8 +43,11 @@
     <string name="choose_item_for_surface">Choose an item</string>
     <string name="clear_surface">Clear</string>
     <string name="tooltip_title">Short label shown on your watch and in lists.</string>
-    <string name="tooltip_content">The text or URL encoded in this item. QR items become scannable codes.</string>
+    <string name="tooltip_content">The text or URL encoded in this item.</string>
+    <string name="tooltip_icon">Icon shown on shortcuts, tiles, and complications.</string>
     <string name="tooltip_tiles">Each slot maps to one tile or complication on your watch.</string>
+    <string name="tooltip_watch_tiles">Each slot maps to one tile on your watch.</string>
+    <string name="tooltip_watch_complications">Each slot maps to one complication on your watch.</string>
     <string name="support_banner">Finding Share My Thing helpful? Support development</string>
     <string name="support_banner_url">https://kattcrazy.nz/product/support-me/</string>
     <string name="list_watch_section">Watch</string>
@@ -93,4 +96,20 @@
     <string name="sync_no_watch">No watch connected. Open the watch app and check that phone and watch are paired.</string>
     <string name="sync_error">Sync failed: %1$s</string>
     <string name="sync_auto_failed">Background sync failed. Pull down to sync.</string>
+    <string name="export_backup">Export backup</string>
+    <string name="import_backup">Import backup</string>
+    <string name="export_dialog_title">Export backup</string>
+    <string name="export_items_only">Items only</string>
+    <string name="export_everything">Everything (items, shortcuts, widgets, tiles, complications)</string>
+    <string name="export_confirm">Export</string>
+    <string name="import_dialog_title">Import backup</string>
+    <string name="import_replace_all">Replace all</string>
+    <string name="import_merge">Merge</string>
+    <string name="import_add">Add to existing</string>
+    <string name="import_confirm">Import</string>
+    <string name="export_success">Backup exported.</string>
+    <string name="import_success_replace">All items replaced from backup.</string>
+    <string name="import_success_merge">Backup merged into your items.</string>
+    <string name="import_success_add">Backup items added to your list.</string>
+    <string name="import_export_error">Backup failed: %1$s</string>
 </resources>
