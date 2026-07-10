@@ -18,4 +18,15 @@ internal object ComplicationIconFactory {
             android.graphics.drawable.Icon.createWithBitmap(bitmap),
         ).build()
     }
+
+    fun smallImage(context: Context, icon: ItemIcon) =
+        smallImage(context, icon.drawableRes())
+
+    fun smallImage(context: Context, @DrawableRes drawableRes: Int): androidx.wear.watchface.complications.data.SmallImage {
+        val bitmap = ItemIconBitmap.renderMonochromeBitmap(context, drawableRes, ICON_DP)
+        return androidx.wear.watchface.complications.data.SmallImage.Builder(
+            image = android.graphics.drawable.Icon.createWithBitmap(bitmap),
+            type = androidx.wear.watchface.complications.data.SmallImageType.ICON,
+        ).build()
+    }
 }

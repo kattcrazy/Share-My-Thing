@@ -54,6 +54,7 @@ private enum class EditFieldTarget {
 @Composable
 fun EditItemScreen(
     existingItem: DisplayItem?,
+    isSaving: Boolean,
     onSave: (title: String, content: String, type: ItemType, icon: ItemIcon) -> Unit,
     onDelete: (() -> Unit)?,
     onCancel: () -> Unit,
@@ -123,6 +124,7 @@ fun EditItemScreen(
             content = content,
             type = type,
             icon = icon,
+            isSaving = isSaving,
             validationError = validationError,
             showDeleteConfirm = showDeleteConfirm,
             validationRequiredMessage = validationRequiredMessage,
@@ -153,6 +155,7 @@ private fun EditItemMainScreen(
     content: String,
     type: ItemType,
     icon: ItemIcon,
+    isSaving: Boolean,
     validationError: String?,
     showDeleteConfirm: Boolean,
     validationRequiredMessage: String,
@@ -197,7 +200,6 @@ private fun EditItemMainScreen(
                         onClick = onTitleClick,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(bottom = 4.dp)
                             .transformedHeight(this, transformationSpec),
                         transformation = SurfaceTransformation(transformationSpec),
                     )
@@ -211,7 +213,6 @@ private fun EditItemMainScreen(
                         onClick = onContentClick,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(bottom = 4.dp)
                             .transformedHeight(this, transformationSpec),
                         transformation = SurfaceTransformation(transformationSpec),
                     )
@@ -314,9 +315,9 @@ private fun EditItemMainScreen(
                                 )
                             }
                         },
+                        enabled = !isSaving,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(top = 4.dp)
                             .transformedHeight(this, transformationSpec),
                         transformation = SurfaceTransformation(transformationSpec),
                     ) {
@@ -327,6 +328,7 @@ private fun EditItemMainScreen(
                 item {
                     Button(
                         onClick = onCancel,
+                        enabled = !isSaving,
                         modifier = Modifier
                             .fillMaxWidth()
                             .transformedHeight(this, transformationSpec),

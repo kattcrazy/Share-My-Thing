@@ -311,6 +311,6 @@ class ItemsRepository(
     }
 
     private suspend fun notifyLocalDataChanged() {
-        onLocalDataChanged?.invoke()
+        runCatching { onLocalDataChanged?.invoke() }
     }
 }

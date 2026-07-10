@@ -3,9 +3,11 @@ package kattcrazy.sharemything.complication
 import android.app.PendingIntent
 import androidx.wear.watchface.complications.data.ComplicationData
 import androidx.wear.watchface.complications.data.ComplicationType
+import androidx.wear.watchface.complications.data.LongTextComplicationData
 import androidx.wear.watchface.complications.data.MonochromaticImageComplicationData
 import androidx.wear.watchface.complications.data.PlainComplicationText
 import androidx.wear.watchface.complications.data.ShortTextComplicationData
+import androidx.wear.watchface.complications.data.SmallImageComplicationData
 import androidx.wear.watchface.complications.datasource.ComplicationRequest
 import androidx.wear.watchface.complications.datasource.SuspendingComplicationDataSourceService
 import kattcrazy.sharemything.ShareMyThingApplication
@@ -20,17 +22,14 @@ abstract class SlotComplicationService(
 ) : SuspendingComplicationDataSourceService() {
 
     override fun getPreviewData(type: ComplicationType): ComplicationData? {
-        return when (type) {
-            ComplicationType.SHORT_TEXT, ComplicationType.MONOCHROMATIC_IMAGE ->
-                ComplicationDataFactory.create(
-                    context = this,
-                    title = "SMT",
-                    itemId = 1L,
-                    icon = ItemIcon.TEXT,
-                    type = type,
-                )
-            else -> null
-        }
+        if (type !in ComplicationDataFactory.supportedTypes) return null
+        return ComplicationDataFactory.create(
+            context = this,
+            title = "SMT",
+            itemId = 1L,
+            icon = ItemIcon.TEXT,
+            type = type,
+        )
     }
 
     override suspend fun onComplicationRequest(request: ComplicationRequest): ComplicationData {
@@ -66,23 +65,39 @@ class Complication4Service : SlotComplicationService(SurfaceSlot.COMPLICATION_4)
 class Complication5Service : SlotComplicationService(SurfaceSlot.COMPLICATION_5)
 
 internal object ComplicationDataFactory {
+    val supportedTypes = setOf(
+        ComplicationType.SHORT_TEXT,
+        ComplicationType.LONG_TEXT,
+        ComplicationType.MONOCHROMATIC_IMAGE,
+        ComplicationType.SMALL_IMAGE,
+    )
+
     fun createPlaceholder(context: android.content.Context, type: ComplicationType): ComplicationData =
         when (type) {
-            ComplicationType.MONOCHROMATIC_IMAGE -> MonochromaticImageComplicationData.Builder(
-                monochromaticImage = ComplicationIconFactory.monochromaticImage(
-                    context,
-                    ItemIcon.TEXT,
-                ),
-                contentDescription = PlainComplicationText.Builder(
-                    context.getString(R.string.surface_not_set),
-                ).build(),
-            ).build()
-            else -> ShortTextComplicationData.Builder(
-                text = PlainComplicationText.Builder("SMT").build(),
-                contentDescription = PlainComplicationText.Builder(
-                    context.getString(R.string.surface_not_set),
-                ).build(),
-            ).build()
+            ComplicationType.MONOCHROMATIC_IMAGE -> iconOnly(
+                context = context,
+                icon = ItemIcon.TEXT,
+                contentDescription = context.getString(R.string.surface_not_set),
+            )
+            ComplicationType.SMALL_IMAGE -> smallImageOnly(
+                context = context,
+                icon = ItemIcon.TEXT,
+                contentDescription = context.getString(R.string.surface_not_set),
+            )
+            ComplicationType.LONG_TEXT -> longText(
+                context = context,
+                title = context.getString(R.string.complication_configure),
+                icon = ItemIcon.TEXT,
+                includeIcon = true,
+                contentDescription = context.getString(R.string.surface_not_set),
+            )
+            else -> shortText(
+                context = context,
+                title = "SMT",
+                icon = ItemIcon.TEXT,
+                includeIcon = true,
+                contentDescription = context.getString(R.string.surface_not_set),
+            )
         }
 
     fun create(
@@ -99,18 +114,103 @@ internal object ComplicationDataFactory {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
         )
         return when (type) {
-            ComplicationType.MONOCHROMATIC_IMAGE -> MonochromaticImageComplicationData.Builder(
-                monochromaticImage = ComplicationIconFactory.monochromaticImage(context, icon),
-                contentDescription = PlainComplicationText.Builder(title).build(),
+            ComplicationType.MONOCHROMATIC_IMAGE -> iconOnly(
+                context = context,
+                icon = icon,
+                contentDescription = title,
+                tapAction = pendingIntent,
             )
-                .setTapAction(pendingIntent)
-                .build()
-            else -> ShortTextComplicationData.Builder(
-                text = PlainComplicationText.Builder(title).build(),
-                contentDescription = PlainComplicationText.Builder(title).build(),
+            ComplicationType.SMALL_IMAGE -> smallImageOnly(
+                context = context,
+                icon = icon,
+                contentDescription = title,
+                tapAction = pendingIntent,
             )
-                .setTapAction(pendingIntent)
-                .build()
+            ComplicationType.LONG_TEXT -> longText(
+                context = context,
+                title = title,
+                icon = icon,
+                includeIcon = true,
+                contentDescription = title,
+                tapAction = pendingIntent,
+            )
+            else -> shortText(
+                context = context,
+                title = title,
+                icon = icon,
+                includeIcon = true,
+                contentDescription = title,
+                tapAction = pendingIntent,
+            )
         }
     }
+
+    private fun shortText(
+        context: android.content.Context,
+        title: String,
+        icon: ItemIcon,
+        includeIcon: Boolean,
+        contentDescription: String,
+        tapAction: PendingIntent? = null,
+    ): ShortTextComplicationData {
+        val builder = ShortTextComplicationData.Builder(
+            text = PlainComplicationText.Builder(shortLabel(title)).build(),
+            contentDescription = PlainComplicationText.Builder(contentDescription).build(),
+        )
+        if (includeIcon) {
+            builder.setMonochromaticImage(ComplicationIconFactory.monochromaticImage(context, icon))
+        }
+        tapAction?.let(builder::setTapAction)
+        return builder.build()
+    }
+
+    private fun longText(
+        context: android.content.Context,
+        title: String,
+        icon: ItemIcon,
+        includeIcon: Boolean,
+        contentDescription: String,
+        tapAction: PendingIntent? = null,
+    ): LongTextComplicationData {
+        val builder = LongTextComplicationData.Builder(
+            text = PlainComplicationText.Builder(title).build(),
+            contentDescription = PlainComplicationText.Builder(contentDescription).build(),
+        )
+        if (includeIcon) {
+            builder.setMonochromaticImage(ComplicationIconFactory.monochromaticImage(context, icon))
+        }
+        tapAction?.let(builder::setTapAction)
+        return builder.build()
+    }
+
+    private fun iconOnly(
+        context: android.content.Context,
+        icon: ItemIcon,
+        contentDescription: String,
+        tapAction: PendingIntent? = null,
+    ): MonochromaticImageComplicationData {
+        val builder = MonochromaticImageComplicationData.Builder(
+            monochromaticImage = ComplicationIconFactory.monochromaticImage(context, icon),
+            contentDescription = PlainComplicationText.Builder(contentDescription).build(),
+        )
+        tapAction?.let(builder::setTapAction)
+        return builder.build()
+    }
+
+    private fun smallImageOnly(
+        context: android.content.Context,
+        icon: ItemIcon,
+        contentDescription: String,
+        tapAction: PendingIntent? = null,
+    ): SmallImageComplicationData {
+        val builder = SmallImageComplicationData.Builder(
+            smallImage = ComplicationIconFactory.smallImage(context, icon),
+            contentDescription = PlainComplicationText.Builder(contentDescription).build(),
+        )
+        tapAction?.let(builder::setTapAction)
+        return builder.build()
+    }
+
+    private fun shortLabel(title: String): String =
+        if (title.length <= 7) title else title.take(6) + "…"
 }

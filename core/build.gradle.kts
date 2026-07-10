@@ -14,6 +14,19 @@ android {
         minSdk = 30
     }
 
+    buildFeatures {
+        buildConfig = true
+    }
+
+    buildTypes {
+        debug {
+            buildConfigField("String", "SYNC_CAPABILITY", "\"share_my_thing_sync_debug\"")
+        }
+        release {
+            buildConfigField("String", "SYNC_CAPABILITY", "\"share_my_thing_sync\"")
+        }
+    }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17

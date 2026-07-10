@@ -36,6 +36,7 @@ fun AppNavHost(
     val slotAssignments by viewModel.slotAssignments.collectAsState()
     val surfacesPlacedOnWatch by viewModel.surfacesPlacedOnWatch.collectAsState()
     val syncFeedback by viewModel.syncFeedback.collectAsState()
+    val isSaving by viewModel.isSaving.collectAsState()
 
     fun openItem(item: DisplayItem) {
         detailItem = item
@@ -99,6 +100,21 @@ fun AppNavHost(
         }
     }
 
+    LaunchedEffect(Unit) {
+        viewModel.itemSaveEvents.collect { event ->
+            editItem = null
+            screen = if (event.isNewItem) {
+                AppScreen.List
+            } else {
+                detailItem = event.item
+                when (event.item.type) {
+                    ItemType.TEXT -> AppScreen.TextDetail(event.item.id)
+                    ItemType.QR_CODE, ItemType.BOTH -> AppScreen.QrDetail(event.item.id)
+                }
+            }
+        }
+    }
+
     when (screen) {
         AppScreen.List -> {
             val isPeerAvailable by viewModel.isPeerAvailable.collectAsState()
@@ -142,8 +158,10 @@ fun AppNavHost(
 
         is AppScreen.Edit -> {
             val editingItemId = (screen as AppScreen.Edit).itemId
+            val isNewItem = editingItemId == null && editItem == null
             EditItemScreen(
                 existingItem = editItem,
+                isSaving = isSaving,
                 onSave = { title, content, type, icon ->
                     viewModel.saveItem(
                         id = editingItemId ?: editItem?.id,
@@ -151,14 +169,8 @@ fun AppNavHost(
                         content = content,
                         type = type,
                         icon = icon,
-                    ) { savedItem ->
-                        detailItem = savedItem
-                        editItem = null
-                        screen = when (savedItem.type) {
-                            ItemType.TEXT -> AppScreen.TextDetail(savedItem.id)
-                            ItemType.QR_CODE, ItemType.BOTH -> AppScreen.QrDetail(savedItem.id)
-                        }
-                    }
+                        isNewItem = isNewItem,
+                    )
                 },
                 onDelete = editItem?.let { item ->
                     {

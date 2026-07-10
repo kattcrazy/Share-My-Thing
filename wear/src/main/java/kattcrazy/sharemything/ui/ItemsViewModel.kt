@@ -13,9 +13,12 @@ import kattcrazy.sharemything.sync.PeerAvailability
 import kattcrazy.sharemything.sync.SyncRepository
 import kattcrazy.sharemything.sync.SyncResult
 import kattcrazy.sharemything.sync.WearSyncSupport
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -26,6 +29,11 @@ sealed interface SyncFeedback {
     data object NoWatchConnected : SyncFeedback
     data class Error(val message: String) : SyncFeedback
 }
+
+data class ItemSaveEvent(
+    val item: DisplayItem,
+    val isNewItem: Boolean,
+)
 
 class ItemsViewModel(
     private val repository: ItemsRepository,
@@ -63,6 +71,12 @@ class ItemsViewModel(
 
     private val _syncFeedback = MutableStateFlow<SyncFeedback?>(null)
     val syncFeedback: StateFlow<SyncFeedback?> = _syncFeedback.asStateFlow()
+
+    private val _isSaving = MutableStateFlow(false)
+    val isSaving: StateFlow<Boolean> = _isSaving.asStateFlow()
+
+    private val _itemSaveEvents = MutableSharedFlow<ItemSaveEvent>(extraBufferCapacity = 1)
+    val itemSaveEvents: SharedFlow<ItemSaveEvent> = _itemSaveEvents.asSharedFlow()
 
     suspend fun getItem(id: Long): DisplayItem? = repository.getItem(id)
 
@@ -111,25 +125,33 @@ class ItemsViewModel(
         content: String,
         type: ItemType,
         icon: ItemIcon,
-        onSaved: (DisplayItem) -> Unit,
+        isNewItem: Boolean,
     ) {
+        if (_isSaving.value) return
         viewModelScope.launch {
-            val existing = id?.let { repository.getItem(it) }
-            val savedId = repository.upsert(
-                DisplayItem(
-                    id = id ?: 0L,
-                    uuid = existing?.uuid.orEmpty(),
-                    title = title.trim(),
-                    content = content.trim(),
-                    type = type,
-                    icon = icon,
-                    sortOrder = existing?.sortOrder ?: watchVisibleItems.value.size,
-                    updatedAtMillis = existing?.updatedAtMillis ?: 0L,
-                    visibleOnWatch = existing?.visibleOnWatch ?: true,
-                ),
-            )
-            val savedItem = repository.getItem(savedId) ?: return@launch
-            onSaved(savedItem)
+            _isSaving.value = true
+            try {
+                val existing = id?.let { repository.getItem(it) }
+                val savedId = repository.upsert(
+                    DisplayItem(
+                        id = id ?: 0L,
+                        uuid = existing?.uuid.orEmpty(),
+                        title = title.trim(),
+                        content = content.trim(),
+                        type = type,
+                        icon = icon,
+                        sortOrder = existing?.sortOrder ?: watchVisibleItems.value.size,
+                        updatedAtMillis = existing?.updatedAtMillis ?: 0L,
+                        visibleOnWatch = existing?.visibleOnWatch ?: true,
+                    ),
+                )
+                val savedItem = repository.getItem(savedId)
+                    ?: watchVisibleItems.value.firstOrNull { it.id == savedId }
+                    ?: return@launch
+                _itemSaveEvents.emit(ItemSaveEvent(savedItem, isNewItem))
+            } finally {
+                _isSaving.value = false
+            }
         }
     }
 

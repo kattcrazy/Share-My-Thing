@@ -15,8 +15,8 @@ android {
         minSdk = 30
         targetSdk = 35
         // Play versionCode: phone uses 1, 2, 3…; must not match wear (see wear/build.gradle.kts).
-        versionCode = 7
-        versionName = "2.3.0"
+        versionCode = 8
+        versionName = "2.3.3"
     }
 
     buildTypes {

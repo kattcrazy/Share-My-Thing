@@ -1,6 +1,8 @@
 package kattcrazy.sharemything.sync
 
+import kattcrazy.sharemything.core.BuildConfig
+
 object SyncPaths {
     const val REQUEST = "/sync/request"
-    const val CAPABILITY = "share_my_thing_sync"
+    val CAPABILITY: String = BuildConfig.SYNC_CAPABILITY
 }

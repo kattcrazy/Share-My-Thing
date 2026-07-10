@@ -91,7 +91,11 @@ object PeerAvailability {
             val appContext = context.applicationContext
             val localNodeId = Wearable.getNodeClient(appContext).localNode.await().id
             findPeerInCapability(appContext, localNodeId, CapabilityClient.FILTER_REACHABLE)
-                ?: findNearbyConnectedPeer(appContext, localNodeId)
+                ?: if (isWatch(appContext)) {
+                    null
+                } else {
+                    findNearbyConnectedPeer(appContext, localNodeId)
+                }
         }.getOrNull()
     }
 
@@ -117,24 +121,23 @@ object PeerAvailability {
             val localNodeId = Wearable.getNodeClient(appContext).localNode.await().id
             val capabilityNodes = capabilityPeerIds(appContext, localNodeId, CapabilityClient.FILTER_REACHABLE)
             if (capabilityNodes.isNotEmpty()) return capabilityNodes
+            if (isWatch(appContext)) return emptySet()
             findNearbyConnectedPeerIds(appContext, localNodeId)
         }.getOrDefault(emptySet())
     }
 
     private suspend fun findNearbyConnectedPeer(context: Context, localNodeId: String): Node? {
         val appContext = context.applicationContext
-        val isWatch = appContext.packageManager.hasSystemFeature(PackageManager.FEATURE_WATCH)
         val connectedNodes = Wearable.getNodeClient(appContext).connectedNodes.await()
         return connectedNodes.firstOrNull { node ->
-            node.id != localNodeId && (isWatch || node.isNearby)
+            node.id != localNodeId && node.isNearby
         }
     }
 
     private suspend fun findNearbyConnectedPeerIds(context: Context, localNodeId: String): Set<String> {
         val appContext = context.applicationContext
-        val isWatch = appContext.packageManager.hasSystemFeature(PackageManager.FEATURE_WATCH)
         return Wearable.getNodeClient(appContext).connectedNodes.await()
-            .filter { node -> node.id != localNodeId && (isWatch || node.isNearby) }
+            .filter { node -> node.id != localNodeId && node.isNearby }
             .map { it.id }
             .toSet()
     }
@@ -156,9 +159,11 @@ object PeerAvailability {
     }
 
     private fun peerPollIntervalMs(context: Context): Long {
-        val isWatch = context.packageManager.hasSystemFeature(PackageManager.FEATURE_WATCH)
-        return if (isWatch) WATCH_PEER_POLL_INTERVAL_MS else PHONE_PEER_POLL_INTERVAL_MS
+        return if (isWatch(context)) WATCH_PEER_POLL_INTERVAL_MS else PHONE_PEER_POLL_INTERVAL_MS
     }
+
+    private fun isWatch(context: Context): Boolean =
+        context.packageManager.hasSystemFeature(PackageManager.FEATURE_WATCH)
 
     private suspend fun hasReachablePeer(context: Context, nodeIds: Set<String>): Boolean =
         nodeIds.isNotEmpty()

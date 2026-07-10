@@ -2,13 +2,14 @@ package kattcrazy.sharemything
 
 import android.app.Application
 import kattcrazy.sharemything.data.ItemsRepository
+import kattcrazy.sharemything.sync.PeerAvailability
 import kattcrazy.sharemything.sync.SyncBootstrap
 import kattcrazy.sharemything.sync.SyncRepository
-import kattcrazy.sharemything.sync.WearSyncSupport
 import kattcrazy.sharemything.wear.WearSurfaceUpdater
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 
 class ShareMyThingApplication : Application() {
     private val applicationScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
@@ -31,8 +32,10 @@ class ShareMyThingApplication : Application() {
             minOutgoingSyncIntervalMs = 30_000L,
         )
         repository.onLocalDataChanged = {
-            if (WearSyncSupport.isSupportedAsync(this@ShareMyThingApplication)) {
-                runCatching { syncRepository.syncWithWatch(force = true) }
+            applicationScope.launch {
+                if (PeerAvailability.hasSyncPeer(this@ShareMyThingApplication)) {
+                    runCatching { syncRepository.syncWithWatch(force = true) }
+                }
             }
         }
         SyncBootstrap.start(
