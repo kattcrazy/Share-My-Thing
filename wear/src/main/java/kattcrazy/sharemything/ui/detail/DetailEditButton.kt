@@ -1,5 +1,6 @@
 package kattcrazy.sharemything.ui.detail
 
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
@@ -14,6 +15,7 @@ import androidx.wear.compose.material3.Icon
 import androidx.wear.compose.material3.MaterialTheme
 import androidx.wear.compose.material3.SurfaceTransformation
 import kattcrazy.sharemything.R
+import kattcrazy.sharemything.ui.pressBounce
 
 @Composable
 fun DetailEditButton(
@@ -28,6 +30,7 @@ fun DetailEditButton(
     val buttonModifier = modifier
         .size(44.dp)
         .clip(CircleShape)
+        .pressBounce()
 
     if (transformation != null) {
         Button(
@@ -35,6 +38,7 @@ fun DetailEditButton(
             modifier = buttonModifier,
             transformation = transformation,
             colors = colors,
+            contentPadding = PaddingValues(0.dp),
         ) {
             DetailEditIcon()
         }
@@ -43,6 +47,7 @@ fun DetailEditButton(
             onClick = onEditClick,
             modifier = buttonModifier,
             colors = colors,
+            contentPadding = PaddingValues(0.dp),
         ) {
             DetailEditIcon()
         }
@@ -54,6 +59,6 @@ private fun DetailEditIcon() {
     Icon(
         painter = painterResource(R.drawable.ic_edit),
         contentDescription = stringResource(R.string.edit_item),
-        modifier = Modifier.size(20.dp),
+        modifier = Modifier.size(28.dp),
     )
 }

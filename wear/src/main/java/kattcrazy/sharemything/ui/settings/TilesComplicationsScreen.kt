@@ -31,6 +31,7 @@ import kattcrazy.sharemything.data.DisplayItem
 import kattcrazy.sharemything.data.labelRes
 import kattcrazy.sharemything.data.SurfaceSlot
 import kattcrazy.sharemything.ui.bottomScrollSpacer
+import kattcrazy.sharemything.ui.pressBounce
 
 @Composable
 fun TilesComplicationsScreen(
@@ -134,6 +135,7 @@ private fun TransformingLazyColumnScope.slotItem(
             onClick = { onSlotClick(slot) },
             modifier = Modifier
                 .fillMaxWidth()
+                .pressBounce()
                 .transformedHeight(this, transformationSpec),
             transformation = SurfaceTransformation(transformationSpec),
             colors = if (assignedItem != null) {

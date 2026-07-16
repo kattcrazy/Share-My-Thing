@@ -27,6 +27,7 @@ import kattcrazy.sharemything.R
 import kattcrazy.sharemything.data.DisplayItem
 import kattcrazy.sharemything.data.SurfaceSlot
 import kattcrazy.sharemything.data.labelRes
+import kattcrazy.sharemything.ui.pressBounce
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -41,7 +42,10 @@ fun PhoneWidgetsScreen(
             TopAppBar(
                 title = { Text(stringResource(R.string.phone_widgets)) },
                 navigationIcon = {
-                    IconButton(onClick = onBack) {
+                    IconButton(
+                        onClick = onBack,
+                        modifier = Modifier.pressBounce(),
+                    ) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = stringResource(R.string.back),

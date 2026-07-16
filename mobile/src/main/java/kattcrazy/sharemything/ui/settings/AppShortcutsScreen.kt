@@ -27,6 +27,7 @@ import kattcrazy.sharemything.data.SurfaceSlot
 import kattcrazy.sharemything.data.labelRes
 import kattcrazy.sharemything.ui.components.TapTooltipAnchor
 import kattcrazy.sharemything.ui.components.TapTooltipContainer
+import kattcrazy.sharemything.ui.pressBounce
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -104,7 +105,10 @@ internal fun WatchSurfaceSlotsScreen(
             TopAppBar(
                 title = { Text(title) },
                 navigationIcon = {
-                    IconButton(onClick = onBack) {
+                    IconButton(
+                        onClick = onBack,
+                        modifier = Modifier.pressBounce(),
+                    ) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = stringResource(R.string.back),

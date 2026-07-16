@@ -44,6 +44,9 @@ import kattcrazy.sharemything.data.DisplayItem
 import kattcrazy.sharemything.data.ItemType
 import kattcrazy.sharemything.data.usesQr
 import kattcrazy.sharemything.data.SurfaceDisplayConstants
+import kattcrazy.sharemything.ui.navigation.NavSharedKeys
+import kattcrazy.sharemything.ui.navigation.navSharedBounds
+import kattcrazy.sharemything.ui.pressBounce
 import kattcrazy.sharemything.util.QrCodeGenerator
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -69,7 +72,10 @@ fun QrDetailScreen(
             TopAppBar(
                 title = { Text(item.title) },
                 navigationIcon = {
-                    IconButton(onClick = onBack) {
+                    IconButton(
+                        onClick = onBack,
+                        modifier = Modifier.pressBounce(),
+                    ) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = stringResource(R.string.back),
@@ -132,7 +138,12 @@ fun QrDetailScreen(
                 horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                FilledTonalIconButton(onClick = onEditClick) {
+                FilledTonalIconButton(
+                    onClick = onEditClick,
+                    modifier = Modifier
+                        .navSharedBounds(NavSharedKeys.edit(item.id))
+                        .pressBounce(),
+                ) {
                     Icon(
                         imageVector = Icons.Outlined.Edit,
                         contentDescription = stringResource(R.string.edit_item),
@@ -140,7 +151,12 @@ fun QrDetailScreen(
                 }
                 if (item.type.usesQr) {
                     Spacer(modifier = Modifier.width(12.dp))
-                    FilledTonalIconButton(onClick = onTipsClick) {
+                    FilledTonalIconButton(
+                        onClick = onTipsClick,
+                        modifier = Modifier
+                            .navSharedBounds(NavSharedKeys.QrTips)
+                            .pressBounce(),
+                    ) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Outlined.HelpOutline,
                             contentDescription = stringResource(R.string.qr_tips_title),
@@ -164,7 +180,10 @@ fun TextDetailScreen(
             TopAppBar(
                 title = { Text(item.title) },
                 navigationIcon = {
-                    IconButton(onClick = onBack) {
+                    IconButton(
+                        onClick = onBack,
+                        modifier = Modifier.pressBounce(),
+                    ) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = stringResource(R.string.back),
@@ -172,7 +191,12 @@ fun TextDetailScreen(
                     }
                 },
                 actions = {
-                    IconButton(onClick = onEditClick) {
+                    IconButton(
+                        onClick = onEditClick,
+                        modifier = Modifier
+                            .navSharedBounds(NavSharedKeys.edit(item.id))
+                            .pressBounce(),
+                    ) {
                         Icon(
                             imageVector = Icons.Outlined.Edit,
                             contentDescription = stringResource(R.string.edit_item),
@@ -214,7 +238,10 @@ fun QrTipsScreen(onBack: () -> Unit) {
             TopAppBar(
                 title = { Text(stringResource(R.string.qr_tips_title)) },
                 navigationIcon = {
-                    IconButton(onClick = onBack) {
+                    IconButton(
+                        onClick = onBack,
+                        modifier = Modifier.pressBounce(),
+                    ) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = stringResource(R.string.back),

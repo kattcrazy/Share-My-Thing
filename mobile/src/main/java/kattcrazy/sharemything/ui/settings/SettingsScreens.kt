@@ -34,6 +34,9 @@ import kattcrazy.sharemything.data.SurfaceSlot
 import kattcrazy.sharemything.data.labelRes
 import kattcrazy.sharemything.ui.components.TapTooltipAnchor
 import kattcrazy.sharemything.ui.components.TapTooltipContainer
+import kattcrazy.sharemything.ui.navigation.NavSharedKeys
+import kattcrazy.sharemything.ui.navigation.navSharedBounds
+import kattcrazy.sharemything.ui.pressBounce
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -48,7 +51,10 @@ fun TilesComplicationsScreen(
             TopAppBar(
                 title = { Text(stringResource(R.string.tiles_and_complications)) },
                 navigationIcon = {
-                    IconButton(onClick = onBack) {
+                    IconButton(
+                        onClick = onBack,
+                        modifier = Modifier.pressBounce(),
+                    ) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = stringResource(R.string.back),
@@ -134,6 +140,8 @@ internal fun SlotRow(
     Card(
         modifier = Modifier
             .fillMaxWidth()
+            .navSharedBounds(NavSharedKeys.slotPicker(slot))
+            .pressBounce()
             .clickable { onSlotClick(slot) },
         colors = CardDefaults.cardColors(
             containerColor = if (isAssigned) {
@@ -174,7 +182,10 @@ fun SlotItemPickerScreen(
             TopAppBar(
                 title = { Text(stringResource(slot.labelRes)) },
                 navigationIcon = {
-                    IconButton(onClick = onBack) {
+                    IconButton(
+                        onClick = onBack,
+                        modifier = Modifier.pressBounce(),
+                    ) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = stringResource(R.string.back),
@@ -208,7 +219,9 @@ fun SlotItemPickerScreen(
                     val isSelected = selectedItemId == item.id
                     Card(
                         onClick = { onSelectItem(item.id) },
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .pressBounce(),
                         colors = CardDefaults.cardColors(
                             containerColor = if (isSelected) {
                                 MaterialTheme.colorScheme.primary
@@ -237,7 +250,9 @@ fun SlotItemPickerScreen(
             item {
                 Card(
                     onClick = onClear,
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .pressBounce(),
                     colors = CardDefaults.cardColors(
                         containerColor = MaterialTheme.colorScheme.errorContainer,
                         contentColor = MaterialTheme.colorScheme.onErrorContainer,

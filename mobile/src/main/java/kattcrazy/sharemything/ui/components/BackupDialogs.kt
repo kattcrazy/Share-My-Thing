@@ -20,6 +20,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import kattcrazy.sharemything.R
 import kattcrazy.sharemything.sync.ImportMode
+import kattcrazy.sharemything.ui.pressBounce
 
 @Composable
 fun ExportBackupDialog(
@@ -46,12 +47,18 @@ fun ExportBackupDialog(
             }
         },
         confirmButton = {
-            TextButton(onClick = { onConfirm(includeAll) }) {
+            TextButton(
+                onClick = { onConfirm(includeAll) },
+                modifier = Modifier.pressBounce(),
+            ) {
                 Text(stringResource(R.string.export_confirm))
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) {
+            TextButton(
+                onClick = onDismiss,
+                modifier = Modifier.pressBounce(),
+            ) {
                 Text(stringResource(R.string.cancel))
             }
         },
@@ -88,12 +95,18 @@ fun ImportBackupDialog(
             }
         },
         confirmButton = {
-            TextButton(onClick = { onConfirm(selectedMode) }) {
+            TextButton(
+                onClick = { onConfirm(selectedMode) },
+                modifier = Modifier.pressBounce(),
+            ) {
                 Text(stringResource(R.string.import_confirm))
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) {
+            TextButton(
+                onClick = onDismiss,
+                modifier = Modifier.pressBounce(),
+            ) {
                 Text(stringResource(R.string.cancel))
             }
         },

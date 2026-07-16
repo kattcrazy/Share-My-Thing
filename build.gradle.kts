@@ -11,6 +11,22 @@ import com.android.build.api.dsl.LibraryExtension
 import java.util.Properties
 
 subprojects {
+    // Play Console flags outdated transitive androidx.fragment from Play Services / AppCompat.
+    configurations.configureEach {
+        resolutionStrategy {
+            eachDependency {
+                if (requested.group == "androidx.fragment" && requested.name == "fragment") {
+                    useVersion("1.8.9")
+                    because("Force current Fragment over Play Services / AppCompat transitive 1.1.0")
+                }
+                if (requested.group == "androidx.appcompat" && requested.name.startsWith("appcompat")) {
+                    useVersion("1.7.1")
+                    because("Force current AppCompat over old Wear preference/watchface transitive deps")
+                }
+            }
+        }
+    }
+
     plugins.withId("com.android.application") {
         extensions.configure<ApplicationExtension> {
             lint {

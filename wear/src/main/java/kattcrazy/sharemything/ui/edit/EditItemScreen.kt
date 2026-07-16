@@ -44,6 +44,7 @@ import kattcrazy.sharemything.ui.EditControlShape
 import kattcrazy.sharemything.data.asSingleLineQrContent
 import kattcrazy.sharemything.data.usesQr
 import kattcrazy.sharemything.ui.bottomScrollSpacer
+import kattcrazy.sharemything.ui.pressBounce
 import androidx.compose.ui.text.input.KeyboardType
 
 private enum class EditFieldTarget {
@@ -318,6 +319,7 @@ private fun EditItemMainScreen(
                         enabled = !isSaving,
                         modifier = Modifier
                             .fillMaxWidth()
+                            .pressBounce()
                             .transformedHeight(this, transformationSpec),
                         transformation = SurfaceTransformation(transformationSpec),
                     ) {
@@ -331,6 +333,7 @@ private fun EditItemMainScreen(
                         enabled = !isSaving,
                         modifier = Modifier
                             .fillMaxWidth()
+                            .pressBounce()
                             .transformedHeight(this, transformationSpec),
                         transformation = SurfaceTransformation(transformationSpec),
                         colors = ButtonDefaults.buttonColors(
@@ -354,6 +357,7 @@ private fun EditItemMainScreen(
                             },
                             modifier = Modifier
                                 .fillMaxWidth()
+                                .pressBounce()
                                 .transformedHeight(this, transformationSpec),
                             transformation = SurfaceTransformation(transformationSpec),
                             colors = ButtonDefaults.buttonColors(
@@ -389,7 +393,7 @@ private fun WearFieldButton(
 ) {
     Button(
         onClick = onClick,
-        modifier = modifier,
+        modifier = modifier.pressBounce(),
         transformation = transformation,
         colors = ButtonDefaults.buttonColors(
             containerColor = MaterialTheme.colorScheme.secondaryContainer,
@@ -425,7 +429,7 @@ private fun TypeBothToggle(
 ) {
     Button(
         onClick = onClick,
-        modifier = modifier,
+        modifier = modifier.pressBounce(),
         transformation = transformation,
         shape = EditControlShape,
         colors = if (selected) {
@@ -470,7 +474,7 @@ private fun TypeIconToggle(
 ) {
     Button(
         onClick = onClick,
-        modifier = modifier,
+        modifier = modifier.pressBounce(),
         transformation = transformation,
         shape = EditControlShape,
         colors = if (selected) {

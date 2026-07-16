@@ -24,6 +24,7 @@ import kattcrazy.sharemything.data.DisplayItem
 import kattcrazy.sharemything.data.labelRes
 import kattcrazy.sharemything.data.SurfaceSlot
 import kattcrazy.sharemything.ui.bottomScrollSpacer
+import kattcrazy.sharemything.ui.pressBounce
 
 @Composable
 fun SlotItemPickerScreen(
@@ -76,6 +77,7 @@ fun SlotItemPickerScreen(
                                 onClick = { onSelectItem(item.id) },
                                 modifier = Modifier
                                     .fillMaxWidth()
+                                    .pressBounce()
                                     .transformedHeight(this, transformationSpec),
                                 transformation = SurfaceTransformation(transformationSpec),
                                 colors = if (selectedItemId == item.id) {
@@ -101,6 +103,7 @@ fun SlotItemPickerScreen(
                         onClick = onClear,
                         modifier = Modifier
                             .fillMaxWidth()
+                            .pressBounce()
                             .transformedHeight(this, transformationSpec),
                         transformation = SurfaceTransformation(transformationSpec),
                         colors = ButtonDefaults.buttonColors(

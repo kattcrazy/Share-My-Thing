@@ -7,9 +7,12 @@ import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
@@ -46,6 +49,7 @@ import kattcrazy.sharemything.theme.ShareMyThingColorSchemes
 import kattcrazy.sharemything.ui.SyncFeedback
 import kattcrazy.sharemything.ui.edgeButtonBottomScrollSpacer
 import kattcrazy.sharemything.ui.edgeButtonTopScrollSpacer
+import kattcrazy.sharemything.ui.pressBounce
 import kotlinx.coroutines.delay
 
 @Composable
@@ -101,6 +105,7 @@ fun ItemListScreen(
             edgeButton = {
                 EdgeButton(
                     onClick = onAddClick,
+                    modifier = Modifier.pressBounce(),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = MaterialTheme.colorScheme.primary,
                         contentColor = MaterialTheme.colorScheme.onPrimary,
@@ -131,8 +136,10 @@ fun ItemListScreen(
                                 enabled = !isSyncing,
                                 modifier = Modifier
                                     .size(44.dp)
-                                    .clip(CircleShape),
+                                    .clip(CircleShape)
+                                    .pressBounce(),
                                 transformation = SurfaceTransformation(transformationSpec),
+                                contentPadding = PaddingValues(0.dp),
                                 colors = when {
                                     isSyncError -> ButtonDefaults.buttonColors(
                                         containerColor = MaterialTheme.colorScheme.errorContainer,
@@ -156,7 +163,7 @@ fun ItemListScreen(
                                     painter = painterResource(R.drawable.ic_sync),
                                     contentDescription = stringResource(R.string.sync_with_watch),
                                     modifier = Modifier
-                                        .size(20.dp)
+                                        .size(28.dp)
                                         .graphicsLayer {
                                             rotationZ = syncRotation
                                         },
@@ -186,6 +193,7 @@ fun ItemListScreen(
                                 onClick = { onItemClick(item) },
                                 modifier = Modifier
                                     .fillMaxWidth()
+                                    .pressBounce()
                                     .transformedHeight(this, transformationSpec),
                                 transformation = SurfaceTransformation(transformationSpec),
                             ) {
@@ -204,6 +212,7 @@ fun ItemListScreen(
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(top = 16.dp)
+                            .pressBounce()
                             .transformedHeight(this, transformationSpec),
                         transformation = SurfaceTransformation(transformationSpec),
                         colors = ButtonDefaults.buttonColors(
@@ -216,21 +225,26 @@ fun ItemListScreen(
                 }
 
                 item(key = "privacy") {
-                    Text(
-                        text = privacyPolicyLabel,
+                    // Tall tap target, compact visual: no extra spacer, text stays bodySmall.
+                    Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(top = 12.dp)
+                            .heightIn(min = 48.dp)
                             .clickable {
                                 context.startActivity(
                                     Intent(Intent.ACTION_VIEW, Uri.parse(privacyPolicyUrl)),
                                 )
                             }
                             .transformedHeight(this, transformationSpec),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        textAlign = TextAlign.Center,
-                    )
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Text(
+                            text = privacyPolicyLabel,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            textAlign = TextAlign.Center,
+                        )
+                    }
                 }
 
                 edgeButtonBottomScrollSpacer(transformationSpec = transformationSpec)

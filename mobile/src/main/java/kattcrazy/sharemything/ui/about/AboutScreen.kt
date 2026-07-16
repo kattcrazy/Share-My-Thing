@@ -29,6 +29,7 @@ import androidx.compose.ui.text.withLink
 import androidx.compose.ui.unit.dp
 import kattcrazy.sharemything.R
 import kattcrazy.sharemything.presentation.theme.appNameTextStyle
+import kattcrazy.sharemything.ui.pressBounce
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -43,7 +44,10 @@ fun AboutScreen(
             TopAppBar(
                 title = { Text(stringResource(R.string.about_title)) },
                 navigationIcon = {
-                    IconButton(onClick = onBack) {
+                    IconButton(
+                        onClick = onBack,
+                        modifier = Modifier.pressBounce(),
+                    ) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = stringResource(R.string.back),

@@ -4,10 +4,13 @@ import android.app.Activity
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 import kattcrazy.sharemything.theme.ShareMyThingColorSchemes
+import kattcrazy.sharemything.ui.LocalMotionEnabled
+import kattcrazy.sharemything.ui.rememberMotionEnabled
 
 @Composable
 fun ShareMyThingTheme(
@@ -15,6 +18,7 @@ fun ShareMyThingTheme(
 ) {
     val darkTheme = isSystemInDarkTheme()
     val colorScheme = if (darkTheme) ShareMyThingColorSchemes.dark else ShareMyThingColorSchemes.light
+    val motionEnabled = rememberMotionEnabled()
 
     val view = LocalView.current
     if (!view.isInEditMode) {
@@ -24,8 +28,10 @@ fun ShareMyThingTheme(
         }
     }
 
-    MaterialTheme(
-        colorScheme = colorScheme,
-        content = content,
-    )
+    CompositionLocalProvider(LocalMotionEnabled provides motionEnabled) {
+        MaterialTheme(
+            colorScheme = colorScheme,
+            content = content,
+        )
+    }
 }

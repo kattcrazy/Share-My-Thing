@@ -47,6 +47,7 @@ import kattcrazy.sharemything.ui.ItemIconPicker
 import kattcrazy.sharemything.ui.EditControlShape
 import kattcrazy.sharemything.ui.components.TapTooltipAnchor
 import kattcrazy.sharemything.ui.components.TapTooltipContainer
+import kattcrazy.sharemything.ui.pressBounce
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -96,7 +97,10 @@ fun EditItemScreen(
                     )
                 },
                 navigationIcon = {
-                    IconButton(onClick = onCancel) {
+                    IconButton(
+                        onClick = onCancel,
+                        modifier = Modifier.pressBounce(),
+                    ) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = stringResource(R.string.back),
@@ -180,6 +184,7 @@ fun EditItemScreen(
                     },
                     label = { Text(stringResource(R.string.type_text)) },
                     shape = EditControlShape,
+                    modifier = Modifier.pressBounce(),
                     leadingIcon = {
                         Icon(
                             painter = painterResource(CoreR.drawable.ic_item_text),
@@ -195,6 +200,7 @@ fun EditItemScreen(
                     },
                     label = { Text(stringResource(R.string.type_both)) },
                     shape = EditControlShape,
+                    modifier = Modifier.pressBounce(),
                     leadingIcon = {
                         Row(horizontalArrangement = Arrangement.spacedBy(2.dp)) {
                             Icon(
@@ -218,6 +224,7 @@ fun EditItemScreen(
                     },
                     label = { Text(stringResource(R.string.type_qr)) },
                     shape = EditControlShape,
+                    modifier = Modifier.pressBounce(),
                     leadingIcon = {
                         Icon(
                             painter = painterResource(CoreR.drawable.ic_item_qr),
@@ -261,14 +268,18 @@ fun EditItemScreen(
                         )
                     }
                 },
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .pressBounce(),
             ) {
                 Text(stringResource(R.string.save))
             }
 
             TextButton(
                 onClick = onCancel,
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .pressBounce(),
                 colors = ButtonDefaults.textButtonColors(
                     contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
                 ),
@@ -285,7 +296,9 @@ fun EditItemScreen(
                             showDeleteConfirm = true
                         }
                     },
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .pressBounce(),
                     colors = ButtonDefaults.textButtonColors(
                         contentColor = MaterialTheme.colorScheme.onErrorContainer,
                     ),

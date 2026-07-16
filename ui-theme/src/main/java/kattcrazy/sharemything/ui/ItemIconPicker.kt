@@ -95,6 +95,7 @@ fun ItemIconPicker(
                     .size(cellSize)
                     .clip(EditControlShape)
                     .background(containerColor)
+                    .pressBounce()
                     .clickable { onIconSelected(icon) },
                 contentAlignment = Alignment.Center,
             ) {
