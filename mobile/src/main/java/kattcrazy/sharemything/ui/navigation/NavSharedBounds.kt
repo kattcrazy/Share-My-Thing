@@ -55,6 +55,7 @@ private val NoOverlayClip = object : SharedTransitionScope.OverlayClip {
 fun Modifier.navSharedBounds(
     key: String,
     scaleContent: Boolean = false,
+    zIndexInOverlay: Float = 0f,
 ): Modifier {
     if (!LocalMotionEnabled.current) return this
     val sharedScope = LocalSharedTransitionScope.current ?: return this
@@ -68,6 +69,7 @@ fun Modifier.navSharedBounds(
                 boundsTransform = { _, _ ->
                     spring(dampingRatio = 0.95f, stiffness = 700f)
                 },
+                zIndexInOverlay = zIndexInOverlay,
                 clipInOverlayDuringTransition = NoOverlayClip,
             )
         } else {
@@ -78,9 +80,23 @@ fun Modifier.navSharedBounds(
                     spring(dampingRatio = 0.95f, stiffness = 700f)
                 },
                 resizeMode = SharedTransitionScope.ResizeMode.RemeasureToBounds,
+                zIndexInOverlay = zIndexInOverlay,
                 clipInOverlayDuringTransition = NoOverlayClip,
             )
         }
+    }
+}
+
+/** Keep Add above list rows while shared morphs run. */
+@OptIn(ExperimentalSharedTransitionApi::class)
+@Composable
+fun Modifier.navKeepAboveOverlay(zIndexInOverlay: Float = 2f): Modifier {
+    if (!LocalMotionEnabled.current) return this
+    val sharedScope = LocalSharedTransitionScope.current ?: return this
+    return with(sharedScope) {
+        this@navKeepAboveOverlay.renderInSharedTransitionScopeOverlay(
+            zIndexInOverlay = zIndexInOverlay,
+        )
     }
 }
 

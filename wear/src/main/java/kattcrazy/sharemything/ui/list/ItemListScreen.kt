@@ -11,8 +11,8 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
@@ -39,6 +39,7 @@ import androidx.wear.compose.material3.EdgeButton
 import androidx.wear.compose.material3.Icon
 import androidx.wear.compose.material3.MaterialTheme
 import androidx.wear.compose.material3.ScreenScaffold
+import androidx.wear.compose.material3.ScreenScaffoldDefaults
 import androidx.wear.compose.material3.SurfaceTransformation
 import androidx.wear.compose.material3.Text
 import androidx.wear.compose.material3.lazy.rememberTransformationSpec
@@ -47,7 +48,6 @@ import kattcrazy.sharemything.R
 import kattcrazy.sharemything.data.DisplayItem
 import kattcrazy.sharemything.theme.ShareMyThingColorSchemes
 import kattcrazy.sharemything.ui.SyncFeedback
-import kattcrazy.sharemything.ui.edgeButtonBottomScrollSpacer
 import kattcrazy.sharemything.ui.edgeButtonTopScrollSpacer
 import kattcrazy.sharemything.ui.pressBounce
 import kotlinx.coroutines.delay
@@ -102,6 +102,7 @@ fun ItemListScreen(
     AppScaffold {
         ScreenScaffold(
             scrollState = listState,
+            edgeButtonSpacing = ScreenScaffoldDefaults.EdgeButtonMinSpacing,
             edgeButton = {
                 EdgeButton(
                     onClick = onAddClick,
@@ -159,15 +160,20 @@ fun ItemListScreen(
                                     )
                                 },
                             ) {
-                                Icon(
-                                    painter = painterResource(R.drawable.ic_sync),
-                                    contentDescription = stringResource(R.string.sync_with_watch),
-                                    modifier = Modifier
-                                        .size(28.dp)
-                                        .graphicsLayer {
-                                            rotationZ = syncRotation
-                                        },
-                                )
+                                Box(
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentAlignment = Alignment.Center,
+                                ) {
+                                    Icon(
+                                        painter = painterResource(R.drawable.ic_sync),
+                                        contentDescription = stringResource(R.string.sync_with_watch),
+                                        modifier = Modifier
+                                            .size(26.dp)
+                                            .graphicsLayer {
+                                                rotationZ = syncRotation
+                                            },
+                                    )
+                                }
                             }
                         }
                     }
@@ -211,7 +217,7 @@ fun ItemListScreen(
                         onClick = onTilesComplicationsClick,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(top = 16.dp)
+                            .padding(top = 8.dp)
                             .pressBounce()
                             .transformedHeight(this, transformationSpec),
                         transformation = SurfaceTransformation(transformationSpec),
@@ -225,11 +231,10 @@ fun ItemListScreen(
                 }
 
                 item(key = "privacy") {
-                    // Tall tap target, compact visual: no extra spacer, text stays bodySmall.
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .heightIn(min = 48.dp)
+                            .padding(vertical = 4.dp)
                             .clickable {
                                 context.startActivity(
                                     Intent(Intent.ACTION_VIEW, Uri.parse(privacyPolicyUrl)),
@@ -246,8 +251,6 @@ fun ItemListScreen(
                         )
                     }
                 }
-
-                edgeButtonBottomScrollSpacer(transformationSpec = transformationSpec)
             }
         }
     }

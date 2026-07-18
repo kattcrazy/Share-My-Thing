@@ -40,7 +40,9 @@ fun DetailHelpButton(
             colors = colors,
             contentPadding = PaddingValues(0.dp),
         ) {
-            DetailHelpIcon()
+            CenteredRoundIcon {
+                DetailHelpIcon()
+            }
         }
     } else {
         Button(
@@ -49,7 +51,9 @@ fun DetailHelpButton(
             colors = colors,
             contentPadding = PaddingValues(0.dp),
         ) {
-            DetailHelpIcon()
+            CenteredRoundIcon {
+                DetailHelpIcon()
+            }
         }
     }
 }
@@ -59,6 +63,6 @@ private fun DetailHelpIcon() {
     Icon(
         painter = painterResource(R.drawable.ic_help),
         contentDescription = stringResource(R.string.qr_tips_title),
-        modifier = Modifier.size(28.dp),
+        modifier = Modifier.size(26.dp),
     )
 }

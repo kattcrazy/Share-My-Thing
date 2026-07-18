@@ -156,6 +156,7 @@ fun AppNavHost(
                             key = destinationKey,
                             // Match FAB ScaleToBounds so Add↔edit doesn't crush the label.
                             scaleContent = destinationKey == NavSharedKeys.edit(null),
+                            zIndexInOverlay = if (destinationKey == NavSharedKeys.edit(null)) 2f else 0f,
                         )
                 } else {
                     Modifier.fillMaxSize()

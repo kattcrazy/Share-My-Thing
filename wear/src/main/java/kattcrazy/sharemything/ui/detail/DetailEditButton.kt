@@ -1,9 +1,12 @@
 package kattcrazy.sharemything.ui.detail
 
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
@@ -40,7 +43,9 @@ fun DetailEditButton(
             colors = colors,
             contentPadding = PaddingValues(0.dp),
         ) {
-            DetailEditIcon()
+            CenteredRoundIcon {
+                DetailEditIcon()
+            }
         }
     } else {
         Button(
@@ -49,7 +54,9 @@ fun DetailEditButton(
             colors = colors,
             contentPadding = PaddingValues(0.dp),
         ) {
-            DetailEditIcon()
+            CenteredRoundIcon {
+                DetailEditIcon()
+            }
         }
     }
 }
@@ -59,6 +66,18 @@ private fun DetailEditIcon() {
     Icon(
         painter = painterResource(R.drawable.ic_edit),
         contentDescription = stringResource(R.string.edit_item),
-        modifier = Modifier.size(28.dp),
+        modifier = Modifier.size(26.dp),
     )
+}
+
+@Composable
+internal fun CenteredRoundIcon(
+    content: @Composable () -> Unit,
+) {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center,
+    ) {
+        content()
+    }
 }

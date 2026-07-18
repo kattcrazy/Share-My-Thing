@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -36,6 +35,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
+import androidx.compose.material3.FabPosition
 import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -62,6 +62,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.zIndex
 import kattcrazy.sharemything.R
 import kattcrazy.sharemything.presentation.theme.appNameTextStyle
 import kattcrazy.sharemything.data.DisplayItem
@@ -71,6 +72,7 @@ import kattcrazy.sharemything.ui.components.ExportBackupDialog
 import kattcrazy.sharemything.ui.components.ImportBackupDialog
 import kattcrazy.sharemything.ui.components.SupportBanner
 import kattcrazy.sharemything.ui.navigation.NavSharedKeys
+import kattcrazy.sharemything.ui.navigation.navKeepAboveOverlay
 import kattcrazy.sharemything.ui.navigation.navSharedBounds
 import kattcrazy.sharemything.ui.pressBounce
 import kattcrazy.sharemything.sync.BackupPayload
@@ -275,89 +277,107 @@ fun ItemListScreen(
         )
     }
 
-    Box(modifier = Modifier.fillMaxSize()) {
-        Scaffold(
-            snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
-            topBar = {
-                Column {
-                    TopAppBar(
-                        title = {
-                            Text(
-                                text = stringResource(R.string.app_name_short),
-                                style = appNameTextStyle(),
-                            )
-                        },
-                        actions = {
-                            IconButton(
-                                onClick = { importDocumentLauncher.launch(arrayOf("application/json", "text/plain", "*/*")) },
-                                modifier = Modifier.pressBounce(),
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Outlined.FileDownload,
-                                    contentDescription = stringResource(R.string.import_backup),
-                                )
-                            }
-                            IconButton(
-                                onClick = { showExportDialog = true },
-                                modifier = Modifier.pressBounce(),
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Outlined.FileUpload,
-                                    contentDescription = stringResource(R.string.export_backup),
-                                )
-                            }
-                            IconButton(
-                                onClick = onAboutClick,
-                                modifier = Modifier
-                                    .navSharedBounds(NavSharedKeys.About)
-                                    .pressBounce(),
-                            ) {
-                                Icon(
-                                    imageVector = Icons.AutoMirrored.Outlined.HelpOutline,
-                                    contentDescription = stringResource(R.string.about_title),
-                                )
-                            }
-                        },
-                    )
-                    SupportBanner()
-                }
-            },
-        ) { padding ->
-            val listModifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-
-            if (isPeerAvailable) {
-                val pullRefreshState = rememberPullToRefreshState()
-                PullToRefreshBox(
-                    isRefreshing = isRefreshing,
-                    onRefresh = onSyncClick,
-                    modifier = listModifier,
-                    state = pullRefreshState,
-                    indicator = {
-                        PullToRefreshDefaults.Indicator(
-                            state = pullRefreshState,
-                            isRefreshing = isRefreshing,
-                            modifier = Modifier.align(Alignment.TopCenter),
-                            containerColor = MaterialTheme.colorScheme.surface,
-                            color = MaterialTheme.colorScheme.primary,
+    Scaffold(
+        snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
+        topBar = {
+            Column {
+                TopAppBar(
+                    title = {
+                        Text(
+                            text = stringResource(R.string.app_name_short),
+                            style = appNameTextStyle(),
                         )
                     },
-                ) {
-                    ItemListContent(
-                        listItems = listItems,
-                        lazyListState = lazyListState,
-                        isPeerAvailable = isPeerAvailable,
-                        reorderableState = reorderableState,
-                        onItemClick = onItemClick,
-                        onSetVisibleOnWatch = onSetVisibleOnWatch,
-                        onPhoneWidgetsClick = onPhoneWidgetsClick,
-                        onAppShortcutsClick = onAppShortcutsClick,
-                        onWatchTilesClick = onWatchTilesClick,
-                        onWatchComplicationsClick = onWatchComplicationsClick,
+                    actions = {
+                        IconButton(
+                            onClick = { importDocumentLauncher.launch(arrayOf("application/json", "text/plain", "*/*")) },
+                            modifier = Modifier.pressBounce(),
+                        ) {
+                            Icon(
+                                imageVector = Icons.Outlined.FileDownload,
+                                contentDescription = stringResource(R.string.import_backup),
+                            )
+                        }
+                        IconButton(
+                            onClick = { showExportDialog = true },
+                            modifier = Modifier.pressBounce(),
+                        ) {
+                            Icon(
+                                imageVector = Icons.Outlined.FileUpload,
+                                contentDescription = stringResource(R.string.export_backup),
+                            )
+                        }
+                        IconButton(
+                            onClick = onAboutClick,
+                            modifier = Modifier
+                                .navSharedBounds(NavSharedKeys.About)
+                                .pressBounce(),
+                        ) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Outlined.HelpOutline,
+                                contentDescription = stringResource(R.string.about_title),
+                            )
+                        }
+                    },
+                )
+                SupportBanner()
+            }
+        },
+        floatingActionButtonPosition = FabPosition.Center,
+        floatingActionButton = {
+            ExtendedFloatingActionButton(
+                onClick = onAddClick,
+                modifier = Modifier
+                    .zIndex(1f)
+                    .navKeepAboveOverlay(zIndexInOverlay = 2f)
+                    .fillMaxWidth(1f / 3f)
+                    .widthIn(min = 120.dp)
+                    .navSharedBounds(
+                        key = NavSharedKeys.edit(null),
+                        scaleContent = true,
+                        zIndexInOverlay = 2f,
                     )
-                }
-            } else {
+                    .pressBounce()
+                    .graphicsLayer { clip = false },
+                elevation = FloatingActionButtonDefaults.elevation(
+                    defaultElevation = 0.dp,
+                    pressedElevation = 0.dp,
+                    focusedElevation = 0.dp,
+                    hoveredElevation = 0.dp,
+                ),
+                icon = {
+                    Icon(
+                        imageVector = Icons.Filled.Add,
+                        contentDescription = null,
+                    )
+                },
+                text = {
+                    Text(text = stringResource(R.string.add_item))
+                },
+            )
+        },
+    ) { padding ->
+        val listModifier = Modifier
+            .fillMaxSize()
+            .padding(padding)
+
+        if (isPeerAvailable) {
+            val pullRefreshState = rememberPullToRefreshState()
+            PullToRefreshBox(
+                isRefreshing = isRefreshing,
+                onRefresh = onSyncClick,
+                modifier = listModifier,
+                state = pullRefreshState,
+                indicator = {
+                    PullToRefreshDefaults.Indicator(
+                        state = pullRefreshState,
+                        isRefreshing = isRefreshing,
+                        modifier = Modifier.align(Alignment.TopCenter),
+                        containerColor = MaterialTheme.colorScheme.surface,
+                        color = MaterialTheme.colorScheme.primary,
+                    )
+                },
+            ) {
                 ItemListContent(
                     listItems = listItems,
                     lazyListState = lazyListState,
@@ -369,39 +389,23 @@ fun ItemListScreen(
                     onAppShortcutsClick = onAppShortcutsClick,
                     onWatchTilesClick = onWatchTilesClick,
                     onWatchComplicationsClick = onWatchComplicationsClick,
-                    modifier = listModifier,
                 )
             }
+        } else {
+            ItemListContent(
+                listItems = listItems,
+                lazyListState = lazyListState,
+                isPeerAvailable = isPeerAvailable,
+                reorderableState = reorderableState,
+                onItemClick = onItemClick,
+                onSetVisibleOnWatch = onSetVisibleOnWatch,
+                onPhoneWidgetsClick = onPhoneWidgetsClick,
+                onAppShortcutsClick = onAppShortcutsClick,
+                onWatchTilesClick = onWatchTilesClick,
+                onWatchComplicationsClick = onWatchComplicationsClick,
+                modifier = listModifier,
+            )
         }
-
-        // Outside Scaffold's FAB slot so shared-bounds return isn't clipped at the bottom.
-        ExtendedFloatingActionButton(
-            onClick = onAddClick,
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .navigationBarsPadding()
-                .padding(bottom = 16.dp)
-                .fillMaxWidth(1f / 3f)
-                .widthIn(min = 120.dp)
-                .navSharedBounds(NavSharedKeys.edit(null), scaleContent = true)
-                .pressBounce()
-                .graphicsLayer { clip = false },
-            elevation = FloatingActionButtonDefaults.elevation(
-                defaultElevation = 0.dp,
-                pressedElevation = 0.dp,
-                focusedElevation = 0.dp,
-                hoveredElevation = 0.dp,
-            ),
-            icon = {
-                Icon(
-                    imageVector = Icons.Filled.Add,
-                    contentDescription = null,
-                )
-            },
-            text = {
-                Text(text = stringResource(R.string.add_item))
-            },
-        )
     }
 }
 
