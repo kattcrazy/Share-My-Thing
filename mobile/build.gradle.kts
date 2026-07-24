@@ -13,7 +13,7 @@ android {
     defaultConfig {
         applicationId = "kattcrazy.sharemything"
         minSdk = 30
-        targetSdk = 35
+        targetSdk = 36
         // Play versionCode: phone uses 1, 2, 3…; must not match wear (see wear/build.gradle.kts).
         versionCode = 10
         versionName = "2.3.11"

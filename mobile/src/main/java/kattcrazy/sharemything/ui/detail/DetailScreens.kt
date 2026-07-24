@@ -1,5 +1,7 @@
 package kattcrazy.sharemything.ui.detail
 
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -36,6 +38,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -44,6 +47,7 @@ import kattcrazy.sharemything.data.DisplayItem
 import kattcrazy.sharemything.data.ItemType
 import kattcrazy.sharemything.data.usesQr
 import kattcrazy.sharemything.data.SurfaceDisplayConstants
+import kattcrazy.sharemything.ui.ItemContentText
 import kattcrazy.sharemything.ui.navigation.NavSharedKeys
 import kattcrazy.sharemything.ui.navigation.navSharedBounds
 import kattcrazy.sharemything.ui.pressBounce
@@ -125,10 +129,17 @@ fun QrDetailScreen(
                 textAlign = TextAlign.Center,
             )
 
-            Text(
+            val context = LocalContext.current
+            ItemContentText(
                 text = item.content,
                 style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurface,
+                linkColor = MaterialTheme.colorScheme.primary,
                 textAlign = TextAlign.Center,
+                selectable = true,
+                onUrlClick = { url ->
+                    context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
+                },
             )
 
             Row(
@@ -220,11 +231,18 @@ fun TextDetailScreen(
                 style = MaterialTheme.typography.headlineSmall,
                 textAlign = TextAlign.Center,
             )
-            Text(
+            val context = LocalContext.current
+            ItemContentText(
                 text = item.content,
                 modifier = Modifier.padding(top = 16.dp),
                 style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurface,
+                linkColor = MaterialTheme.colorScheme.primary,
                 textAlign = TextAlign.Center,
+                selectable = true,
+                onUrlClick = { url ->
+                    context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
+                },
             )
         }
     }

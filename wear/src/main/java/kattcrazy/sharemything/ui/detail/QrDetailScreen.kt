@@ -26,11 +26,14 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.layout
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import android.content.Intent
+import android.net.Uri
 import androidx.wear.compose.foundation.lazy.TransformingLazyColumn
 import androidx.wear.compose.foundation.lazy.rememberTransformingLazyColumnState
 import androidx.wear.compose.material3.AppScaffold
@@ -45,6 +48,7 @@ import kattcrazy.sharemything.data.DisplayItem
 import kattcrazy.sharemything.data.ItemType
 import kattcrazy.sharemything.data.SurfaceDisplayConstants
 import kattcrazy.sharemything.data.usesQr
+import kattcrazy.sharemything.ui.ItemContentText
 import kattcrazy.sharemything.util.QrCodeGenerator
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -146,13 +150,22 @@ fun QrDetailScreen(
                                 textAlign = TextAlign.Center,
                             )
 
-                            Text(
+                            val context = LocalContext.current
+                            ItemContentText(
                                 text = item.content,
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .padding(top = 4.dp, start = 12.dp, end = 12.dp),
                                 style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurface,
+                                linkColor = MaterialTheme.colorScheme.primary,
                                 textAlign = TextAlign.Center,
+                                selectable = false,
+                                onUrlClick = { url ->
+                                    context.startActivity(
+                                        Intent(Intent.ACTION_VIEW, Uri.parse(url)),
+                                    )
+                                },
                             )
 
                             Row(
